@@ -8,11 +8,11 @@ export const Sidebar = () => {
     const location = useLocation();
 
     const menuItems = [
-        { icon: LayoutDashboard, label: 'Dashboard', path: '/web' },
-        { icon: Activity, label: 'Mobile Home', path: '/mobile' },
-        { icon: Leaf, label: 'Daily Log', path: '/web' },
-        { icon: Baby, label: 'Wardrobe (OOTD)', path: '/ootd' },
-        { icon: Settings, label: 'Settings', path: '/web' },
+        { icon: LayoutDashboard, label: '桌面端总览', path: '/web' },
+        { icon: Activity, label: '移动端首页', path: '/mobile' },
+        { icon: Leaf, label: '每日记录', path: '/web' },
+        { icon: Baby, label: '穿搭记录', path: '/ootd' },
+        { icon: Settings, label: '设置', path: '/web' },
     ];
 
     return (
@@ -23,7 +23,7 @@ export const Sidebar = () => {
                 </div>
                 <div>
                     <h1 className="font-display font-bold text-lg text-sakura-text">Little Blossom</h1>
-                    <p className="text-xs text-sakura-text/50">Tracker vNext</p>
+                    <p className="text-xs text-sakura-text/50">宝宝日常 · 追踪面板</p>
                 </div>
             </div>
 

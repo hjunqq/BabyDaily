@@ -12,7 +12,7 @@ type Summary = {
 
 type TrendPoint = { name: string; milk: number; solid: number };
 
-type Activity = { id: string; time: string; category: string; detail: string; duration: string };
+type Activity = { id: string; time: string; category: string; detail: string; duration: string; type: BabyRecord['type'] };
 
 type State = {
     loading: boolean;
@@ -50,17 +50,22 @@ export const useDashboardData = () => {
                 BabyService.getTrends(babyId, 7),
             ]);
 
-            const summary = summaryResp ? mapSummary(summaryResp) : buildSummary(records);
-            const trends = trendsResp ? mapTrends(trendsResp) : buildTrends(records);
+            if (!summaryResp || !trendsResp) {
+                throw new Error('接口返回为空，无法展示仪表盘');
+            }
+
+            const summary = mapSummary(summaryResp);
+            const trends = mapTrends(trendsResp);
             const activities = buildActivities(records);
 
             setState({ loading: false, summary, trends, activities });
         } catch (err: any) {
             console.error('Dashboard data load failed:', err);
+            const msg = err?.message ? `数据加载失败：${err.message}` : '数据加载失败，请稍后重试';
             setState(prev => ({
                 ...prev,
                 loading: false,
-                error: '数据拉取失败，请稍后重试',
+                error: msg,
             }));
         }
     };
@@ -72,57 +77,6 @@ export const useDashboardData = () => {
     return { ...state, refresh: load };
 };
 
-const buildSummary = (records: BabyRecord[]): Summary => {
-    let milkMl = 0;
-    let diaperWet = 0;
-    let diaperSoiled = 0;
-    let sleepMinutes = 0;
-    let lastFeedTime: string | undefined;
-
-    records.forEach((r) => {
-        if (r.type === 'FEED') {
-            const details = r.details as FeedDetails;
-            if (details?.amount) milkMl += details.amount;
-            if (!lastFeedTime || r.time > lastFeedTime) {
-                lastFeedTime = new Date(r.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            }
-        }
-        if (r.type === 'DIAPER') {
-            const detail = (r.details as any)?.type;
-            if (detail === 'PEE' || detail === 'BOTH') diaperWet += 1;
-            if (detail === 'POO' || detail === 'BOTH') diaperSoiled += 1;
-        }
-        if (r.type === 'SLEEP') {
-            const end = r.end_time ? new Date(r.end_time).getTime() : new Date(r.time).getTime() + 90 * 60000;
-            const start = new Date(r.time).getTime();
-            sleepMinutes += Math.max(0, Math.round((end - start) / 60000));
-        }
-    });
-
-    return {
-        milkMl: Math.round(milkMl),
-        diaperWet,
-        diaperSoiled,
-        sleepMinutes,
-        lastFeedTime,
-    };
-};
-
-const buildTrends = (records: BabyRecord[]): TrendPoint[] => {
-    if (!records.length) return [];
-    const bucket: Record<string, { milk: number; solid: number }> = {};
-    records.forEach((r) => {
-        const day = new Date(r.time).toISOString().slice(5, 10); // MM-DD
-        if (!bucket[day]) bucket[day] = { milk: 0, solid: 0 };
-        if (r.type === 'FEED') {
-            const details = r.details as FeedDetails;
-            if (details?.subtype === 'SOLID') bucket[day].solid += details.amount || 0;
-            else bucket[day].milk += details?.amount || 0;
-        }
-    });
-    return Object.entries(bucket).map(([name, val]) => ({ name, milk: val.milk, solid: val.solid }));
-};
-
 const buildActivities = (records: BabyRecord[]): Activity[] => {
     if (!records.length) return [];
     return records.slice(0, 10).map((r) => {
@@ -132,13 +86,17 @@ const buildActivities = (records: BabyRecord[]): Activity[] => {
         if (r.type === 'FEED') {
             const details = r.details as FeedDetails;
             const amount = details?.amount ? `${details.amount}${details.unit || 'ml'}` : '';
-            detail = `${details?.subtype === 'BREAST' ? '母乳' : '配方奶'} ${amount}`.trim();
+            const method = details?.subtype === 'BREAST' ? '母乳' : details?.subtype === 'SOLID' ? '辅食' : '奶瓶';
+            detail = `${method} ${amount}`.trim();
             duration = details?.duration || '-';
         } else if (r.type === 'DIAPER') {
-            detail = (r.details as any)?.type === 'BOTH' ? '湿 + 脏' : (r.details as any)?.type === 'POO' ? '脏' : '湿';
+            const t = (r.details as any)?.type;
+            if (t === 'BOTH') detail = '湿+脏';
+            else if (t === 'POO') detail = '脏尿布';
+            else detail = '湿尿布';
         } else if (r.type === 'SLEEP') {
             duration = '1h 30m';
-            detail = '小睡';
+            detail = '睡眠';
         }
         return {
             id: r.id,
@@ -146,6 +104,7 @@ const buildActivities = (records: BabyRecord[]): Activity[] => {
             category: mapCategory(r.type),
             detail,
             duration,
+            type: r.type,
         };
     });
 };
@@ -153,7 +112,7 @@ const buildActivities = (records: BabyRecord[]): Activity[] => {
 const mapCategory = (type: BabyRecord['type']) => {
     switch (type) {
         case 'FEED':
-            return '喂奶';
+            return '喂养';
         case 'SLEEP':
             return '睡眠';
         case 'DIAPER':

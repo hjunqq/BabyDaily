@@ -28,7 +28,7 @@ export class FamilyService {
             family_id: savedFamily.id,
             user_id: userId,
             role: FamilyRole.ADMIN,
-            relation: '创建者',
+            relation: 'creator',
         });
         await this.familyMemberRepository.save(member);
 
@@ -46,7 +46,7 @@ export class FamilyService {
     async findOne(id: string): Promise<Family | null> {
         return this.familyRepository.findOne({
             where: { id },
-            relations: ['members', 'members.user']
+            relations: ['members', 'members.user'],
         });
     }
 

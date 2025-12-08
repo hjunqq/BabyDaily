@@ -9,24 +9,24 @@ export const useOotdData = (tags?: string[]) => {
     const [babyId, setBabyId] = useState<string | null>(null);
 
     const load = async () => {
-            try {
-                setLoading(true);
-                setError(undefined);
+        try {
+            setLoading(true);
+            setError(undefined);
 
-                await BabyService.ensureDevEnvironment();
-                const currentBabyId = BabyService.getCurrentBabyId();
-                if (!currentBabyId) throw new Error('未找到宝宝信息');
-                setBabyId(currentBabyId);
+            await BabyService.ensureDevEnvironment();
+            const currentBabyId = BabyService.getCurrentBabyId();
+            if (!currentBabyId) throw new Error('未找到宝宝信息');
+            setBabyId(currentBabyId);
 
-                const data = await OotdService.getOotdList(currentBabyId, 1, 20, tags);
-                setItems(data);
-            } catch (err: any) {
-                console.error('Failed to load OOTD:', err);
-                setError(err.message || '加载失败，请稍后重试');
-                setItems([]);
-            } finally {
-                setLoading(false);
-            }
+            const data = await OotdService.getOotdList(currentBabyId, 1, 20, tags);
+            setItems(data);
+        } catch (err: any) {
+            console.error('Failed to load OOTD:', err);
+            setError(err.message || '加载失败，请重试');
+            setItems([]);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {

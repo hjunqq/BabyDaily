@@ -24,9 +24,16 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
     const [details, setDetails] = useState<any>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [babyId, setBabyId] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        const ensureEnv = async () => {
+            await BabyService.ensureDevEnvironment();
+            setBabyId(BabyService.getCurrentBabyId());
+        };
         if (isOpen) {
+            ensureEnv();
             if (initialData) {
                 // Edit Mode
                 setSelectedType(initialData.type);
@@ -48,25 +55,31 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
         setSelectedType(type);
         setStep('DETAILS');
         // Reset details based on type
-        if (type === 'FEED') setDetails({ subtype: 'BOTTLE', amount: 100 });
+        if (type === 'FEED') setDetails({ subtype: 'BOTTLE', amount: 100, unit: 'ml' });
         if (type === 'DIAPER') setDetails({ type: 'PEE' });
-        if (type === 'SLEEP') setDetails({ is_nap: true, duration: 60 }); // default 1h
+        if (type === 'SLEEP') setDetails({ is_nap: true, duration: 90 }); // default 1.5h
     };
 
     const handleSubmit = async () => {
-        if (!selectedType) return;
+        if (!selectedType || !babyId) return;
         setIsSubmitting(true);
+        setError(null);
         try {
             if (initialData) {
                 await BabyService.updateRecord(initialData.id, {
                     details: details,
-                    // Allow changing time? Let's ignore time edit for simplicity now, or just send old time
                 });
             } else {
+                if (selectedType === 'FEED') {
+                    const num = parseInt(details.amount || '0', 10);
+                    if (Number.isNaN(num) || num <= 0) throw new Error('请输入大于 0 的奶量');
+                }
+                if (selectedType === 'SLEEP' && !details.duration) {
+                    setDetails({ ...details, duration: 90 });
+                }
                 await BabyService.createRecord({
                     type: selectedType,
-                    baby_id: 'u-sakura-001',
-                    creator_id: 'current-user',
+                    baby_id: babyId,
                     time: new Date().toISOString(),
                     details: details
                 });
@@ -75,6 +88,7 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
             onClose();
         } catch (error) {
             console.error(error);
+            setError((error as any)?.message || '保存失败');
             setIsSubmitting(false);
         }
     };
@@ -154,10 +168,18 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
                 );
             case 'SLEEP':
                 return (
-                    // Simple mock for sleep
-                    <div className="text-center p-8">
-                        <Moon size={48} className="mx-auto text-purple-300 mb-4" />
-                        <p className="text-gray-500">Sleep tracking started...</p>
+                    <div className="space-y-4">
+                        <label className="block text-sm font-bold text-gray-500">Duration (minutes)</label>
+                        <input
+                            type="range"
+                            min="30"
+                            max="240"
+                            step="15"
+                            value={details.duration || 90}
+                            onChange={(e) => setDetails({ ...details, duration: parseInt(e.target.value) })}
+                            className="w-full accent-purple-400"
+                        />
+                        <div className="text-center text-lg font-bold text-sakura-text">{details.duration || 90} min</div>
                     </div>
                 );
             default:
@@ -195,6 +217,11 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
 
                 {/* Content */}
                 <div className="min-h-[300px]">
+                    {error && (
+                        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">
+                            {error}
+                        </div>
+                    )}
                     {step === 'TYPE' ? (
                         <div className="grid grid-cols-3 gap-4">
                             {RECORD_TYPES.map((t) => (

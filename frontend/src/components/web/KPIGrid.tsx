@@ -12,8 +12,8 @@ const KPICard = ({ title, value, sub, icon }: KPIProps) => {
     const { theme } = useTheme();
     return (
         <div className={`p-6 flex flex-col justify-between h-40 transition-all ${theme === 'A'
-                ? 'glass-panel rounded-2xl'
-                : 'bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md'
+            ? 'glass-panel rounded-2xl'
+            : 'bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md'
             }`}>
             <div className="flex items-start justify-between">
                 <div>
@@ -61,7 +61,7 @@ export const KPIGrid = ({ milkMl, diaperWet, diaperSoiled, sleepMinutes, lastFee
             <KPICard
                 title="尿布更换"
                 value={`${diaperWet + diaperSoiled} 次`}
-                sub={`湿 ${diaperWet} · 脏 ${diaperSoiled}`}
+                sub={`湿${diaperWet} · 脏${diaperSoiled}`}
                 icon={<Baby className="text-orange-400" />}
             />
         </div>

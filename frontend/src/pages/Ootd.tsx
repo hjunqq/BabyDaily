@@ -31,6 +31,13 @@ export const Ootd = () => {
     const handleUploadChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0 || !babyId) return;
+        const fileArr = Array.from(files);
+        const invalid = fileArr.find(f => !f.type.startsWith('image/') || f.size > 2 * 1024 * 1024);
+        if (invalid) {
+            alert('仅支持图片文件，大小不超过 2MB');
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
         try {
             await OotdService.uploadOotd({
                 baby_id: babyId,

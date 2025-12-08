@@ -43,6 +43,7 @@ export const MobileHome = () => {
     const { theme } = useTheme();
     const { summary, activities, loading, error, refresh } = useDashboardData();
     const [showForm, setShowForm] = useState(false);
+    const [showAll, setShowAll] = useState(false);
 
     const summaryCards = useMemo(() => ([
         {
@@ -55,7 +56,7 @@ export const MobileHome = () => {
         {
             title: '尿布更换',
             value: `${summary.diaperWet + summary.diaperSoiled} 次`,
-            sub: `湿 ${summary.diaperWet} · 脏 ${summary.diaperSoiled}`,
+            sub: `${summary.diaperWet} 湿 · ${summary.diaperSoiled} 脏`,
             icon: <Baby size={18} className="text-amber-500" />,
             accent: 'bg-amber-100',
         },
@@ -69,14 +70,19 @@ export const MobileHome = () => {
     ]), [summary]);
 
     const recentRecords: RecordItem[] = useMemo(() => {
-        return activities.slice(0, 4).map((a) => ({
-            id: a.id,
-            time: a.time,
-            type: a.category === '喂奶' ? 'FEED' : a.category === '睡眠' ? 'SLEEP' : 'DIAPER',
-            title: a.category,
-            detail: a.detail,
-        }));
-    }, [activities]);
+        const list = showAll ? activities : activities.slice(0, 4);
+        return list.map((a) => {
+            const type = (a as any).type as RecordItem['type'];
+            const title = type === 'FEED' ? '喂养' : type === 'SLEEP' ? '睡眠' : '尿布';
+            return {
+                id: a.id,
+                time: a.time || '--:--',
+                type,
+                title,
+                detail: a.detail || '暂无详情',
+            };
+        });
+    }, [activities, showAll]);
 
     if (loading) return <MobileHomeSkeleton />;
 
@@ -106,8 +112,8 @@ export const MobileHome = () => {
                         樱
                     </div>
                     <div className="space-y-1">
-                        <div className="text-xs text-sakura-text/60">2024 年 2 月 15 日 · 星期四</div>
-                        <div className="text-xl font-display font-bold text-sakura-text">樱樱的今天</div>
+                        <div className="text-xs text-sakura-text/60">{new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'long' })}</div>
+                        <div className="text-xl font-display font-bold text-sakura-text">宝宝的今天</div>
                         <div className="text-sm text-sakura-text/60 flex items-center gap-1">
                             <Heart size={14} className="text-sakura-pink" /> 记录每个温柔瞬间
                         </div>
@@ -139,10 +145,10 @@ export const MobileHome = () => {
                     <div className="flex items-center justify-between">
                         <div>
                             <div className="text-sm font-semibold text-sakura-text/70">最近记录</div>
-                            <div className="text-xs text-sakura-text/50">保留最近 4 条 · 更早查看全部</div>
+                            <div className="text-xs text-sakura-text/50">展示最近 4 条 · 可切换查看全部</div>
                         </div>
-                        <button className="text-xs font-bold text-sakura-pink hover:text-sakura-text min-h-[44px] px-3 rounded-xl" aria-label="查看全部记录" onClick={() => setShowForm(true)}>
-                            查看全部
+                        <button className="text-xs font-bold text-sakura-pink hover:text-sakura-text min-h-[44px] px-3 rounded-xl" aria-label="查看全部记录" onClick={() => setShowAll(!showAll)}>
+                            {showAll ? '收起' : '查看全部'}
                         </button>
                     </div>
 
@@ -161,6 +167,8 @@ export const MobileHome = () => {
             ) : (
                 <EmptyState
                     type="no-records"
+                    title="暂无记录"
+                    description="先添加一条喂养/睡眠/尿布记录吧"
                     action={{
                         label: '添加第一条记录',
                         onClick: () => setShowForm(true),

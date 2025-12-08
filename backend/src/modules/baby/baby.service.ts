@@ -11,7 +11,11 @@ export class BabyService {
     ) { }
 
     async create(data: Partial<Baby>): Promise<Baby> {
-        const baby = this.babyRepository.create(data);
+        const baby = this.babyRepository.create({
+            ...data,
+            gender: data.gender as any,
+            birthday: data.birthday ? new Date(data.birthday) : undefined,
+        });
         return this.babyRepository.save(baby);
     }
 

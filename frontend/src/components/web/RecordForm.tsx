@@ -19,19 +19,34 @@ export const RecordForm = ({ onClose, onSuccess }: RecordFormProps) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
+    const validate = () => {
+        if (type === 'FEED') {
+            const num = parseInt(amount, 10);
+            if (Number.isNaN(num) || num <= 0) {
+                throw new Error('请输入大于 0 的奶量');
+            }
+        }
+        if (!time) {
+            throw new Error('请选择开始时间');
+        }
+        if (type === 'SLEEP' && endTime && new Date(endTime) < new Date(time)) {
+            throw new Error('结束时间需晚于开始时间');
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
         try {
-            const babyId = BabyService.getCurrentBabyId();
+            validate();
+            const babyId = BabyService.getCurrentBabyId() || (await BabyService.ensureDevEnvironment()).id;
             if (!babyId) throw new Error('未找到宝宝信息');
 
             let details: any = {};
 
             if (type === 'FEED') {
-                if (!amount) throw new Error('请输入奶量');
                 details = {
                     amount: parseInt(amount, 10),
                     unit: 'ml',
@@ -39,6 +54,8 @@ export const RecordForm = ({ onClose, onSuccess }: RecordFormProps) => {
                 };
             } else if (type === 'DIAPER') {
                 details = { type: diaperType };
+            } else if (type === 'SLEEP') {
+                details = { is_nap: true };
             }
 
             await BabyService.createRecord({
@@ -47,8 +64,7 @@ export const RecordForm = ({ onClose, onSuccess }: RecordFormProps) => {
                 time: new Date(time).toISOString(),
                 end_time: endTime ? new Date(endTime).toISOString() : undefined,
                 details,
-                creator_id: 'current-user',
-            } as any);
+            });
 
             onSuccess();
             onClose();
@@ -144,7 +160,7 @@ export const RecordForm = ({ onClose, onSuccess }: RecordFormProps) => {
                                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                             }`}
                                     >
-                                        {t === 'PEE' ? '湿' : t === 'POO' ? '脏' : '湿 + 脏'}
+                                        {t === 'PEE' ? '湿' : t === 'POO' ? '便' : '湿+便'}
                                     </button>
                                 ))}
                             </div>
@@ -162,7 +178,7 @@ export const RecordForm = ({ onClose, onSuccess }: RecordFormProps) => {
                             取消
                         </Button>
                         <Button type="submit" variant="primary" loading={loading} disabled={loading} className="flex-1">
-                            {loading ? '保存中…' : '保存'}
+                            {loading ? '保存中...' : '保存'}
                         </Button>
                     </div>
                 </form>

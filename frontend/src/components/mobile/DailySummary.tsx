@@ -2,7 +2,6 @@ import { Droplets, Clock, Baby } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { BabyService } from '../../services/api';
-// import type { BabyRecord } from '../../types';
 
 interface SummaryCardProps {
     title: string;
@@ -35,50 +34,57 @@ const SummaryCard = ({ title, value, sub, icon, color_a }: SummaryCardProps) => 
 export const DailySummary = () => {
     const [summary, setSummary] = useState({
         milk: 0,
-        diaper: 0,
+        diaperWet: 0,
+        diaperSoiled: 0,
         sleep: 0
     });
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
-            const records = await BabyService.getRecords('u-sakura-001');
-            // Simple mock aggregation
-            const milk = records
-                .filter(r => r.type === 'FEED')
-                .reduce((acc, curr) => acc + (curr.details as any).amount || 0, 0);
-
-            const diaper = records.filter(r => r.type === 'DIAPER').length;
-
-            // Mock sleep duration calculation (just count hours for demo)
-            const sleep = records
-                .filter(r => r.type === 'SLEEP')
-                .length * 1.5; // Mock 1.5h per sleep
-
-            setSummary({ milk, diaper, sleep });
+            try {
+                setError(null);
+                await BabyService.ensureDevEnvironment();
+                const babyId = BabyService.getCurrentBabyId() || 'u-sakura-001';
+                const res = await BabyService.getSummary(babyId);
+                setSummary({
+                    milk: Math.round(res.milk_ml ?? 0),
+                    diaperWet: res.diaper_wet ?? 0,
+                    diaperSoiled: res.diaper_soiled ?? 0,
+                    sleep: Math.round((res.sleep_minutes ?? 0) / 60),
+                });
+            } catch (err: any) {
+                setError(err?.message || '统计数据加载失败');
+            }
         };
         fetchData();
     }, []);
 
     return (
         <div className="w-full overflow-x-auto px-6 pb-4 pt-2 -mx-0 hide-scrollbar flex gap-3">
+            {error && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-xs rounded-xl min-w-[220px]">
+                    {error}
+                </div>
+            )}
             <SummaryCard
-                title="Milk"
+                title="奶量"
                 value={`${summary.milk} ml`}
-                sub="Target: 800ml"
+                sub="目标：800ml"
                 icon={<Droplets size={16} className="text-blue-400" />}
                 color_a="bg-blue-50/30"
             />
             <SummaryCard
-                title="Diapers"
-                value={`${summary.diaper} Times`}
-                sub="3 Wet · 2 Dirty"
+                title="尿布"
+                value={`${summary.diaperWet + summary.diaperSoiled} 次`}
+                sub={`${summary.diaperWet} 湿 · ${summary.diaperSoiled} 脏`}
                 icon={<Baby size={16} className="text-orange-400" />}
                 color_a="bg-orange-50/30"
             />
             <SummaryCard
-                title="Sleep"
+                title="睡眠"
                 value={`${summary.sleep}h`}
-                sub="2 Naps"
+                sub="今日累计"
                 icon={<Clock size={16} className="text-purple-400" />}
                 color_a="bg-purple-50/30"
             />

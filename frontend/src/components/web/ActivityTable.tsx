@@ -10,6 +10,7 @@ interface Activity {
     category: string;
     detail: string;
     duration: string;
+    type?: string;
 }
 
 interface ActivityTableProps {
@@ -40,17 +41,24 @@ export const ActivityTable = ({ activities, onUpdate, onEdit }: ActivityTablePro
         }
     };
 
-    const handleExport = () => {
-        // 简单导出 CSV
-        const header = '时间,类型,详情,时长\n';
-        const rows = activities.map(a => `${a.time},${a.category},${a.detail},${a.duration}`).join('\n');
-        const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'activities.csv';
-        link.click();
-        URL.revokeObjectURL(url);
+    const handleExport = async () => {
+        try {
+            const babyId = BabyService.getCurrentBabyId() || (await BabyService.ensureDevEnvironment()).id;
+            if (!babyId) throw new Error('未找到宝宝信息');
+            const res = await fetch(`http://localhost:3000/records/baby/${babyId}/export?limit=200`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('access_token') || ''}` },
+            });
+            if (!res.ok) throw new Error(`导出失败：${res.status}`);
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `records-${babyId}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+        } catch (err: any) {
+            alert(err.message || '导出失败');
+        }
     };
 
     return (

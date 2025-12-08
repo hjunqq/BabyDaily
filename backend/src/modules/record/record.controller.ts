@@ -1,10 +1,11 @@
-import { Controller, Post, Body, Get, Param, Delete, UseGuards, Request, Query, Patch } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Delete, UseGuards, Request, Query, Patch, Res } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RecordService } from './record.service';
 import { CreateRecordDto } from './dto/create-record.dto';
 import { UpdateRecordDto } from './dto/update-record.dto';
 import { FamilyGuard } from '../../common/guards/family.guard';
 import { RecordQueryDto, SummaryQueryDto } from './dto/query-record.dto';
+import type { Response } from 'express';
 
 @Controller('records')
 @UseGuards(AuthGuard('jwt'), FamilyGuard)
@@ -29,6 +30,18 @@ export class RecordController {
     @Get('baby/:babyId/trend')
     trend(@Param('babyId') babyId: string, @Query() query: SummaryQueryDto) {
         return this.recordService.trend(babyId, query.days ?? 7);
+    }
+
+    @Get('baby/:babyId/export')
+    async exportCsv(
+        @Param('babyId') babyId: string,
+        @Query('limit') limit: string,
+        @Res() res: Response,
+    ) {
+        const csv = await this.recordService.exportCsv(babyId, limit ? parseInt(limit, 10) : 200);
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="records-${babyId}.csv"`);
+        return res.send(csv);
     }
 
     @Get('baby/:babyId')

@@ -34,7 +34,7 @@ export class RecordService {
     async findOneWithGuard(id: string, userId: string): Promise<Record | null> {
         const rec = await this.recordRepository.findOne({ where: { id } });
         if (!rec) return null;
-        // 仅允许家庭成员访问，FamilyGuard 已校验 baby 归属；创建者限制仅对写操作生效
+        // FamilyGuard already checks baby ownership; creator check applies only to write operations
         return rec;
     }
 
@@ -46,7 +46,7 @@ export class RecordService {
                 code: ErrorCodes.NOT_FOUND,
             });
         }
-        // 仅允许创建者修改
+        // Only creator can update
         if (rec.creator_id !== userId) {
             throw new ForbiddenException({
                 message: 'No permission to modify this record',
@@ -111,11 +111,11 @@ export class RecordService {
         });
 
         return {
-            milkMl: milk_ml,
-            diaperWet: diaper_wet,
-            diaperSoiled: diaper_soiled,
-            sleepMinutes: sleep_minutes,
-            lastFeedTime: last_feed_time,
+            milk_ml,
+            diaper_wet,
+            diaper_soiled,
+            sleep_minutes,
+            last_feed_time,
         };
     }
 
@@ -144,19 +144,32 @@ export class RecordService {
             }
         });
 
-        // Ensure all days are present
         const result = [];
-        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         for (let i = days - 1; i >= 0; i--) {
             const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
             const key = fmt(d);
             const val = bucket.get(key) || { milk_ml: 0, solid_g: 0 };
             result.push({
-                name: dayNames[d.getDay()], // 星期几
-                milk: val.milk_ml,
-                solid: val.solid_g
+                date: key,
+                milk_ml: val.milk_ml,
+                solid_g: val.solid_g,
             });
         }
         return result;
+    }
+
+    async exportCsv(babyId: string, limit = 200) {
+        const records = await this.recordRepository.find({
+            where: { baby_id: babyId },
+            order: { time: 'DESC' },
+            take: limit,
+        });
+        const header = ['time', 'type', 'details', 'remark'].join(',');
+        const rows = records.map((r) => {
+            const detailStr = r.details ? JSON.stringify(r.details).replace(/"/g, '""') : '';
+            const remarkStr = r.remark ? r.remark.replace(/"/g, '""') : '';
+            return `"${r.time.toISOString()}","${r.type}","${detailStr}","${remarkStr}"`;
+        });
+        return [header, ...rows].join('\n');
     }
 }

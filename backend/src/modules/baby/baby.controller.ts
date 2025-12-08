@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get, Param, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { BabyService } from './baby.service';
+import { CreateBabyDto } from './dto/create-baby.dto';
 
 @Controller('babies')
 @UseGuards(AuthGuard('jwt'))
@@ -8,9 +9,11 @@ export class BabyController {
     constructor(private readonly babyService: BabyService) { }
 
     @Post()
-    create(@Body() body: any) {
-        // 简化处理，直接透传数据
-        return this.babyService.create(body);
+    create(@Body() body: CreateBabyDto) {
+        return this.babyService.create({
+            ...body,
+            birthday: new Date(body.birthday),
+        });
     }
 
     @Get('family/:familyId')

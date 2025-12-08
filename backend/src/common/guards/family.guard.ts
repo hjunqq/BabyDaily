@@ -14,7 +14,7 @@ export class FamilyGuard implements CanActivate {
 
         if (!babyId || !user?.userId) {
             throw new ForbiddenException({
-                message: '缺少 babyId 或用户信息',
+                message: 'Missing babyId or user info',
                 code: ErrorCodes.AUTH_FORBIDDEN,
             });
         }
@@ -22,7 +22,7 @@ export class FamilyGuard implements CanActivate {
         const belongs = await this.familyService.isBabyBelongToUserFamily(babyId, user.userId);
         if (!belongs) {
             throw new ForbiddenException({
-                message: '无权限访问该宝宝数据',
+                message: 'No permission for this baby data',
                 code: ErrorCodes.AUTH_FORBIDDEN,
             });
         }

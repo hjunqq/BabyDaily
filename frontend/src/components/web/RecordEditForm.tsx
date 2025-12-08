@@ -41,8 +41,8 @@ export const RecordEditForm = ({ recordId, onClose, onSuccess }: RecordEditFormP
                 if (isDiaperDetails(record.details) && record.details.type) {
                     setDiaperType(record.details.type);
                 }
-            } catch (err) {
-                setError('加载记录失败');
+            } catch (err: any) {
+                setError(err?.message || '加载记录失败');
             } finally {
                 setLoading(false);
             }
@@ -57,17 +57,24 @@ export const RecordEditForm = ({ recordId, onClose, onSuccess }: RecordEditFormP
         setError('');
 
         try {
+            if (!time) throw new Error('请选择开始时间');
+            if (type === 'SLEEP' && endTime && new Date(endTime) < new Date(time)) {
+                throw new Error('结束时间需晚于开始时间');
+            }
             let details: any = {};
 
             if (type === 'FEED') {
-                if (!amount) throw new Error('请输入奶量');
+                const num = parseInt(amount, 10);
+                if (Number.isNaN(num) || num <= 0) throw new Error('请输入大于 0 的奶量');
                 details = {
-                    amount: parseInt(amount, 10),
+                    amount: num,
                     unit: 'ml',
                     subtype: 'FORMULA',
                 };
             } else if (type === 'DIAPER') {
                 details = { type: diaperType };
+            } else if (type === 'SLEEP') {
+                details = { is_nap: true };
             }
 
             await BabyService.updateRecord(recordId, {
@@ -114,7 +121,7 @@ export const RecordEditForm = ({ recordId, onClose, onSuccess }: RecordEditFormP
                     <div>
                         <label className="block text-sm font-medium text-sakura-text mb-2">记录类型</label>
                         <div className="px-4 py-2 bg-gray-100 rounded-lg text-sm text-gray-600">
-                            {type === 'FEED' ? '喂奶' : type === 'SLEEP' ? '睡眠' : '尿布'}
+                            {type === 'FEED' ? '喂养' : type === 'SLEEP' ? '睡眠' : '尿布'}
                         </div>
                     </div>
 
@@ -137,7 +144,7 @@ export const RecordEditForm = ({ recordId, onClose, onSuccess }: RecordEditFormP
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sakura-pink focus:border-sakura-pink outline-none"
-                                placeholder="如：120"
+                                placeholder="例如：120"
                                 required
                             />
                         </div>
@@ -165,11 +172,11 @@ export const RecordEditForm = ({ recordId, onClose, onSuccess }: RecordEditFormP
                                         type="button"
                                         onClick={() => setDiaperType(t)}
                                         className={`px-4 py-2 rounded-lg font-medium transition-all ${diaperType === t
-                                                ? 'bg-sakura-pink text-white'
-                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                            ? 'bg-sakura-pink text-white'
+                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                             }`}
                                     >
-                                        {t === 'PEE' ? '湿' : t === 'POO' ? '脏' : '湿 + 脏'}
+                                        {t === 'PEE' ? '湿' : t === 'POO' ? '便' : '湿+便'}
                                     </button>
                                 ))}
                             </div>
@@ -187,7 +194,7 @@ export const RecordEditForm = ({ recordId, onClose, onSuccess }: RecordEditFormP
                             取消
                         </Button>
                         <Button type="submit" variant="primary" loading={saving} disabled={saving} className="flex-1">
-                            {saving ? '保存中…' : '保存'}
+                            {saving ? '保存中...' : '保存'}
                         </Button>
                     </div>
                 </form>

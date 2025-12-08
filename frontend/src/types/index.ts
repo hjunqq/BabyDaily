@@ -17,7 +17,7 @@ export interface BabyRecord {
     type: RecordType;
     time: string;
     end_time?: string;
-    details: FeedDetails | DiaperDetails | SleepDetails | GrowthDetails | ApiRecordDetails; // fallback
+    details: FeedDetails | DiaperDetails | SleepDetails | GrowthDetails | ApiRecordDetails;
     media_urls?: string[];
     remark?: string;
 }

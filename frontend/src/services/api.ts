@@ -106,7 +106,8 @@ export const BabyService = {
     },
 
     createRecord: async (record: Partial<BabyRecord>): Promise<BabyRecord> => {
-        const targetBabyId = record.baby_id === 'u-sakura-001' ? (CURRENT_BABY_ID || (await BabyService.ensureDevEnvironment()).id) : record.baby_id;
+        const envBabyId = CURRENT_BABY_ID || (await BabyService.ensureDevEnvironment()).id;
+        const targetBabyId = record.baby_id && record.baby_id !== 'u-sakura-001' ? record.baby_id : envBabyId;
 
         const res = await fetch(`${API_URL}/records`, {
             method: 'POST',
@@ -143,28 +144,19 @@ export const BabyService = {
         return await res.json();
     },
 
-    // Summary (placeholder until backend provides endpoint)
+    // Summary
     getSummary: async (babyId: string) => {
         const targetId = babyId === 'u-sakura-001' ? (CURRENT_BABY_ID || (await BabyService.ensureDevEnvironment()).id) : babyId;
-        try {
-            const res = await fetch(`${API_URL}/records/baby/${targetId}/summary`, { headers: getHeaders() });
-            if (!res.ok) throw new Error('Failed');
-            return await res.json();
-        } catch {
-            // fallback handled in hooks
-            return null;
-        }
+        const res = await fetch(`${API_URL}/records/baby/${targetId}/summary`, { headers: getHeaders() });
+        if (!res.ok) throw new Error(`获取统计失败: ${res.status} ${res.statusText}`);
+        return await res.json();
     },
 
-    // Trend (placeholder until backend provides endpoint)
+    // Trend
     getTrends: async (babyId: string, days = 7) => {
         const targetId = babyId === 'u-sakura-001' ? (CURRENT_BABY_ID || (await BabyService.ensureDevEnvironment()).id) : babyId;
-        try {
-            const res = await fetch(`${API_URL}/records/baby/${targetId}/trend?days=${days}`, { headers: getHeaders() });
-            if (!res.ok) throw new Error('Failed');
-            return await res.json();
-        } catch {
-            return null;
-        }
+        const res = await fetch(`${API_URL}/records/baby/${targetId}/trend?days=${days}`, { headers: getHeaders() });
+        if (!res.ok) throw new Error(`获取趋势失败: ${res.status} ${res.statusText}`);
+        return await res.json();
     }
 };
