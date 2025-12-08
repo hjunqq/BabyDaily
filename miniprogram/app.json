@@ -1,0 +1,13 @@
+{
+    "pages": [
+        "pages/home/home"
+    ],
+    "window": {
+        "backgroundTextStyle": "light",
+        "navigationBarBackgroundColor": "#FFB7C5",
+        "navigationBarTitleText": "Sakura Baby",
+        "navigationBarTextStyle": "white"
+    },
+    "style": "v2",
+    "sitemapLocation": "sitemap.json"
+}

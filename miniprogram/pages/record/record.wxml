@@ -1,0 +1,41 @@
+<view class="container theme-{{theme}}">
+  <!-- Display Area -->
+  <view class="display-section">
+    <view class="type-tabs">
+      <block wx:for="{{types}}" wx:key="key">
+        <view class="tab {{selectedType === item.key ? 'active' : ''}}" bindtap="selectType" data-type="{{item.key}}">
+          {{item.label}}
+        </view>
+      </block>
+    </view>
+    <view class="value-display">
+      <text class="value">{{inputValue}}</text>
+      <text class="unit" wx:if="{{selectedType === 'milk'}}">ml</text>
+      <text class="unit" wx:if="{{selectedType === 'sleep'}}">min</text>
+    </view>
+  </view>
+
+  <!-- Keypad Area -->
+  <view class="keypad-section">
+    <view class="keypad-row">
+      <view class="key" bindtap="onKeypadTap" data-key="1">1</view>
+      <view class="key" bindtap="onKeypadTap" data-key="2">2</view>
+      <view class="key" bindtap="onKeypadTap" data-key="3">3</view>
+    </view>
+    <view class="keypad-row">
+      <view class="key" bindtap="onKeypadTap" data-key="4">4</view>
+      <view class="key" bindtap="onKeypadTap" data-key="5">5</view>
+      <view class="key" bindtap="onKeypadTap" data-key="6">6</view>
+    </view>
+    <view class="keypad-row">
+      <view class="key" bindtap="onKeypadTap" data-key="7">7</view>
+      <view class="key" bindtap="onKeypadTap" data-key="8">8</view>
+      <view class="key" bindtap="onKeypadTap" data-key="9">9</view>
+    </view>
+    <view class="keypad-row">
+      <view class="key action" bindtap="onKeypadTap" data-key="delete">Del</view>
+      <view class="key" bindtap="onKeypadTap" data-key="0">0</view>
+      <view class="key action confirm" bindtap="onKeypadTap" data-key="confirm">OK</view>
+    </view>
+  </view>
+</view

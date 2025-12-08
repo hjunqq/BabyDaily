@@ -1,0 +1,130 @@
+/* Page Layout */
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Theme A (Glass) */
+.theme-A {
+  background: linear-gradient(135deg, #FFF0F5 0%, #FFF5F7 100%);
+}
+
+.theme-A .display-section {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  margin: 20px;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(255, 183, 197, 0.15);
+}
+
+.theme-A .key {
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Theme B (Flat) */
+.theme-B {
+  background: #F9F5F3;
+}
+
+.theme-B .display-section {
+  background: #FFFFFF;
+  margin: 20px;
+  border-radius: 20px;
+  border: 1px solid #F0F0F0;
+}
+
+.theme-B .key {
+  background: #FFFFFF;
+  border: 1px solid #EBEBEB;
+}
+
+/* Display Section */
+.display-section {
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.type-tabs {
+  display: flex;
+  background: rgba(0,0,0,0.05);
+  padding: 4px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.tab {
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #888;
+}
+
+.tab.active {
+  background: #FFFFFF;
+  color: #5A3A2E;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.value-display {
+  font-size: 48px;
+  font-weight: 700;
+  color: #5A3A2E;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+}
+
+.unit {
+  font-size: 20px;
+  color: #888;
+  margin-left: 8px;
+}
+
+/* Keypad Section */
+.keypad-section {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.keypad-row {
+  display: flex;
+  gap: 16px;
+  height: 70px;
+}
+
+.key {
+  flex: 1;
+  border-radius: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 600;
+  color: #5A3A2E;
+  transition: all 0.2s;
+}
+
+.key:active {
+  transform: scale(0.95);
+  background: rgba(0,0,0,0.05);
+}
+
+.key.action {
+  font-size: 18px;
+  color: #888;
+}
+
+.key.confirm {
+  background: #FFB7C5 !important;
+  color: #FFFFFF !important;
+}
