@@ -77,10 +77,11 @@ export const FAB = ({
 }) => {
     const { theme } = useTheme();
 
+    const safeBottom = 'bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))]';
     const positionClasses = {
-        'bottom-right': 'fixed bottom-8 right-6',
-        'bottom-left': 'fixed bottom-8 left-6',
-        'bottom-center': 'fixed bottom-8 left-1/2 -translate-x-1/2',
+        'bottom-right': `fixed ${safeBottom} right-6`,
+        'bottom-left': `fixed ${safeBottom} left-6`,
+        'bottom-center': `fixed ${safeBottom} left-1/2 -translate-x-1/2`,
     };
 
     return (

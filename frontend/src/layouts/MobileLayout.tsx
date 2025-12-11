@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { ThemeSwitcher } from '../components/common/ThemeSwitcher';
+import { Navigation } from '../components/Navigation';
 
 interface MobileLayoutProps {
     children: React.ReactNode;
@@ -22,12 +23,13 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
                 </>
             )}
 
-            <div className={`mx-auto max-w-[480px] min-h-screen relative z-10 ${theme === 'B' ? 'bg-white shadow-xl shadow-gray-100/50' : ''
+            <div className={`mx-auto max-w-[480px] min-h-screen pb-32 relative z-10 ${theme === 'B' ? 'bg-white shadow-xl shadow-gray-100/50' : ''
                 }`}>
                 {children}
             </div>
 
             <ThemeSwitcher />
+            <Navigation variant="bottom" />
         </div>
     );
 };

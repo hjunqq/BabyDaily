@@ -128,7 +128,7 @@ export const RecordForm = ({ onClose, onSuccess }: RecordFormProps) => {
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sakura-pink focus:border-sakura-pink outline-none"
-                                placeholder="例如: 120"
+                                placeholder="例如：120"
                                 required
                             />
                         </div>
@@ -160,7 +160,7 @@ export const RecordForm = ({ onClose, onSuccess }: RecordFormProps) => {
                                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                             }`}
                                     >
-                                        {t === 'PEE' ? '湿' : t === 'POO' ? '便' : '湿+便'}
+                                        {t === 'PEE' ? '尿' : t === 'POO' ? '便' : '尿+便'}
                                     </button>
                                 ))}
                             </div>

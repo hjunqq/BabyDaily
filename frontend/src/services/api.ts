@@ -3,6 +3,9 @@ import { type Baby, type BabyRecord } from '../types';
 const API_URL = 'http://localhost:3000';
 let ACCESS_TOKEN = localStorage.getItem('access_token');
 let CURRENT_BABY_ID: string | null = localStorage.getItem('current_baby_id');
+let CURRENT_USER = localStorage.getItem('current_user')
+    ? JSON.parse(localStorage.getItem('current_user') as string)
+    : null;
 
 const getHeaders = () => ({
     'Content-Type': 'application/json',
@@ -18,6 +21,10 @@ export const BabyService = {
             const data = await res.json();
             ACCESS_TOKEN = data.access_token;
             if (ACCESS_TOKEN) localStorage.setItem('access_token', ACCESS_TOKEN);
+            if (data.user) {
+                CURRENT_USER = data.user;
+                localStorage.setItem('current_user', JSON.stringify(data.user));
+            }
             return data.user;
         } catch (error) {
             console.error('Dev login failed:', error);
@@ -90,6 +97,19 @@ export const BabyService = {
     },
 
     getCurrentBabyId: () => CURRENT_BABY_ID,
+
+    getCurrentUser: () => CURRENT_USER,
+
+    isAuthenticated: () => !!ACCESS_TOKEN,
+
+    logout: () => {
+        ACCESS_TOKEN = null;
+        CURRENT_BABY_ID = null;
+        CURRENT_USER = null;
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('current_baby_id');
+        localStorage.removeItem('current_user');
+    },
 
     getBabyProfile: async (_id: string): Promise<Baby> => {
         // Ignroe ID, return current env baby

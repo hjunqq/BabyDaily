@@ -1,8 +1,16 @@
-import { Search, Bell, HelpCircle, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Search, Bell, HelpCircle, ToggleLeft, ToggleRight, LogOut } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { BabyService } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 export const Header = () => {
     const { theme, toggleTheme } = useTheme();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        BabyService.logout();
+        navigate('/login', { replace: true });
+    };
 
     return (
         <header className="flex items-center justify-between py-4 px-8 mb-8">
@@ -14,7 +22,7 @@ export const Header = () => {
                 <Search size={18} className="text-gray-400" />
                 <input
                     type="text"
-                    placeholder="搜索记录、喂养或小睡……"
+                    placeholder="搜索记录、宝宝或小贴士"
                     className="bg-transparent border-none outline-none w-full text-sm text-sakura-text placeholder-gray-400"
                 />
             </div>
@@ -44,6 +52,13 @@ export const Header = () => {
                         <div className="text-[10px] text-gray-400">Admin</div>
                     </div>
                 </div>
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 px-3 py-2 rounded-full text-gray-500 hover:bg-black/5 transition-colors"
+                >
+                    <LogOut size={18} />
+                    <span className="text-sm font-semibold hidden lg:inline">退出</span>
+                </button>
             </div>
         </header>
     );

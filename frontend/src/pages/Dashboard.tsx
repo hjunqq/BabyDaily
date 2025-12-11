@@ -32,7 +32,6 @@ export const Dashboard = () => {
 
     return (
         <div className="space-y-6 animate-fade-in">
-            {/* 页面标题 */}
             <div className="flex items-center justify-between">
                 <div className="space-y-1">
                     <h2 className="text-2xl font-display font-bold text-sakura-text">今日总览</h2>
@@ -43,7 +42,6 @@ export const Dashboard = () => {
                 </Button>
             </div>
 
-            {/* KPI 卡片 */}
             <KPIGrid
                 milkMl={summary.milkMl}
                 diaperWet={summary.diaperWet}

@@ -87,7 +87,6 @@ export const Ootd = () => {
 
     return (
         <div className="space-y-8 animate-fade-in p-2">
-            {/* 头部 */}
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-display font-bold text-sakura-text flex items-center gap-2">
@@ -115,7 +114,6 @@ export const Ootd = () => {
                 />
             </div>
 
-            {/* 标签筛选 */}
             <div className="flex gap-2 overflow-x-auto pb-2 w-full hide-scrollbar">
                 {allTags.map(tag => {
                     const isSelected = tag === '全部' ? selectedTags.length === 0 : selectedTags.includes(tag);
@@ -138,7 +136,6 @@ export const Ootd = () => {
                 })}
             </div>
 
-            {/* OOTD 网格 */}
             {filteredData.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     {filteredData.map(item => (

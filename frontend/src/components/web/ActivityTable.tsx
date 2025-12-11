@@ -116,7 +116,7 @@ export const ActivityTable = ({ activities, onUpdate, onEdit }: ActivityTablePro
                                         />
                                         <IconButton
                                             icon={<Trash2 size={16} />}
-                                            label={deleting === item.id ? "删除中..." : "删除记录"}
+                                            label={deleting === item.id ? '删除中...' : '删除记录'}
                                             onClick={() => handleDelete(item.id)}
                                             variant="danger"
                                             size="md"

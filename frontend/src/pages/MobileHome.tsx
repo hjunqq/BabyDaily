@@ -56,7 +56,7 @@ export const MobileHome = () => {
         {
             title: '尿布更换',
             value: `${summary.diaperWet + summary.diaperSoiled} 次`,
-            sub: `${summary.diaperWet} 湿 · ${summary.diaperSoiled} 脏`,
+            sub: `${summary.diaperWet} 湿 · ${summary.diaperSoiled} 便`,
             icon: <Baby size={18} className="text-amber-500" />,
             accent: 'bg-amber-100',
         },
@@ -101,8 +101,7 @@ export const MobileHome = () => {
     const hasRecords = recentRecords.length > 0;
 
     return (
-        <div className="max-w-xl mx-auto px-5 pb-28 relative space-y-6 animate-fade-in">
-            {/* 头部卡片 */}
+        <div className="max-w-xl mx-auto px-5 pb-36 relative space-y-6 animate-fade-in">
             <div className={`mt-2 p-5 rounded-3xl ${theme === 'A'
                 ? 'glass-panel'
                 : 'bg-white shadow-lg shadow-sakura-text/5 border border-sakura-text/5'
@@ -121,7 +120,6 @@ export const MobileHome = () => {
                 </div>
             </div>
 
-            {/* 今日关键总览 */}
             <div className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
                 {summaryCards.map((item, idx) => (
                     <div
@@ -139,7 +137,6 @@ export const MobileHome = () => {
                 <div className="w-2 flex-shrink-0" />
             </div>
 
-            {/* 最近记录列表 */}
             {hasRecords ? (
                 <div className={`rounded-3xl p-5 space-y-4 ${theme === 'A' ? 'glass-panel' : 'bg-white shadow-sm border border-gray-100'}`}>
                     <div className="flex items-center justify-between">
@@ -176,7 +173,6 @@ export const MobileHome = () => {
                 />
             )}
 
-            {/* 主操作按钮 */}
             <FAB
                 icon={<Plus size={18} />}
                 label="添加记录"

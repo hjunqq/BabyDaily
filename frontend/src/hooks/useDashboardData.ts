@@ -51,7 +51,7 @@ export const useDashboardData = () => {
             ]);
 
             if (!summaryResp || !trendsResp) {
-                throw new Error('接口返回为空，无法展示仪表盘');
+                throw new Error('接口返回为空，无法展示仪表盘数据');
             }
 
             const summary = mapSummary(summaryResp);
@@ -86,14 +86,14 @@ const buildActivities = (records: BabyRecord[]): Activity[] => {
         if (r.type === 'FEED') {
             const details = r.details as FeedDetails;
             const amount = details?.amount ? `${details.amount}${details.unit || 'ml'}` : '';
-            const method = details?.subtype === 'BREAST' ? '母乳' : details?.subtype === 'SOLID' ? '辅食' : '奶瓶';
+            const method = details?.subtype === 'BREAST' ? '母乳' : details?.subtype === 'SOLID' ? '辅食' : '奶粉';
             detail = `${method} ${amount}`.trim();
             duration = details?.duration || '-';
         } else if (r.type === 'DIAPER') {
             const t = (r.details as any)?.type;
-            if (t === 'BOTH') detail = '湿+脏';
-            else if (t === 'POO') detail = '脏尿布';
-            else detail = '湿尿布';
+            if (t === 'BOTH') detail = '尿+便';
+            else if (t === 'POO') detail = '便便';
+            else detail = '尿尿';
         } else if (r.type === 'SLEEP') {
             duration = '1h 30m';
             detail = '睡眠';

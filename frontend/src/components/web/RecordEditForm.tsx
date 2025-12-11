@@ -176,7 +176,7 @@ export const RecordEditForm = ({ recordId, onClose, onSuccess }: RecordEditFormP
                                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                             }`}
                                     >
-                                        {t === 'PEE' ? '湿' : t === 'POO' ? '便' : '湿+便'}
+                                        {t === 'PEE' ? '尿' : t === 'POO' ? '便' : '尿+便'}
                                     </button>
                                 ))}
                             </div>
