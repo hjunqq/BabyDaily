@@ -1,0 +1,42 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BabyDaily · Records (Desktop)</title>
+<style>
+  :root{--rose:#F3B6C2;--cocoa:#4A342E;--cream:#FFF6F2;--sand:#F7EFEB;--line:#E8DCD6;--shadow:0 10px 30px rgba(66,41,33,.12);}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Manrope","Noto Sans SC",sans-serif;background:var(--cream);color:var(--cocoa)}
+  .shell{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  aside{background:#fff;border-right:1px solid var(--line);padding:24px}
+  main{padding:24px 32px}
+  .toolbar{display:flex;gap:12px;align-items:center;margin-bottom:16px}
+  .search{flex:1;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+  .btn{padding:10px 14px;border-radius:14px;border:none;background:var(--rose);font-weight:700;box-shadow:var(--shadow)}
+  .list{display:grid;gap:12px}
+  .item{background:#fff;border-radius:18px;padding:14px;box-shadow:var(--shadow);display:flex;justify-content:space-between}
+  .tag{font-size:12px;background:var(--sand);padding:4px 8px;border-radius:999px}
+</style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <div style="font-family:Fraunces,serif;font-size:20px">BabyDaily</div>
+      <div style="margin-top:16px">Records</div>
+    </aside>
+    <main>
+      <h2>记录时间轴</h2>
+      <div class="toolbar">
+        <input class="search" placeholder="搜索记录" />
+        <button class="btn">+ 新建记录</button>
+      </div>
+      <div class="list">
+        <div class="item"><div><strong>10:30</strong> 喂奶 · 120 ml</div><span class="tag">喂奶</span></div>
+        <div class="item"><div><strong>09:15</strong> 尿布 · 湿</div><span class="tag">尿布</span></div>
+        <div class="item"><div><strong>08:20</strong> 睡眠 · 1h 10m</div><span class="tag">睡眠</span></div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

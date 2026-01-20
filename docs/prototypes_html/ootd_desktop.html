@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BabyDaily · OOTD (Desktop)</title>
+<style>
+  :root{--rose:#F3B6C2;--cocoa:#4A342E;--cream:#FFF6F2;--sand:#F7EFEB;--line:#E8DCD6;--shadow:0 10px 30px rgba(66,41,33,.12);}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Manrope","Noto Sans SC",sans-serif;background:var(--cream);color:var(--cocoa)}
+  .shell{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+  aside{background:#fff;border-right:1px solid var(--line);padding:24px}
+  main{padding:24px 32px}
+  .content{display:grid;grid-template-columns:360px 1fr;gap:24px}
+  .card{background:#fff;border-radius:18px;padding:16px;box-shadow:var(--shadow)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .photo{background:var(--sand);border-radius:16px;height:120px}
+</style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <div style="font-family:Fraunces,serif;font-size:20px">BabyDaily</div>
+      <div style="margin-top:16px">OOTD</div>
+    </aside>
+    <main>
+      <h2>宝宝穿搭相册</h2>
+      <div class="content">
+        <div class="card">
+          <div style="font-weight:600;margin-bottom:8px">2024 年 6 月</div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">
+            <div class="photo"></div><div class="photo"></div><div class="photo"></div>
+            <div class="photo"></div><div class="photo"></div><div class="photo"></div><div class="photo"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-weight:600;margin-bottom:12px">最近穿搭</div>
+          <div class="grid">
+            <div class="photo"></div><div class="photo"></div><div class="photo"></div>
+            <div class="photo"></div><div class="photo"></div><div class="photo"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

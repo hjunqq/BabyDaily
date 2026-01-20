@@ -16,7 +16,7 @@ export const ActionFab = ({ onClick }: ActionFabProps) => {
                 : 'bg-sakura-text text-white shadow-sakura-text/20 hover:bg-sakura-text/90'
                 }`}>
             <Plus size={24} strokeWidth={3} />
-            <span className="font-bold text-lg">Record</span>
+            <span className="font-bold text-lg">记录</span>
         </button>
     );
 };

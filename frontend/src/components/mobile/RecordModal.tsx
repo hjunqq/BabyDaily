@@ -197,7 +197,7 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
                         {step === 'DETAILS' && !initialData ? '←' : <X size={20} />}
                     </button>
                     <h3 className="font-display font-bold text-lg text-sakura-text">
-                        {step === 'TYPE' ? 'New Record' : (initialData ? 'Edit Record' : selectedType)}
+                        {step === 'TYPE' ? '新建记录' : (initialData ? '编辑记录' : selectedType)}
                     </h3>
                     <div className="w-8">
                         {/* Delete Button for Edit Mode */}
@@ -246,7 +246,7 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
                                 disabled={isSubmitting}
                                 className="w-full mt-8 py-4 bg-sakura-pink text-white rounded-xl font-bold text-lg shadow-lg shadow-sakura-pink/30 active:scale-95 transition-all flex items-center justify-center gap-2"
                             >
-                                {isSubmitting ? 'Saving...' : <><Check /> Save Record</>}
+                                {isSubmitting ? '保存中...' : <><Check /> 保存记录</>}
                             </button>
                         </div>
                     )}

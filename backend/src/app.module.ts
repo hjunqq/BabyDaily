@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+﻿import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './modules/users/users.module';
@@ -7,6 +7,8 @@ import { FamilyModule } from './modules/family/family.module';
 import { BabyModule } from './modules/baby/baby.module';
 import { RecordModule } from './modules/record/record.module';
 import { OotdModule } from './modules/ootd/ootd.module';
+import { SettingsModule } from './modules/settings/settings.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -25,8 +27,7 @@ import { AppService } from './app.service';
         password: configService.get<string>('DATABASE_PASSWORD'),
         database: configService.get<string>('DATABASE_NAME'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // ⚠️ 仅在开发环境开启，生产环境请关闭
-      }),
+        synchronize: true, // âš ï¸ ä»…åœ¨å¼€å‘çŽ¯å¢ƒå¼€å¯ï¼Œç”Ÿäº§çŽ¯å¢ƒè¯·å…³é—­      }),
       inject: [ConfigService],
     }),
     UsersModule,
@@ -35,6 +36,8 @@ import { AppService } from './app.service';
     BabyModule,
     RecordModule,
     OotdModule,
+    SettingsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

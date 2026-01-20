@@ -11,29 +11,34 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
 
-  // 启用全局验证管道
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true, // 自动移除 DTO 中未定义的属性
-    forbidNonWhitelisted: true, // 如果有未定义的属性，抛出错误
-    transform: true, // 自动转换类型
-  }));
+  // Enable global validation pipe
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
-  // 启用全局异常过滤器
+  // Enable global exception filters
   app.useGlobalFilters(new AllExceptionsFilter(), new BusinessExceptionFilter());
 
-  // Swagger 文档
+  // Swagger docs
   const config = new DocumentBuilder()
     .setTitle('BabyDaily API')
-    .setDescription('BabyDaily 后端接口文档')
+    .setDescription('BabyDaily backend API docs')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  // 静态文件（上传）
+  // Static uploads
   app.use('/uploads', express.static(join(__dirname, '..', '..', 'uploads')));
 
-  await app.listen(process.env.PORT ?? 3000);
+  const port = Number(process.env.PORT ?? 3000);
+  const host = process.env.HOST ?? '0.0.0.0';
+  await app.listen(port, host);
 }
+
 bootstrap();

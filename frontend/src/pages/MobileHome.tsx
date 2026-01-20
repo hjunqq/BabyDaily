@@ -1,193 +1,117 @@
-import { Baby, Droplets, Heart, Moon, Plus, Smile } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { useTheme } from '../contexts/ThemeContext';
-import { useDashboardData } from '../hooks/useDashboardData';
-import { MobileHomeSkeleton, EmptyState, ErrorState, FAB } from '../components/common';
-import { RecordForm } from '../components/web/RecordForm';
+﻿import { Button } from 'devextreme-react/button';
+import { ProgressBar } from 'devextreme-react/progress-bar';
+import { LoadIndicator } from 'devextreme-react/load-indicator';
+import { useEffect, useState } from 'react';
+import { BabyService } from '../services/api';
+import { useCurrentBaby } from '../hooks/useCurrentBaby';
+import { useRecords } from '../hooks/useRecords';
 
-type RecordItem = {
-    id: string | number;
-    time: string;
-    type: 'FEED' | 'SLEEP' | 'DIAPER';
-    title: string;
-    detail: string;
-};
-
-const typeBadge = (type: RecordItem['type']) => {
-    switch (type) {
-        case 'FEED':
-            return 'bg-sakura-pink/15 text-sakura-text';
-        case 'SLEEP':
-            return 'bg-purple-100 text-purple-700';
-        case 'DIAPER':
-            return 'bg-emerald-100 text-emerald-700';
-        default:
-            return 'bg-sakura-bg text-sakura-text';
-    }
-};
-
-const typeIcon = (type: RecordItem['type']) => {
-    switch (type) {
-        case 'FEED':
-            return <Droplets size={16} className="text-sakura-pink" />;
-        case 'SLEEP':
-            return <Moon size={16} className="text-purple-500" />;
-        case 'DIAPER':
-            return <Baby size={16} className="text-emerald-600" />;
-        default:
-            return <Smile size={16} />;
-    }
+const buildSummary = (summary: any) => {
+  const sleepMinutes = summary.sleep_minutes ?? 0;
+  return [
+    { title: '奶量', value: `${summary.milk_ml ?? 0} ml`, detail: '今日累计', progress: summary.milk_ml ?? 0, max: 1000 },
+    { title: '尿布', value: `${(summary.diaper_wet ?? 0) + (summary.diaper_soiled ?? 0)} 次`, detail: `湿${summary.diaper_wet ?? 0} / 脏${summary.diaper_soiled ?? 0}`, progress: (summary.diaper_wet ?? 0) + (summary.diaper_soiled ?? 0), max: 20 },
+    { title: '睡眠', value: `${Math.floor(sleepMinutes / 60)}h ${sleepMinutes % 60}m`, detail: '今日合计', progress: sleepMinutes, max: 720 },
+  ];
 };
 
 export const MobileHome = () => {
-    const { theme } = useTheme();
-    const { summary, activities, loading, error, refresh } = useDashboardData();
-    const [showForm, setShowForm] = useState(false);
-    const [showAll, setShowAll] = useState(false);
+  const { baby, loading: babyLoading, error: babyError } = useCurrentBaby();
+  const { records, loading: recordsLoading, error: recordsError } = useRecords(baby?.id || null, 5, 0);
+  const [summary, setSummary] = useState<any | null>(null);
+  const [summaryError, setSummaryError] = useState<string | undefined>();
 
-    const summaryCards = useMemo(() => ([
-        {
-            title: '今日奶量',
-            value: `${summary.milkMl} ml`,
-            sub: '目标 800 ml',
-            icon: <Droplets size={18} className="text-sakura-pink" />,
-            accent: 'bg-sakura-pink/15',
-        },
-        {
-            title: '尿布更换',
-            value: `${summary.diaperWet + summary.diaperSoiled} 次`,
-            sub: `${summary.diaperWet} 湿 · ${summary.diaperSoiled} 便`,
-            icon: <Baby size={18} className="text-amber-500" />,
-            accent: 'bg-amber-100',
-        },
-        {
-            title: '睡眠时长',
-            value: `${Math.floor(summary.sleepMinutes / 60)}h ${summary.sleepMinutes % 60}m`,
-            sub: '夜间 + 小睡',
-            icon: <Moon size={18} className="text-purple-500" />,
-            accent: 'bg-purple-100',
-        },
-    ]), [summary]);
+  useEffect(() => {
+    const load = async () => {
+      if (!baby?.id) return;
+      try {
+        const data = await BabyService.getSummary(baby.id, 1);
+        setSummary(data);
+        setSummaryError(undefined);
+      } catch (err: any) {
+        setSummaryError(err?.message || '获取统计失败');
+      }
+    };
+    load();
+  }, [baby?.id]);
 
-    const recentRecords: RecordItem[] = useMemo(() => {
-        const list = showAll ? activities : activities.slice(0, 4);
-        return list.map((a) => {
-            const type = (a as any).type as RecordItem['type'];
-            const title = type === 'FEED' ? '喂养' : type === 'SLEEP' ? '睡眠' : '尿布';
-            return {
-                id: a.id,
-                time: a.time || '--:--',
-                type,
-                title,
-                detail: a.detail || '暂无详情',
-            };
-        });
-    }, [activities, showAll]);
-
-    if (loading) return <MobileHomeSkeleton />;
-
-    if (error) {
-        return (
-            <div className="max-w-xl mx-auto px-5 py-16">
-                <ErrorState
-                    type="server"
-                    message={error}
-                    onRetry={refresh}
-                />
-            </div>
-        );
-    }
-
-    const hasRecords = recentRecords.length > 0;
-
+  if (babyLoading || recordsLoading) {
     return (
-        <div className="max-w-xl mx-auto px-5 pb-36 relative space-y-6 animate-fade-in">
-            <div className={`mt-2 p-5 rounded-3xl ${theme === 'A'
-                ? 'glass-panel'
-                : 'bg-white shadow-lg shadow-sakura-text/5 border border-sakura-text/5'
-                }`}>
-                <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-sakura-pink flex items-center justify-center text-white font-display text-xl shadow-lg shadow-sakura-pink/40">
-                        樱
-                    </div>
-                    <div className="space-y-1">
-                        <div className="text-xs text-sakura-text/60">{new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'long' })}</div>
-                        <div className="text-xl font-display font-bold text-sakura-text">宝宝的今天</div>
-                        <div className="text-sm text-sakura-text/60 flex items-center gap-1">
-                            <Heart size={14} className="text-sakura-pink" /> 记录每个温柔瞬间
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
-                {summaryCards.map((item, idx) => (
-                    <div
-                        key={idx}
-                        className={`flex-shrink-0 w-36 p-4 rounded-2xl transition-all ${theme === 'A' ? 'glass-panel' : 'bg-white shadow-sm border border-gray-100'}`}
-                    >
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-semibold text-sakura-text/60">{item.title}</span>
-                            <span className={`p-1 rounded-lg ${item.accent}`}>{item.icon}</span>
-                        </div>
-                        <div className="text-xl font-bold text-sakura-text leading-snug">{item.value}</div>
-                        <div className="text-[11px] text-sakura-text/60 mt-1">{item.sub}</div>
-                    </div>
-                ))}
-                <div className="w-2 flex-shrink-0" />
-            </div>
-
-            {hasRecords ? (
-                <div className={`rounded-3xl p-5 space-y-4 ${theme === 'A' ? 'glass-panel' : 'bg-white shadow-sm border border-gray-100'}`}>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <div className="text-sm font-semibold text-sakura-text/70">最近记录</div>
-                            <div className="text-xs text-sakura-text/50">展示最近 4 条 · 可切换查看全部</div>
-                        </div>
-                        <button className="text-xs font-bold text-sakura-pink hover:text-sakura-text min-h-[44px] px-3 rounded-xl" aria-label="查看全部记录" onClick={() => setShowAll(!showAll)}>
-                            {showAll ? '收起' : '查看全部'}
-                        </button>
-                    </div>
-
-                    <div className="space-y-3">
-                        {recentRecords.map((item) => (
-                            <div key={item.id} className="flex items-center gap-3 p-3 rounded-2xl bg-sakura-bg/70 border border-sakura-text/5">
-                                <div className="w-12 text-xs font-bold text-sakura-text">{item.time}</div>
-                                <div className={`px-2 py-1 rounded-lg text-[11px] font-semibold ${typeBadge(item.type)}`}>
-                                    <span className="inline-flex items-center gap-1">{typeIcon(item.type)} {item.title}</span>
-                                </div>
-                                <div className="text-sm text-sakura-text/80 flex-1">{item.detail}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            ) : (
-                <EmptyState
-                    type="no-records"
-                    title="暂无记录"
-                    description="先添加一条喂养/睡眠/尿布记录吧"
-                    action={{
-                        label: '添加第一条记录',
-                        onClick: () => setShowForm(true),
-                    }}
-                />
-            )}
-
-            <FAB
-                icon={<Plus size={18} />}
-                label="添加记录"
-                onClick={() => setShowForm(true)}
-            />
-
-            {showForm && (
-                <RecordForm
-                    onClose={() => setShowForm(false)}
-                    onSuccess={() => {
-                        setShowForm(false);
-                        refresh();
-                    }}
-                />
-            )}
+      <div className="bd-state">
+        <div className="bd-state-card">
+          <div style={{ fontSize: 18, marginBottom: 8 }}>加载中...</div>
+          <LoadIndicator visible />
         </div>
+      </div>
     );
+  }
+
+  if (babyError || recordsError || summaryError) {
+    return (
+      <div className="bd-state">
+        <div className="bd-state-card">
+          <div style={{ fontSize: 42 }}>⚠️</div>
+          <h3>加载失败</h3>
+          <p style={{ color: '#6b524b' }}>{babyError || recordsError || summaryError}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const summaryCards = summary ? buildSummary(summary) : [];
+
+  return (
+    <div>
+      <div className="bd-mobile-header">
+        <div className="bd-avatar" />
+        <div>
+          <div style={{ fontWeight: 700 }}>{baby?.name || '宝宝'}</div>
+          <div style={{ fontSize: 12, color: '#6b524b' }}>今天 · {new Date().toLocaleDateString('zh-CN')}</div>
+        </div>
+      </div>
+
+      <div className="bd-summary-scroll">
+        {summaryCards.map(item => (
+          <div key={item.title} className="bd-summary-card">
+            <div style={{ fontSize: 12, fontWeight: 600 }}>{item.title}</div>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>{item.value}</div>
+            <div style={{ fontSize: 12, color: '#6b524b' }}>{item.detail}</div>
+            <ProgressBar min={0} max={item.max} value={item.progress} showStatus={false} />
+          </div>
+        ))}
+      </div>
+
+      <div className="bd-card">
+        <div className="bd-section-title">最近记录</div>
+        {records.length === 0 ? (
+          <div style={{ color: '#6b524b' }}>暂无记录</div>
+        ) : (
+          records.map(item => (
+            <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', margin: '8px 0', fontSize: 13 }}>
+              <span>{new Date(item.time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })} {mapRecordType(item.type)}</span>
+              <strong>{item.remark || '—'}</strong>
+            </div>
+          ))
+        )}
+        <div style={{ marginTop: 8, fontSize: 12, color: '#6b524b' }}>查看全部 →</div>
+      </div>
+
+      <div className="bd-fab">
+        <Button text="+ 记录" type="default" stylingMode="contained" width={120} height={44} />
+      </div>
+    </div>
+  );
+};
+
+const mapRecordType = (type: string) => {
+  switch (type) {
+    case 'FEED':
+      return '喂奶';
+    case 'DIAPER':
+      return '尿布';
+    case 'SLEEP':
+      return '睡眠';
+    default:
+      return '记录';
+  }
 };

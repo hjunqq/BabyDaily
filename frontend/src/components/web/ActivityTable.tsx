@@ -3,6 +3,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { IconButton } from '../common/Button';
 import { useState } from 'react';
 import { BabyService } from '../../services/api';
+import { API_URL } from '../../config/env';
 
 interface Activity {
     id: string;
@@ -45,7 +46,7 @@ export const ActivityTable = ({ activities, onUpdate, onEdit }: ActivityTablePro
         try {
             const babyId = BabyService.getCurrentBabyId() || (await BabyService.ensureDevEnvironment()).id;
             if (!babyId) throw new Error('未找到宝宝信息');
-            const res = await fetch(`http://localhost:3000/records/baby/${babyId}/export?limit=200`, {
+            const res = await fetch(`${API_URL}/records/baby/${babyId}/export?limit=200`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem('access_token') || ''}` },
             });
             if (!res.ok) throw new Error(`导出失败：${res.status}`);

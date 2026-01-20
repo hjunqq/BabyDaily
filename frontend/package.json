@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
+    "devextreme": "^25.2.3",
+    "devextreme-react": "^25.2.3",
     "lucide-react": "^0.556.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

@@ -1,22 +1,44 @@
-import React from 'react';
-import { Header } from './Header';
-import { useTheme } from '../contexts/ThemeContext';
-import { ThemeSwitcher } from './common/ThemeSwitcher';
-import { Navigation } from './Navigation';
+﻿import React from 'react';
+import { List } from 'devextreme-react/list';
+import { useLocation, useNavigate } from 'react-router-dom';
+
+const navItems = [
+  { id: 'dashboard', text: '仪表盘', path: '/web' },
+  { id: 'records', text: '记录', path: '/web/records' },
+  { id: 'record', text: '新建记录', path: '/web/record' },
+  { id: 'statistics', text: '趋势统计', path: '/web/statistics' },
+  { id: 'ootd', text: '宝宝穿搭', path: '/web/ootd' },
+  { id: 'profile', text: '我的', path: '/web/profile' },
+  { id: 'settings', text: '设置', path: '/web/settings' },
+  { id: 'notifications', text: '通知', path: '/web/notifications' },
+  { id: 'api', text: '接口测试', path: '/web/api-test' },
+];
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
-    const { theme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const active = navItems.find(item => location.pathname.startsWith(item.path)) ?? navItems[0];
 
-    return (
-        <div className={`flex min-h-screen transition-colors duration-300 ${theme === 'A' ? 'bg-gradient-to-br from-sakura-bg to-white' : 'bg-sakura-bg-alt'}`}>
-            <Navigation variant="sidebar" />
-            <div className="flex-1 ml-64 p-8">
-                <Header />
-                <main className="max-w-7xl mx-auto">
-                    {children}
-                </main>
-            </div>
-            <ThemeSwitcher />
+  return (
+    <div className="bd-shell">
+      <aside className="bd-sidebar">
+        <div className="bd-logo">BabyDaily</div>
+        <div style={{ marginTop: 20 }}>
+          <List
+            dataSource={navItems}
+            keyExpr="id"
+            displayExpr="text"
+            selectionMode="single"
+            selectedItemKeys={[active.id]}
+            onItemClick={e => navigate(e.itemData.path)}
+          />
         </div>
-    );
+      </aside>
+      <div className="bd-main">
+        <div className="bd-page">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
 };

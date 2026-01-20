@@ -1,4 +1,4 @@
-export interface Baby {
+﻿export interface Baby {
     id: string;
     family_id: string;
     name: string;
@@ -60,4 +60,22 @@ export interface User {
     id: string;
     nickname: string;
     avatar_url: string;
+}
+
+export interface UserSettings {
+    id: string;
+    user_id: string;
+    theme: string;
+    language: string;
+    export_format: string;
+}
+
+export interface NotificationItem {
+    id: string;
+    user_id: string;
+    title: string;
+    content?: string;
+    type?: string;
+    is_read: boolean;
+    created_at: string;
 }

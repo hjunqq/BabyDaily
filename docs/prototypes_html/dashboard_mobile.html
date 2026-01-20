@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BabyDaily · Mobile Home</title>
+<style>
+  :root{--rose:#F3B6C2;--cocoa:#4A342E;--cream:#FFF6F2;--sand:#F7EFEB;--line:#E8DCD6;--shadow:0 10px 30px rgba(66,41,33,.12);}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Manrope","Noto Sans SC",sans-serif;background:var(--cream);color:var(--cocoa)}
+  .phone{max-width:390px;margin:0 auto;padding:24px 18px 80px}
+  .header{display:flex;gap:12px;align-items:center}
+  .avatar{width:64px;height:64px;border-radius:18px;background:rgba(255,255,255,.65);border:1px solid #f1e6e1;box-shadow:var(--shadow)}
+  .summary{display:flex;gap:12px;overflow:auto;margin:18px 0}
+  .card{min-width:120px;background:var(--sand);border-radius:18px;padding:12px;box-shadow:var(--shadow)}
+  .list{background:#fff;border-radius:18px;padding:12px;box-shadow:var(--shadow)}
+  .row{display:flex;justify-content:space-between;font-size:13px;margin:8px 0}
+  .fab{position:fixed;right:18px;bottom:24px;background:var(--rose);border:none;border-radius:20px;padding:14px 18px;font-weight:700;box-shadow:var(--shadow)}
+</style>
+</head>
+<body>
+  <div class="phone">
+    <div class="header">
+      <div class="avatar"></div>
+      <div>
+        <div style="font-weight:700">Luna</div>
+        <div style="font-size:12px;color:#6b524b">今天 · 6 月 12 日</div>
+      </div>
+    </div>
+
+    <div class="summary">
+      <div class="card"><div>奶量</div><strong>480 ml</strong><div style="font-size:12px">目标 600</div></div>
+      <div class="card"><div>尿布</div><strong>5 次</strong><div style="font-size:12px">湿3 / 脏2</div></div>
+      <div class="card"><div>睡眠</div><strong>8h 30m</strong><div style="font-size:12px">夜间 6h</div></div>
+    </div>
+
+    <div class="list">
+      <div style="font-weight:600;margin-bottom:6px">最近记录</div>
+      <div class="row"><span>10:30 喂奶</span><strong>120 ml</strong></div>
+      <div class="row"><span>09:15 尿布</span><strong>湿</strong></div>
+      <div class="row"><span>08:20 睡眠</span><strong>1h 10m</strong></div>
+      <div style="margin-top:8px;font-size:12px;color:#6b524b">查看全部 →</div>
+    </div>
+  </div>
+  <button class="fab">+ 记录</button>
+</body>
+</html>

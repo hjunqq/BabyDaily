@@ -1,63 +1,47 @@
-import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+﻿import { Button } from 'devextreme-react/button';
+import { TextBox } from 'devextreme-react/text-box';
+import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { BabyService } from '../services/api';
-import { useTheme } from '../contexts/ThemeContext';
 
 export const Login = () => {
-    const { theme } = useTheme();
-    const navigate = useNavigate();
-    const location = useLocation();
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-    const redirectPath = (location.state as any)?.from?.pathname || '/web';
+  const handleLogin = async () => {
+    setLoading(true);
+    try {
+      await BabyService.loginDev();
+      await BabyService.ensureDevEnvironment();
+      navigate('/');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    useEffect(() => {
-        if (BabyService.isAuthenticated()) {
-            navigate(redirectPath, { replace: true });
-        }
-    }, [redirectPath, navigate]);
-
-    const handleDevLogin = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            await BabyService.ensureDevEnvironment();
-            navigate(redirectPath, { replace: true });
-        } catch (err: any) {
-            setError(err?.message || '登录失败，请稍后重试');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className={`min-h-screen flex items-center justify-center p-6 ${theme === 'A' ? 'bg-sakura-bg' : 'bg-sakura-bg-alt'}`}>
-            <div className={`w-full max-w-md rounded-2xl p-8 shadow-xl ${theme === 'A' ? 'bg-white/90 backdrop-blur-md border border-white/70' : 'bg-white border border-gray-200'}`}>
-                <div className="text-center mb-6">
-                    <div className="text-3xl mb-2">🍼</div>
-                    <h1 className="text-2xl font-bold text-sakura-text mb-1">BabyDaily 登录</h1>
-                    <p className="text-sm text-sakura-text/70">开发环境使用一键登录创建默认家庭与宝宝</p>
-                </div>
-
-                <button
-                    onClick={handleDevLogin}
-                    disabled={loading}
-                    className="w-full py-3 rounded-xl font-semibold text-white bg-sakura-pink hover:bg-sakura-pink/90 shadow-lg shadow-sakura-pink/30 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
-                >
-                    {loading ? '登录中...' : '一键开发登录'}
-                </button>
-
-                <div className="mt-4 text-center text-sm text-gray-500">
-                    微信登录即将上线，当前使用开发登录。
-                </div>
-
-                {error && (
-                    <div className="mt-4 text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl p-3">
-                        {error}
-                    </div>
-                )}
-            </div>
+  return (
+    <div className="bd-app" style={{ minHeight: '100vh' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', minHeight: '100vh' }}>
+        <div style={{ padding: 60 }}>
+          <div className="bd-logo">BabyDaily</div>
+          <p style={{ marginTop: 18, color: '#6b524b', maxWidth: 420 }}>
+            轻奢而温柔的记录空间，帮你留住每一个小变化。
+          </p>
         </div>
-    );
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(180deg,#fff8f5, #f9f0ec)' }}>
+          <div className="bd-card" style={{ width: 360 }}>
+            <h2 className="bd-title" style={{ fontSize: 28 }}>欢迎回来</h2>
+            <div style={{ margin: '14px 0' }}>
+              <TextBox placeholder="手机号或邮箱" stylingMode="outlined" />
+            </div>
+            <div style={{ margin: '14px 0' }}>
+              <TextBox mode="password" placeholder="密码" stylingMode="outlined" />
+            </div>
+            <Button text={loading ? '登录中...' : '登录'} type="default" width="100%" height={44} stylingMode="contained" onClick={handleLogin} disabled={loading} />
+            <div style={{ marginTop: 12, fontSize: 12, color: '#7a625a' }}>支持开发登录与微信登录</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };

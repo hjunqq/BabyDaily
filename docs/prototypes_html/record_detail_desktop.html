@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BabyDaily · Record Detail (Desktop)</title>
+<style>
+  :root{--rose:#F3B6C2;--cocoa:#4A342E;--cream:#FFF6F2;--sand:#F7EFEB;--line:#E8DCD6;--shadow:0 10px 30px rgba(66,41,33,.12);}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Manrope","Noto Sans SC",sans-serif;background:var(--cream);color:var(--cocoa)}
+  .wrap{max-width:900px;margin:0 auto;padding:32px}
+  .card{background:#fff;border-radius:18px;padding:18px;box-shadow:var(--shadow)}
+  .row{display:flex;justify-content:space-between;margin:8px 0}
+  .btns{display:flex;gap:10px;margin-top:12px}
+  .btn{padding:10px 14px;border-radius:14px;border:none;background:var(--rose);font-weight:700;box-shadow:var(--shadow)}
+  .btn.secondary{background:var(--sand)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>记录详情</h2>
+    <div class="card">
+      <div class="row"><span>类型</span><strong>喂奶</strong></div>
+      <div class="row"><span>数值</span><strong>120 ml</strong></div>
+      <div class="row"><span>时间</span><strong>10:30</strong></div>
+      <div class="row"><span>备注</span><strong>顺利</strong></div>
+      <div class="btns">
+        <button class="btn">编辑</button>
+        <button class="btn secondary">删除</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

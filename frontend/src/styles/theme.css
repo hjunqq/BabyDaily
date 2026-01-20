@@ -1,0 +1,351 @@
+﻿@import url("https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@600;700&display=swap");
+
+:root {
+  --rose: #F3B6C2;
+  --cocoa: #4A342E;
+  --cream: #FFF6F2;
+  --sand: #F7EFEB;
+  --sage: #BFD9C6;
+  --mist: #CFE9F2;
+  --line: #E8DCD6;
+  --danger: #E58C86;
+  --shadow-soft: 0 10px 30px rgba(66, 41, 33, 0.12);
+  --shadow-lite: 0 6px 18px rgba(66, 41, 33, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Manrope", "Noto Sans SC", sans-serif;
+  color: var(--cocoa);
+  background: var(--cream);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.bd-app {
+  min-height: 100vh;
+  background: radial-gradient(1200px 520px at 20% -10%, #fff8f5 0%, var(--cream) 45%, #f9f0ec 100%);
+}
+
+.bd-shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+.bd-sidebar {
+  background: #fff;
+  border-right: 1px solid var(--line);
+  padding: 24px;
+}
+
+.bd-logo {
+  font-family: "Fraunces", "Noto Serif SC", serif;
+  font-size: 20px;
+  letter-spacing: 0.4px;
+}
+
+.bd-main {
+  padding: 24px 32px 56px;
+}
+
+.bd-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.bd-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.bd-title {
+  font-family: "Fraunces", "Noto Serif SC", serif;
+  font-size: 28px;
+  margin: 0 0 8px;
+}
+
+.bd-subtitle {
+  margin: 0;
+  color: #6b524b;
+  font-size: 14px;
+}
+
+.bd-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.bd-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: var(--shadow-soft);
+  padding: 16px;
+}
+
+.bd-card.muted {
+  background: var(--sand);
+}
+
+.bd-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.bd-grid.kpi {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.bd-grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.bd-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--sand);
+  font-size: 12px;
+}
+
+.bd-hero {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 48px;
+  align-items: center;
+  margin-top: 56px;
+}
+
+.bd-cta {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.bd-hero-panel {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid #f1e6e1;
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: var(--shadow-soft);
+}
+
+.bd-mobile-shell {
+  max-width: 420px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 24px 18px 96px;
+  background: #fff;
+  box-shadow: var(--shadow-lite);
+}
+
+.bd-mobile-header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.bd-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid #f1e6e1;
+  box-shadow: var(--shadow-soft);
+}
+
+.bd-summary-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin: 18px 0;
+}
+
+.bd-summary-card {
+  min-width: 120px;
+  border-radius: 18px;
+  padding: 12px;
+  background: var(--sand);
+  box-shadow: var(--shadow-soft);
+}
+
+.bd-list {
+  display: grid;
+  gap: 10px;
+}
+
+.bd-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--shadow-lite);
+}
+
+.bd-fab {
+  position: fixed;
+  right: 18px;
+  bottom: 24px;
+  z-index: 10;
+}
+
+.bd-bottom-nav {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  width: min(420px, 100%);
+  background: #fff;
+  border-top: 1px solid var(--line);
+  padding: 8px 8px 12px;
+  box-shadow: 0 -4px 18px rgba(66, 41, 33, 0.08);
+}
+
+.bd-state {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bd-state-card {
+  text-align: center;
+  background: #fff;
+  padding: 24px;
+  border-radius: 18px;
+  box-shadow: var(--shadow-soft);
+  max-width: 360px;
+}
+
+.bd-kpi-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.bd-kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.bd-kpi-sub {
+  font-size: 12px;
+  color: #6b524b;
+}
+
+/* DevExtreme overrides */
+.dx-button {
+  border-radius: 14px;
+  font-weight: 600;
+  font-family: "Manrope", "Noto Sans SC", sans-serif;
+}
+
+.dx-button-mode-contained.dx-button-default {
+  background: var(--rose);
+  border-color: var(--rose);
+  color: #2f221d;
+  box-shadow: var(--shadow-soft);
+}
+
+.dx-button-mode-outlined.dx-button-default {
+  border-color: var(--line);
+  color: var(--cocoa);
+  background: transparent;
+}
+
+.dx-button-mode-text.dx-button-default {
+  color: var(--cocoa);
+}
+
+.dx-texteditor {
+  border-radius: 12px;
+  font-family: "Manrope", "Noto Sans SC", sans-serif;
+}
+
+.dx-texteditor.dx-editor-outlined {
+  border-color: var(--line);
+  background: #fff;
+}
+
+.dx-texteditor-input {
+  color: var(--cocoa);
+}
+
+.dx-datagrid {
+  border: none;
+}
+
+.dx-datagrid-headers {
+  background: var(--sand);
+  border-bottom: 1px solid var(--line);
+}
+
+.dx-datagrid-rowsview .dx-row {
+  border-bottom: 1px solid var(--line);
+}
+
+.bd-sidebar .dx-list-item {
+  border-radius: 12px;
+  margin-bottom: 6px;
+}
+
+.bd-sidebar .dx-list-item-selected {
+  background: var(--sand);
+  border-left: 4px solid var(--rose);
+}
+
+.bd-sidebar .dx-list-item-content {
+  padding: 10px 12px;
+}
+
+.dx-list-item-content {
+  padding: 8px 0;
+}
+
+.bd-bottom-nav .dx-tab {
+  font-size: 12px;
+  padding: 8px 6px;
+}
+
+.bd-bottom-nav .dx-tab.dx-tab-selected {
+  color: var(--cocoa);
+  border-bottom: 2px solid var(--rose);
+}
+
+.bd-bottom-nav .dx-tab .dx-tab-text {
+  font-weight: 600;
+}
+
+@media (max-width: 1100px) {
+  .bd-grid.kpi {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bd-hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .bd-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .bd-sidebar {
+    display: none;
+  }
+}
