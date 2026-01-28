@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BabyDaily · 极简首页</title>
+    <style>
+        :root {
+            --rose: #F3B6C2;
+            --rose-light: #fbe4e9;
+            --cocoa: #4A342E;
+            --cream: #FFF6F2;
+            --sand: #F7EFEB;
+            --sage: #BFD9C6;
+            --mist: #CFE9F2;
+            --line: #E8DCD6;
+            --shadow: 0 8px 24px rgba(66, 41, 33, .1);
+            --shadow-hover: 0 12px 32px rgba(66, 41, 33, .15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Manrope", "Noto Sans SC", sans-serif;
+            background: linear-gradient(180deg, var(--cream) 0%, #fff 100%);
+            color: var(--cocoa);
+            min-height: 100vh;
+        }
+
+        .phone {
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 28px 20px 100px;
+        }
+
+        /* 头部区域 */
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .header .date {
+            font-size: 13px;
+            color: #8b7670;
+        }
+
+        /* 上次喂奶提示卡片 - 核心信息 */
+        .last-feed-card {
+            background: linear-gradient(135deg, var(--rose-light) 0%, #fff 100%);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(243, 182, 194, 0.3);
+        }
+
+        .last-feed-card .label {
+            font-size: 13px;
+            color: #8b7670;
+            margin-bottom: 8px;
+        }
+
+        .last-feed-card .main-info {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .last-feed-card .amount {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--cocoa);
+        }
+
+        .last-feed-card .type-tag {
+            font-size: 13px;
+            background: var(--rose);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .last-feed-card .time-ago {
+            font-size: 20px;
+            font-weight: 600;
+            color: #e07a7a;
+        }
+
+        .last-feed-card .time-detail {
+            font-size: 12px;
+            color: #8b7670;
+            margin-top: 4px;
+        }
+
+        /* 今日统计 */
+        .today-stats {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .stat-card.feed {
+            border-left: 4px solid var(--rose);
+        }
+
+        .stat-card.sleep {
+            border-left: 4px solid var(--sage);
+        }
+
+        .stat-card .icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .title {
+            font-size: 12px;
+            color: #8b7670;
+            margin-bottom: 4px;
+        }
+
+        .stat-card .value {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .stat-card .unit {
+            font-size: 13px;
+            color: #8b7670;
+        }
+
+        /* 快捷操作按钮 */
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            border: none;
+            border-radius: 20px;
+            padding: 24px 16px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .action-btn:active {
+            transform: scale(0.97);
+        }
+
+        .action-btn.feed-btn {
+            background: linear-gradient(135deg, var(--rose-light) 0%, #fff 50%);
+        }
+
+        .action-btn.sleep-btn {
+            background: linear-gradient(135deg, #e6f5eb 0%, #fff 50%);
+        }
+
+        .action-btn .icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .action-btn .text {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--cocoa);
+        }
+
+        .action-btn .sub-text {
+            font-size: 12px;
+            color: #8b7670;
+            margin-top: 4px;
+        }
+
+        /* 最近记录 */
+        .recent-list {
+            background: #fff;
+            border-radius: 18px;
+            padding: 18px;
+            box-shadow: var(--shadow);
+        }
+
+        .recent-list .title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .recent-list .title a {
+            font-size: 12px;
+            color: var(--rose);
+            text-decoration: none;
+        }
+
+        .record-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .record-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .record-item .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 12px;
+        }
+
+        .record-item .icon.feed {
+            background: var(--rose-light);
+        }
+
+        .record-item .icon.sleep {
+            background: #e6f5eb;
+        }
+
+        .record-item .info {
+            flex: 1;
+        }
+
+        .record-item .type {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .record-item .time {
+            font-size: 12px;
+            color: #8b7670;
+        }
+
+        .record-item .value {
+            font-size: 16px;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        /* 底部弹出面板 (记录表单) */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(74, 52, 46, 0.4);
+            z-index: 100;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .modal-sheet {
+            background: #fff;
+            border-radius: 24px 24px 0 0;
+            padding: 24px 20px 40px;
+            width: 100%;
+            max-width: 420px;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .modal-sheet .handle {
+            width: 40px;
+            height: 4px;
+            background: var(--line);
+            border-radius: 2px;
+            margin: 0 auto 20px;
+        }
+
+        .modal-sheet h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: #8b7670;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            font-size: 16px;
+            background: var(--sand);
+            color: var(--cocoa);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--rose);
+            background: #fff;
+        }
+
+        .quick-select {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .quick-select button {
+            padding: 10px 18px;
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            background: var(--sand);
+            color: var(--cocoa);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-select button:hover,
+        .quick-select button.active {
+            background: var(--rose);
+            color: #fff;
+            border-color: var(--rose);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--rose);
+            color: #fff;
+            border: none;
+            border-radius: 16px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .submit-btn:hover {
+            background: #e5a3af;
+        }
+
+        .cancel-btn {
+            width: 100%;
+            padding: 14px;
+            background: transparent;
+            color: #8b7670;
+            border: none;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        /* 底部导航菜单 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-top: 1px solid var(--line);
+            display: flex;
+            justify-content: center;
+            padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+            z-index: 50;
+        }
+
+        .bottom-nav-inner {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 16px;
+            text-decoration: none;
+            color: #8b7670;
+            transition: all 0.2s;
+            border-radius: 12px;
+        }
+
+        .nav-item:hover {
+            background: var(--sand);
+        }
+
+        .nav-item.active {
+            color: var(--rose);
+        }
+
+        .nav-item .icon {
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+
+        .nav-item .label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* 更多菜单弹出层 */
+        .more-menu {
+            display: none;
+            position: fixed;
+            bottom: 70px;
+            right: 16px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(74, 52, 46, 0.2);
+            padding: 8px;
+            z-index: 60;
+            min-width: 160px;
+        }
+
+        .more-menu.active {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .more-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            text-decoration: none;
+            color: var(--cocoa);
+            font-size: 14px;
+            border-radius: 10px;
+            transition: background 0.2s;
+        }
+
+        .more-menu a:hover {
+            background: var(--sand);
+        }
+
+        .more-menu a .icon {
+            font-size: 18px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="phone">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>🍼 宝宝日常</h1>
+            <div class="date">2026年1月27日 星期二</div>
+        </div>
+
+        <!-- 上次喂奶提醒 - 核心展示 -->
+        <div class="last-feed-card">
+            <div class="label">距离上次喂奶</div>
+            <div class="main-info">
+                <span class="amount">120 ml</span>
+                <span class="type-tag">瓶喂</span>
+            </div>
+            <div class="time-ago">⏰ 2小时30分钟前</div>
+            <div class="time-detail">18:05 喂奶 · 瓶喂配方奶</div>
+        </div>
+
+        <!-- 今日统计 -->
+        <div class="today-stats">
+            <div class="stat-card feed">
+                <div class="icon">🍼</div>
+                <div class="title">今日奶量</div>
+                <div class="value">480<span class="unit"> ml</span></div>
+            </div>
+            <div class="stat-card sleep">
+                <div class="icon">💤</div>
+                <div class="title">今日睡眠</div>
+                <div class="value">6<span class="unit">h</span> 20<span class="unit">m</span></div>
+            </div>
+        </div>
+
+        <!-- 快捷操作 -->
+        <div class="actions">
+            <button class="action-btn feed-btn" onclick="openFeedModal()">
+                <span class="icon">🍼</span>
+                <span class="text">记录喂奶</span>
+                <span class="sub-text">瓶喂 / 亲喂</span>
+            </button>
+            <button class="action-btn sleep-btn" onclick="openSleepModal()">
+                <span class="icon">💤</span>
+                <span class="text">记录睡眠</span>
+                <span class="sub-text">开始 / 结束</span>
+            </button>
+        </div>
+
+        <!-- 最近记录 -->
+        <div class="recent-list">
+            <div class="title">
+                <span>最近记录</span>
+                <a href="#">查看全部 →</a>
+            </div>
+            <div class="record-item">
+                <div class="icon feed">🍼</div>
+                <div class="info">
+                    <div class="type">瓶喂</div>
+                    <div class="time">18:05</div>
+                </div>
+                <div class="value">120 ml</div>
+            </div>
+            <div class="record-item">
+                <div class="icon sleep">💤</div>
+                <div class="info">
+                    <div class="type">睡眠</div>
+                    <div class="time">15:30 - 17:00</div>
+                </div>
+                <div class="value">1h 30m</div>
+            </div>
+            <div class="record-item">
+                <div class="icon feed">🤱</div>
+                <div class="info">
+                    <div class="type">亲喂</div>
+                    <div class="time">14:20</div>
+                </div>
+                <div class="value">15 分钟</div>
+            </div>
+            <div class="record-item">
+                <div class="icon feed">🍼</div>
+                <div class="info">
+                    <div class="type">瓶喂</div>
+                    <div class="time">11:30</div>
+                </div>
+                <div class="value">150 ml</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 喂奶记录弹窗 -->
+    <div class="modal-overlay" id="feedModal">
+        <div class="modal-sheet">
+            <div class="handle"></div>
+            <h2>🍼 记录喂奶</h2>
+
+            <div class="form-group">
+                <label>喂养方式</label>
+                <div class="quick-select">
+                    <button class="active" onclick="selectFeedType(this, 'bottle')">瓶喂</button>
+                    <button onclick="selectFeedType(this, 'breast')">亲喂</button>
+                </div>
+            </div>
+
+            <div class="form-group" id="bottleAmount">
+                <label>奶量 (ml)</label>
+                <div class="quick-select">
+                    <button onclick="selectAmount(60)">60</button>
+                    <button onclick="selectAmount(90)">90</button>
+                    <button class="active" onclick="selectAmount(120)">120</button>
+                    <button onclick="selectAmount(150)">150</button>
+                    <button onclick="selectAmount(180)">180</button>
+                </div>
+                <input type="number" placeholder="或输入具体奶量" style="margin-top: 10px;">
+            </div>
+
+            <div class="form-group" id="breastDuration" style="display: none;">
+                <label>亲喂时长 (分钟)</label>
+                <div class="quick-select">
+                    <button onclick="selectDuration(5)">5</button>
+                    <button onclick="selectDuration(10)">10</button>
+                    <button onclick="selectDuration(15)">15</button>
+                    <button onclick="selectDuration(20)">20</button>
+                    <button onclick="selectDuration(30)">30</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>时间</label>
+                <input type="time" value="20:35">
+            </div>
+
+            <button class="submit-btn">✓ 保存记录</button>
+            <button class="cancel-btn" onclick="closeModal()">取消</button>
+        </div>
+    </div>
+
+    <!-- 睡眠记录弹窗 -->
+    <div class="modal-overlay" id="sleepModal">
+        <div class="modal-sheet">
+            <div class="handle"></div>
+            <h2>💤 记录睡眠</h2>
+
+            <div class="form-group">
+                <label>睡眠操作</label>
+                <div class="quick-select">
+                    <button class="active">开始睡觉</button>
+                    <button>结束睡觉</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>时间</label>
+                <input type="time" value="20:35">
+            </div>
+
+            <button class="submit-btn">✓ 保存记录</button>
+            <button class="cancel-btn" onclick="closeModal()">取消</button>
+        </div>
+    </div>
+
+    <!-- 底部导航栏 -->
+    <nav class="bottom-nav">
+        <div class="bottom-nav-inner">
+            <a href="#" class="nav-item active">
+                <span class="icon">🏠</span>
+                <span class="label">首页</span>
+            </a>
+            <a href="records_mobile.html" class="nav-item">
+                <span class="icon">📋</span>
+                <span class="label">记录</span>
+            </a>
+            <a href="statistics_mobile.html" class="nav-item">
+                <span class="icon">📊</span>
+                <span class="label">统计</span>
+            </a>
+            <a href="#" class="nav-item" onclick="toggleMoreMenu(event)">
+                <span class="icon">☰</span>
+                <span class="label">更多</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- 更多菜单弹出层 -->
+    <div class="more-menu" id="moreMenu">
+        <a href="record_mobile.html">
+            <span class="icon">🧷</span>
+            换尿布
+        </a>
+        <a href="baby_profile_mobile.html">
+            <span class="icon">👶</span>
+            宝宝档案
+        </a>
+        <a href="ootd_mobile.html">
+            <span class="icon">👗</span>
+            穿搭相册
+        </a>
+        <a href="family_mobile.html">
+            <span class="icon">👨‍👩‍👧</span>
+            家庭成员
+        </a>
+        <a href="settings_mobile.html">
+            <span class="icon">⚙️</span>
+            设置
+        </a>
+    </div>
+
+    <script>
+        function openFeedModal() {
+            document.getElementById('feedModal').classList.add('active');
+        }
+
+        function openSleepModal() {
+            document.getElementById('sleepModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+        }
+
+        function selectFeedType(btn, type) {
+            btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            if (type === 'bottle') {
+                document.getElementById('bottleAmount').style.display = 'block';
+                document.getElementById('breastDuration').style.display = 'none';
+            } else {
+                document.getElementById('bottleAmount').style.display = 'none';
+                document.getElementById('breastDuration').style.display = 'block';
+            }
+        }
+
+        function selectAmount(amount) {
+            event.target.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function selectDuration(duration) {
+            event.target.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function toggleMoreMenu(e) {
+            e.preventDefault();
+            document.getElementById('moreMenu').classList.toggle('active');
+        }
+
+        // 点击遮罩关闭
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function (e) {
+                if (e.target === this) closeModal();
+            });
+        });
+
+        // 点击其他地方关闭更多菜单
+        document.addEventListener('click', function (e) {
+            const moreMenu = document.getElementById('moreMenu');
+            const moreBtn = document.querySelector('.nav-item:last-child');
+            if (!moreMenu.contains(e.target) && !moreBtn.contains(e.target)) {
+                moreMenu.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+
+</html>

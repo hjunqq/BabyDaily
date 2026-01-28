@@ -1,4 +1,5 @@
-﻿import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+﻿import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { Layout } from './components/Layout';
 import { MobileLayout } from './layouts/MobileLayout';
@@ -44,23 +45,23 @@ import { SkeletonStatePage } from './pages/states/SkeletonStatePage';
 import { NotFoundPage } from './pages/states/NotFoundPage';
 import { ServerErrorPage } from './pages/states/ServerErrorPage';
 
+const ResponsivePage = ({ desktop, mobile }: { desktop: React.ReactElement; mobile: React.ReactElement }) => {
+  const isMobile = useIsMobile();
+  if (isMobile === null) return null;
+  return isMobile ? mobile : desktop;
+};
+
+const RequireAuth = ({ children }: { children: React.ReactElement }) => {
+  const location = useLocation();
+  const isAuthed = BabyService.isAuthenticated();
+
+  if (!isAuthed) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  return children;
+};
+
 function App() {
-  const ResponsivePage = ({ desktop, mobile }: { desktop: JSX.Element; mobile: JSX.Element }) => {
-    const isMobile = useIsMobile();
-    if (isMobile === null) return null;
-    return isMobile ? mobile : desktop;
-  };
-
-  const RequireAuth = ({ children }: { children: JSX.Element }) => {
-    const location = useLocation();
-    const isAuthed = BabyService.isAuthenticated();
-
-    if (!isAuthed) {
-      return <Navigate to="/login" state={{ from: location }} replace />;
-    }
-    return children;
-  };
-
   return (
     <Router>
       <ThemeProvider>
