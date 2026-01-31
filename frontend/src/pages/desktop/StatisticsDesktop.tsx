@@ -18,10 +18,10 @@ export const StatisticsDesktop = () => {
         const data = await BabyService.getTrends(baby.id, 7);
         const mapped = Array.isArray(data)
           ? data.map((item: any) => ({
-              day: item.date?.slice(5) || '',
-              milk: item.milk_ml ?? 0,
-              solid: item.solid_g ?? 0,
-            }))
+            day: item.date?.slice(5) || '',
+            milk: item.milkMl ?? 0,
+            solid: item.solidG ?? 0,
+          }))
           : [];
         setTrendData(mapped);
       } catch (err: any) {

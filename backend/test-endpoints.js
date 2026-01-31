@@ -103,9 +103,10 @@ async function main() {
 
     // 4. Test Summary (should be empty initially or have data)
     const summary = await request('GET', `/records/baby/${babyId}/summary`, null, token);
+    console.log('SUMMARY DATA RECEIVED:', JSON.stringify(summary.data, null, 2));
     assert(summary.status === 200, 'Get Summary');
-    assert(summary.data.hasOwnProperty('milkMl'), 'Summary has milkMl'); // Check CamelCase
-    assert(summary.data.hasOwnProperty('diaperWet'), 'Summary has diaperWet');
+    assert(summary.data && typeof summary.data.milkMl !== 'undefined', 'Summary has milkMl');
+    assert(summary.data && typeof summary.data.diaperWet !== 'undefined', 'Summary has diaperWet');
     console.log('Summary Response:', JSON.stringify(summary.data));
 
     // 5. Test Trend
@@ -113,27 +114,33 @@ async function main() {
     assert(trend.status === 200, 'Get Trend');
     assert(Array.isArray(trend.data), 'Trend is array');
     if (trend.data.length > 0) {
-        assert(trend.data[0].hasOwnProperty('name'), 'Trend has name');
+        assert(trend.data[0].hasOwnProperty('date'), 'Trend has date');
         assert(trend.data[0].hasOwnProperty('milk'), 'Trend has milk');
     }
     console.log('Trend Response (first item):', trend.data[0]);
 
     // 6. Test Create Record (VALID)
     const feedTime = new Date().toISOString();
-    const createRecord = await request('POST', '/records', {
-        baby_id: babyId,
+    const createRecordBody = {
+        babyId: babyId,
         type: 'FEED',
         time: feedTime,
         details: { amount: 150, unit: 'ml', subtype: 'FORMULA' }
-    }, token);
+    };
+    console.log('Creating Record with:', JSON.stringify(createRecordBody));
+    const createRecord = await request('POST', '/records', createRecordBody, token);
+
+    if (createRecord.status !== 201) {
+        console.error('Record creation failed:', JSON.stringify(createRecord.error));
+    }
     assert(createRecord.status === 201, 'Create Record');
     const recordId = createRecord.data.id;
-    console.log(`Created Record ID: ${recordId}`);
+    console.log(`Created Record ID: ${recordId}, Creator ID: ${createRecord.data.creatorId}`);
 
     // 7. Test Create Record (INVALID - DTO Check)
     console.log('Testing DTO Validation (expecting 400)...');
     const invalidRecord = await request('POST', '/records', {
-        baby_id: babyId,
+        babyId: babyId,
         // Missing type
         time: 'not-a-date',
         details: {}
@@ -143,6 +150,7 @@ async function main() {
 
     // 8. Update Record
     const updateRecord = await request('PATCH', `/records/${recordId}`, {
+        babyId: babyId,
         details: { amount: 180, unit: 'ml', subtype: 'FORMULA' }
     }, token);
     assert(updateRecord.status === 200, 'Update Record');

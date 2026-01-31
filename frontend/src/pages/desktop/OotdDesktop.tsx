@@ -22,7 +22,7 @@ export const OotdDesktop = () => {
       const list = new DataTransfer();
       files.forEach(file => list.items.add(file));
       await OotdService.uploadOotd({
-        baby_id: babyId,
+        babyId: babyId,
         files: list.files,
         tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
         date: date.toISOString().slice(0, 10),
@@ -84,7 +84,7 @@ export const OotdDesktop = () => {
             noDataText="暂无穿搭记录"
             itemRender={item => (
               <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #E8DCD6' }}>
-                <img src={item.thumbnail_url || item.image_url} alt="穿搭照片" style={{ width: 72, height: 72, borderRadius: 12, objectFit: 'cover', background: '#F7EFEB' }} />
+                <img src={item.thumbnailUrl || item.imageUrl} alt="穿搭照片" style={{ width: 72, height: 72, borderRadius: 12, objectFit: 'cover', background: '#F7EFEB' }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600 }}>{item.tags?.join(' / ') || '今日穿搭'}</div>
                   <div style={{ fontSize: 12, color: '#6b524b' }}>{item.date}</div>

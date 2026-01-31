@@ -11,6 +11,30 @@ const getHeaders = () => ({
     'Authorization': `Bearer ${ACCESS_TOKEN}`
 });
 
+export const request = async (url: string, options: RequestInit = {}) => {
+    let res = await fetch(url, { ...options, headers: { ...getHeaders(), ...options.headers } });
+
+    // If unauthorized or bad request (likely stale state), try re-login once
+    if (res.status === 401 || res.status === 400) {
+        console.warn(`Request to ${url} failed with ${res.status}, attempting re-login...`);
+        try {
+            await BabyService.loginDev();
+            res = await fetch(url, { ...options, headers: { ...getHeaders(), ...options.headers } });
+        } catch (loginError) {
+            console.error('Re-login failed during request retry:', loginError);
+            BabyService.logout();
+            throw loginError;
+        }
+    }
+
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || `Request failed with status ${res.status}`);
+    }
+
+    return res.json();
+};
+
 export const BabyService = {
     // Auth & Init
     loginDev: async () => {
@@ -36,39 +60,33 @@ export const BabyService = {
             if (!ACCESS_TOKEN) await BabyService.loginDev();
 
             // 1. Get Families
-            let res = await fetch(`${API_URL}/families/my`, { headers: getHeaders() });
-            if (res.status === 401) {
-                // Token invalid? Retry login
-                await BabyService.loginDev();
-                res = await fetch(`${API_URL}/families/my`, { headers: getHeaders() });
+            let families;
+            try {
+                families = await request(`${API_URL}/families/my`);
+            } catch (err) {
+                // If it fails even after retry in request(), we have a critical issue
+                BabyService.logout();
+                throw err;
             }
 
-            let families = await res.json();
             let familyId;
-
             if (!Array.isArray(families) || families.length === 0) {
-                // Create default family
-                res = await fetch(`${API_URL}/families`, {
+                const family = await request(`${API_URL}/families`, {
                     method: 'POST',
-                    headers: getHeaders(),
                     body: JSON.stringify({ name: '樱花的家' })
                 });
-                const family = await res.json();
                 familyId = family.id;
             } else {
                 familyId = families[0].id;
             }
 
             // 2. Get Babies
-            res = await fetch(`${API_URL}/babies/family/${familyId}`, { headers: getHeaders() });
-            let babies = await res.json();
+            const babies = await request(`${API_URL}/babies/family/${familyId}`);
 
             let baby;
             if (!Array.isArray(babies) || babies.length === 0) {
-                // Create default baby
-                res = await fetch(`${API_URL}/babies`, {
+                baby = await request(`${API_URL}/babies`, {
                     method: 'POST',
-                    headers: getHeaders(),
                     body: JSON.stringify({
                         family_id: familyId,
                         name: '樱花',
@@ -76,7 +94,6 @@ export const BabyService = {
                         birthday: new Date().toISOString()
                     })
                 });
-                baby = await res.json();
             } else {
                 baby = babies[0];
             }
@@ -84,12 +101,17 @@ export const BabyService = {
             CURRENT_BABY_ID = baby.id;
             localStorage.setItem('current_baby_id', baby.id);
 
-            return {
-                ...baby,
-                avatar_url: baby.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sakura&backgroundColor=ffb7c5'
-            } as Baby;
+            // Default avatar if none
+            if (!baby.avatar_url) {
+                baby.avatar_url = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sakura&backgroundColor=ffb7c5';
+            }
+
+            return mapBabyResponse(baby);
         } catch (error) {
             console.error('Environment setup failed:', error);
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('current_user');
+            localStorage.removeItem('current_baby_id');
             throw error;
         }
     },
@@ -110,141 +132,159 @@ export const BabyService = {
     },
 
     getMe: async (): Promise<User> => {
-        const res = await fetch(`${API_URL}/users/me`, { headers: getHeaders() });
-        if (!res.ok) throw new Error('获取用户信息失败');
-        const user = await res.json();
+        const user = await request(`${API_URL}/users/me`);
         CURRENT_USER = user;
         localStorage.setItem('current_user', JSON.stringify(user));
         return user;
     },
 
     updateMe: async (data: Partial<User>): Promise<User> => {
-        const res = await fetch(`${API_URL}/users/me`, {
+        const user = await request(`${API_URL}/users/me`, {
             method: 'PATCH',
-            headers: getHeaders(),
-            body: JSON.stringify(data),
+            body: JSON.stringify(userToCamelCase(data)),
         });
-        if (!res.ok) throw new Error('更新用户信息失败');
-        const user = await res.json();
         CURRENT_USER = user;
         localStorage.setItem('current_user', JSON.stringify(user));
         return user;
     },
 
     getFamilies: async (): Promise<Family[]> => {
-        const res = await fetch(`${API_URL}/families/my`, { headers: getHeaders() });
-        if (!res.ok) throw new Error('获取家庭失败');
-        return await res.json();
+        return request(`${API_URL}/families/my`);
     },
 
     getBabiesByFamily: async (familyId: string): Promise<Baby[]> => {
-        const res = await fetch(`${API_URL}/babies/family/${familyId}`, { headers: getHeaders() });
-        if (!res.ok) throw new Error('获取宝宝列表失败');
-        return await res.json();
+        const babies = await request(`${API_URL}/babies/family/${familyId}`);
+        return babies.map(mapBabyResponse);
     },
 
     getBabyById: async (id: string): Promise<Baby> => {
-        const res = await fetch(`${API_URL}/babies/${id}`, { headers: getHeaders() });
-        if (!res.ok) throw new Error('获取宝宝信息失败');
-        return await res.json();
+        const baby = await request(`${API_URL}/babies/${id}`);
+        return mapBabyResponse(baby);
     },
 
     getBabyProfile: async (id: string): Promise<Baby> => {
-        return BabyService.getBabyById(id);
+        const baby = await request(`${API_URL}/babies/${id}`);
+        return mapBabyResponse(baby);
+    },
+
+    updateBaby: async (id: string, data: Partial<Baby>): Promise<Baby> => {
+        const baby = await request(`${API_URL}/babies/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(userToCamelCase(data))
+        });
+        return mapBabyResponse(baby);
+    },
+
+    uploadAvatar: async (babyId: string, file: File): Promise<Baby> => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const token = localStorage.getItem('access_token');
+        const res = await fetch(`${API_URL}/babies/${babyId}/avatar`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+
+        if (!res.ok) {
+            throw new Error('Avatar upload failed');
+        }
+        const baby = await res.json();
+        return mapBabyResponse(baby);
     },
 
     getSettings: async (): Promise<UserSettings> => {
-        const res = await fetch(`${API_URL}/settings`, { headers: getHeaders() });
-        if (!res.ok) throw new Error('获取设置失败');
-        return await res.json();
+        return request(`${API_URL}/settings`);
     },
 
     updateSettings: async (data: Partial<UserSettings>): Promise<UserSettings> => {
-        const res = await fetch(`${API_URL}/settings`, {
+        return request(`${API_URL}/settings`, {
             method: 'PUT',
-            headers: getHeaders(),
             body: JSON.stringify(data),
         });
-        if (!res.ok) throw new Error('更新设置失败');
-        return await res.json();
     },
 
     getNotifications: async (limit = 20, offset = 0): Promise<NotificationItem[]> => {
-        const res = await fetch(`${API_URL}/notifications?limit=${limit}&offset=${offset}`, { headers: getHeaders() });
-        if (!res.ok) throw new Error('获取通知失败');
-        return await res.json();
+        return request(`${API_URL}/notifications?limit=${limit}&offset=${offset}`);
     },
 
     markNotificationRead: async (id: string): Promise<NotificationItem> => {
-        const res = await fetch(`${API_URL}/notifications/${id}/read`, {
+        return request(`${API_URL}/notifications/${id}/read`, {
             method: 'POST',
-            headers: getHeaders(),
         });
-        if (!res.ok) throw new Error('更新通知状态失败');
-        return await res.json();
     },
 
     // Records
     getRecords: async (babyId: string, limit = 50, offset = 0): Promise<BabyRecord[]> => {
         const targetId = babyId === 'u-sakura-001' ? (CURRENT_BABY_ID || (await BabyService.ensureDevEnvironment()).id) : babyId;
-
-        const res = await fetch(`${API_URL}/records/baby/${targetId}?limit=${limit}&offset=${offset}`, { headers: getHeaders() });
-        if (!res.ok) throw new Error('获取记录失败');
-        return await res.json();
+        return request(`${API_URL}/records/baby/${targetId}?limit=${limit}&offset=${offset}`);
     },
 
     createRecord: async (record: Partial<BabyRecord>): Promise<BabyRecord> => {
         const envBabyId = CURRENT_BABY_ID || (await BabyService.ensureDevEnvironment()).id;
-        const targetBabyId = record.baby_id && record.baby_id !== 'u-sakura-001' ? record.baby_id : envBabyId;
+        const targetBabyId = record.babyId && record.babyId !== 'u-sakura-001' ? record.babyId : envBabyId;
 
-        const res = await fetch(`${API_URL}/records`, {
+        return request(`${API_URL}/records`, {
             method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({ ...record, baby_id: targetBabyId })
+            body: JSON.stringify({ ...record, babyId: targetBabyId })
         });
-        if (!res.ok) throw new Error('创建记录失败');
-        return await res.json();
     },
 
     updateRecord: async (id: string, updates: Partial<BabyRecord>): Promise<BabyRecord> => {
-        const res = await fetch(`${API_URL}/records/${id}`, {
+        const babyId = CURRENT_BABY_ID || (await BabyService.ensureDevEnvironment()).id;
+        return request(`${API_URL}/records/${id}`, {
             method: 'PATCH',
-            headers: getHeaders(),
-            body: JSON.stringify(updates)
+            body: JSON.stringify({ ...updates, babyId })
         });
-        if (!res.ok) throw new Error('更新记录失败');
-        return await res.json();
     },
 
     deleteRecord: async (id: string): Promise<void> => {
-        const res = await fetch(`${API_URL}/records/${id}`, {
+        await request(`${API_URL}/records/${id}`, {
             method: 'DELETE',
-            headers: getHeaders()
         });
-        if (!res.ok) throw new Error('删除记录失败');
     },
 
     getRecord: async (id: string): Promise<BabyRecord> => {
-        const res = await fetch(`${API_URL}/records/${id}`, {
-            headers: getHeaders()
+        return request(`${API_URL}/records/${id}`);
+    },
+
+    importRecords: async (babyId: string, records: any[]): Promise<{ count: number }> => {
+        return request(`${API_URL}/records/baby/${babyId}/import`, {
+            method: 'POST',
+            body: JSON.stringify({ records })
         });
-        if (!res.ok) throw new Error('获取记录详情失败');
-        return await res.json();
     },
 
     // Summary
     getSummary: async (babyId: string, days = 1) => {
         const targetId = babyId === 'u-sakura-001' ? (CURRENT_BABY_ID || (await BabyService.ensureDevEnvironment()).id) : babyId;
-        const res = await fetch(`${API_URL}/records/baby/${targetId}/summary?days=${days}`, { headers: getHeaders() });
-        if (!res.ok) throw new Error(`获取统计失败: ${res.status} ${res.statusText}`);
-        return await res.json();
+        return request(`${API_URL}/records/baby/${targetId}/summary?days=${days}`);
     },
 
-    // Trend
     getTrends: async (babyId: string, days = 7) => {
         const targetId = babyId === 'u-sakura-001' ? (CURRENT_BABY_ID || (await BabyService.ensureDevEnvironment()).id) : babyId;
-        const res = await fetch(`${API_URL}/records/baby/${targetId}/trend?days=${days}`, { headers: getHeaders() });
-        if (!res.ok) throw new Error(`获取趋势失败: ${res.status} ${res.statusText}`);
-        return await res.json();
+        return request(`${API_URL}/records/baby/${targetId}/trend?days=${days}`);
     }
+};
+
+const userToCamelCase = (data: any) => {
+    const mapped: any = { ...data };
+    if (mapped.avatar_url) {
+        mapped.avatarUrl = mapped.avatar_url;
+        delete mapped.avatar_url;
+    }
+    return mapped;
+};
+
+const mapBabyResponse = (baby: any): Baby => {
+    if (!baby) return baby;
+    return {
+        ...baby,
+        familyId: baby.family_id || baby.familyId,
+        avatarUrl: baby.avatar_url || baby.avatarUrl,
+        bloodType: baby.blood_type || baby.bloodType,
+        // Ensure camelCase for other fields if needed, but these are the main ones varying
+    };
 };

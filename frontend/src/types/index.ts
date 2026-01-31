@@ -1,24 +1,24 @@
 ﻿export interface Baby {
     id: string;
-    family_id: string;
+    familyId: string;
     name: string;
     gender: 'MALE' | 'FEMALE';
     birthday: string;
-    blood_type?: string;
-    avatar_url?: string;
+    bloodType?: string;
+    avatarUrl?: string;
 }
 
-export type RecordType = 'FEED' | 'SLEEP' | 'DIAPER' | 'BATH' | 'HEALTH' | 'GROWTH' | 'MILESTONE';
+export type RecordType = 'FEED' | 'SLEEP' | 'DIAPER' | 'BATH' | 'HEALTH' | 'GROWTH' | 'MILESTONE' | 'VITA_AD' | 'VITA_D3';
 
 export interface BabyRecord {
     id: string;
-    baby_id: string;
-    creator_id: string;
+    babyId: string;
+    creatorId: string;
     type: RecordType;
     time: string;
-    end_time?: string;
-    details: FeedDetails | DiaperDetails | SleepDetails | GrowthDetails | ApiRecordDetails;
-    media_urls?: string[];
+    endTime?: string;
+    details: FeedDetails | DiaperDetails | SleepDetails | GrowthDetails | SupplementDetails | ApiRecordDetails;
+    mediaUrls?: string[];
     remark?: string;
 }
 
@@ -38,14 +38,19 @@ export interface DiaperDetails {
 }
 
 export interface SleepDetails {
-    is_nap: boolean;
+    isNap: boolean;
     location?: string;
 }
 
 export interface GrowthDetails {
     height?: number;
     weight?: number;
-    head_circumference?: number;
+    headCircumference?: number;
+}
+
+export interface SupplementDetails {
+    amount?: number;
+    unit?: string;
 }
 
 export type ApiRecordDetails = Record<string, unknown>;
@@ -53,29 +58,29 @@ export type ApiRecordDetails = Record<string, unknown>;
 export interface Family {
     id: string;
     name: string;
-    creator_id: string;
+    creatorId: string;
 }
 
 export interface User {
     id: string;
     nickname: string;
-    avatar_url: string;
+    avatarUrl: string;
 }
 
 export interface UserSettings {
     id: string;
-    user_id: string;
+    userId: string;
     theme: string;
     language: string;
-    export_format: string;
+    exportFormat: string;
 }
 
 export interface NotificationItem {
     id: string;
-    user_id: string;
+    userId: string;
     title: string;
     content?: string;
     type?: string;
-    is_read: boolean;
-    created_at: string;
+    isRead: boolean;
+    createdAt: string;
 }

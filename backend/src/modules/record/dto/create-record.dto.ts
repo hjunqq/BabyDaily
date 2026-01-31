@@ -4,6 +4,12 @@ export enum RecordType {
     FEED = 'FEED',
     SLEEP = 'SLEEP',
     DIAPER = 'DIAPER',
+    BATH = 'BATH',
+    HEALTH = 'HEALTH',
+    GROWTH = 'GROWTH',
+    MILESTONE = 'MILESTONE',
+    VITA_AD = 'VITA_AD',
+    VITA_D3 = 'VITA_D3',
 }
 
 export class FeedDetailsDto {
@@ -31,12 +37,22 @@ export class DiaperDetailsDto {
 
 export class SleepDetailsDto {
     @IsIn([true, false])
-    is_nap: boolean;
+    isNap: boolean;
+}
+
+export class SupplementDetailsDto {
+    @IsNumber()
+    @IsOptional()
+    amount?: number;
+
+    @IsString()
+    @IsOptional()
+    unit?: string;
 }
 
 export class CreateRecordDto {
     @IsString()
-    baby_id: string;
+    babyId: string;
 
     @IsEnum(RecordType)
     type: RecordType;
@@ -46,9 +62,13 @@ export class CreateRecordDto {
 
     @IsOptional()
     @IsDateString()
-    end_time?: string;
+    endTime?: string;
 
     @IsObject()
     @IsOptional()
     details?: object;
+
+    @IsString()
+    @IsOptional()
+    remark?: string;
 }

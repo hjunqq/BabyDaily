@@ -11,5 +11,5 @@ export class UpdateSettingsDto {
 
     @IsOptional()
     @IsString()
-    export_format?: string;
+    exportFormat?: string;
 }

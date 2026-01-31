@@ -123,18 +123,18 @@ const mapCategory = (type: BabyRecord['type']) => {
 };
 
 const mapSummary = (res: any): Summary => ({
-  milkMl: res.milk_ml ?? 0,
-  diaperWet: res.diaper_wet ?? 0,
-  diaperSoiled: res.diaper_soiled ?? 0,
-  sleepMinutes: res.sleep_minutes ?? 0,
-  lastFeedTime: res.last_feed_time ? new Date(res.last_feed_time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : undefined,
+  milkMl: res.milkMl ?? 0,
+  diaperWet: res.diaperWet ?? 0,
+  diaperSoiled: res.diaperSoiled ?? 0,
+  sleepMinutes: res.sleepMinutes ?? 0,
+  lastFeedTime: res.lastFeedTime ? new Date(res.lastFeedTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : undefined,
 });
 
 const mapTrends = (res: any[]): TrendPoint[] => {
   if (!Array.isArray(res) || !res.length) return [];
   return res.map(item => ({
     name: item.date?.slice(5) || '',
-    milk: item.milk_ml ?? 0,
-    solid: item.solid_g ?? 0,
+    milk: item.milk ?? 0,
+    solid: item.solid ?? 0,
   }));
 };

@@ -18,16 +18,18 @@ export class Baby {
     name: string;
 
     @Column({
-        type: 'enum',
+        type: 'simple-enum',
         enum: Gender,
     })
     gender: Gender;
-
     @Column()
     birthday: Date;
 
     @Column({ nullable: true })
     blood_type: string;
+
+    @Column({ nullable: true })
+    avatar_url: string;
 
     @ManyToOne(() => Family)
     @JoinColumn({ name: 'family_id' })

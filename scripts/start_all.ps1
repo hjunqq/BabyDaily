@@ -95,6 +95,6 @@ Start-ProcessWindow -Title "BabyDaily Backend" -Path $backendPath -Command "npm 
 Start-ProcessWindow -Title "BabyDaily Frontend" -Path $frontendPath -Command "npm run dev -- --host"
 
 Write-Host ""
-Write-Host "Backend: http://localhost:3001 (Swagger: /api/docs)" -ForegroundColor Yellow
+Write-Host "Backend: http://localhost:3000 (Swagger: /api/docs)" -ForegroundColor Yellow
 Write-Host "Frontend: http://localhost:5173 (Dashboard: /web, Mobile: /mobile, OOTD: /ootd)" -ForegroundColor Yellow
 Write-Host "Tip: use -SkipDocker to bypass docker compose if Postgres/Redis are already running." -ForegroundColor DarkGray

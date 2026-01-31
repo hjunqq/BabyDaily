@@ -52,24 +52,59 @@ export const RecordDetailMobile = () => {
     );
   }
 
-  const formData = {
-    type: mapRecordType(record.type),
+  const mapDiaperType = (t: string) => {
+    switch (t) {
+      case 'PEE': return '尿尿';
+      case 'POO': return '便便';
+      case 'BOTH': return '尿尿 + 便便';
+      default: return t;
+    }
+  };
+
+  const formData: any = {
+    recordType: mapRecordType(record.type),
     time: new Date(record.time).toLocaleString('zh-CN'),
     remark: record.remark || '',
   };
+
+  if (record.details) {
+    if (record.type === 'FEED') {
+      const feed = record.details as any;
+      formData.amount = `${feed.amount || 0} ${feed.subtype === 'SOLID' ? 'g' : 'ml'}`;
+      formData.subtype = feed.subtype === 'SOLID' ? '辅食' : '奶';
+    } else if (record.type === 'SLEEP') {
+      const sleep = record.details as any;
+      formData.duration = `${sleep.duration || 0} 分钟`;
+    } else if (record.type === 'DIAPER') {
+      const diaper = record.details as any;
+      formData.diaperType = mapDiaperType(diaper.type);
+    }
+  }
 
   return (
     <div>
       <h2 className="bd-title" style={{ fontSize: 22 }}>记录详情</h2>
       <div className="bd-card">
         <Form formData={formData} readOnly labelMode="floating" colCount={1}>
-          <Item dataField="type" label={{ text: '类型' }} />
+          <Item dataField="recordType" label={{ text: '类型' }} />
           <Item dataField="time" label={{ text: '时间' }} />
+          {record.type === 'FEED' && (
+            <Item dataField="amount" label={{ text: '量' }} />
+          )}
+          {record.type === 'FEED' && (
+            <Item dataField="subtype" label={{ text: '分类' }} />
+          )}
+          {record.type === 'SLEEP' && (
+            <Item dataField="duration" label={{ text: '时长' }} />
+          )}
+          {record.type === 'DIAPER' && (
+            <Item dataField="diaperType" label={{ text: '尿布详情' }} />
+          )}
           <Item dataField="remark" label={{ text: '备注' }} />
         </Form>
       </div>
       <div className="bd-fab">
-        <Button text="编辑记录" type="default" stylingMode="contained" height={44} onClick={() => navigate(`/mobile/record/${record.id}/edit`)} />
+        <Button text="编辑记录" type="default" stylingMode="contained" height={44} onClick={() => navigate(`/record/${record.id}/edit`)} />
       </div>
     </div>
   );

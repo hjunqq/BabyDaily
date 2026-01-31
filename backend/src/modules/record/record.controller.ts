@@ -8,31 +8,35 @@ import { RecordQueryDto, SummaryQueryDto } from './dto/query-record.dto';
 import type { Response } from 'express';
 
 @Controller('records')
-@UseGuards(AuthGuard('jwt'), FamilyGuard)
+@UseGuards(AuthGuard('jwt'))
 export class RecordController {
     constructor(private readonly recordService: RecordService) { }
 
     @Post()
+    @UseGuards(FamilyGuard)
     create(@Request() req: any, @Body() createRecordDto: CreateRecordDto) {
         return this.recordService.create(req.user.userId, {
             ...createRecordDto,
             time: new Date(createRecordDto.time),
-            end_time: createRecordDto.end_time ? new Date(createRecordDto.end_time) : undefined,
+            endTime: createRecordDto.endTime ? new Date(createRecordDto.endTime) : undefined,
         });
     }
 
     // 具体路径要放在通配路径之前
     @Get('baby/:babyId/summary')
+    @UseGuards(FamilyGuard)
     summary(@Param('babyId') babyId: string, @Query() query: SummaryQueryDto) {
         return this.recordService.summary(babyId, query.days ?? 1);
     }
 
     @Get('baby/:babyId/trend')
+    @UseGuards(FamilyGuard)
     trend(@Param('babyId') babyId: string, @Query() query: SummaryQueryDto) {
         return this.recordService.trend(babyId, query.days ?? 7);
     }
 
     @Get('baby/:babyId/export')
+    @UseGuards(FamilyGuard)
     async exportCsv(
         @Param('babyId') babyId: string,
         @Query('limit') limit: string,
@@ -44,7 +48,18 @@ export class RecordController {
         return res.send(csv);
     }
 
+    @Post('baby/:babyId/import')
+    @UseGuards(FamilyGuard)
+    importRecords(
+        @Request() req: any,
+        @Param('babyId') babyId: string,
+        @Body() body: { records: any[] }
+    ) {
+        return this.recordService.importRecords(req.user.userId, babyId, body.records);
+    }
+
     @Get('baby/:babyId')
+    @UseGuards(FamilyGuard)
     findAllByBaby(
         @Param('babyId') babyId: string,
         @Query() query: RecordQueryDto,
@@ -66,7 +81,7 @@ export class RecordController {
         return this.recordService.updateWithGuard(id, {
             ...updateRecordDto,
             time: updateRecordDto.time ? new Date(updateRecordDto.time) : undefined,
-            end_time: updateRecordDto.end_time ? new Date(updateRecordDto.end_time) : undefined,
+            endTime: updateRecordDto.endTime ? new Date(updateRecordDto.endTime) : undefined,
         }, req.user.userId);
     }
 

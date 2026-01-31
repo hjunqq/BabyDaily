@@ -67,7 +67,7 @@ export const RecordEditMobile = () => {
         }
         if (record.type === 'SLEEP') {
           const details: any = record.details || {};
-          setIsNap(!!details.is_nap);
+          setIsNap(!!details.isNap);
           setLocation(details.location || '');
         }
       } catch (err: any) {
@@ -90,7 +90,7 @@ export const RecordEditMobile = () => {
         details,
         remark,
       });
-      navigate(`/mobile/record/${id}`);
+      navigate(`/record/${id}`);
     } finally {
       setSaving(false);
     }
@@ -172,7 +172,7 @@ const buildDetails = (type: BabyRecord['type'], form: any) => {
   }
   if (type === 'SLEEP') {
     return {
-      is_nap: form.isNap,
+      isNap: form.isNap,
       location: form.location || undefined,
     };
   }

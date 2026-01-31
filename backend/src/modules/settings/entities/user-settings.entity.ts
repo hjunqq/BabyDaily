@@ -5,8 +5,8 @@ export class UserSettings {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ unique: true })
-    user_id: string;
+    @Column({ name: 'user_id', unique: true })
+    userId: string;
 
     @Column({ default: 'B' })
     theme: string;
@@ -14,8 +14,8 @@ export class UserSettings {
     @Column({ default: 'zh-CN' })
     language: string;
 
-    @Column({ default: 'CSV' })
-    export_format: string;
+    @Column({ name: 'export_format', default: 'CSV' })
+    exportFormat: string;
 
     @CreateDateColumn()
     created_at: Date;

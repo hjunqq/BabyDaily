@@ -61,7 +61,7 @@ export const RecordsMobile = () => {
           itemRender={(item: BabyRecord) => (
             <div
               style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #E8DCD6' }}
-              onClick={() => navigate(`/mobile/record/${item.id}`)}
+              onClick={() => navigate(`/record/${item.id}`)}
             >
               <div>
                 <strong>{new Date(item.time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</strong> · {mapRecordType(item.type)}

@@ -15,6 +15,8 @@ const recordTypes = [
   { id: 'FEED', text: '喂奶' },
   { id: 'DIAPER', text: '尿布' },
   { id: 'SLEEP', text: '睡眠' },
+  { id: 'VITA_AD', text: '维生素 AD' },
+  { id: 'VITA_D3', text: '维生素 D3' },
 ];
 
 const feedSubtypes = [
@@ -49,13 +51,13 @@ export const RecordMobile = () => {
     try {
       const details = buildDetails(type, { amount, feedSubtype, duration, diaperType, isNap, location });
       await BabyService.createRecord({
-        baby_id: baby.id,
+        babyId: baby.id,
         type,
         time: time.toISOString(),
         details,
         remark,
       });
-      navigate('/mobile/records');
+      navigate('/records');
     } finally {
       setSaving(false);
     }
@@ -86,6 +88,10 @@ export const RecordMobile = () => {
               <CheckBox value={isNap} onValueChanged={e => setIsNap(!!e.value)} text="小睡" />
               <TextBox value={location} onValueChanged={e => setLocation(e.value)} placeholder="睡眠地点" />
             </>
+          )}
+
+          {(type === 'VITA_AD' || type === 'VITA_D3') && (
+            <NumberBox value={amount} onValueChanged={e => setAmount(e.value ?? 1)} placeholder="数量 (粒)" />
           )}
 
           <TextArea value={remark} onValueChanged={e => setRemark(e.value)} placeholder="备注" />
@@ -123,8 +129,14 @@ const buildDetails = (type: BabyRecord['type'], form: any) => {
   }
   if (type === 'SLEEP') {
     return {
-      is_nap: form.isNap,
+      isNap: form.isNap,
       location: form.location || undefined,
+    };
+  }
+  if (type === 'VITA_AD' || type === 'VITA_D3') {
+    return {
+      amount: form.amount || 1,
+      unit: '粒',
     };
   }
   return {};

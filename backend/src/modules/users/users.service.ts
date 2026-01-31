@@ -15,8 +15,26 @@ export class UsersService {
     }
 
     async create(openid: string, nickname?: string, avatar_url?: string): Promise<User> {
+        // 先查询是否已存在
+        const existing = await this.findOneByOpenid(openid);
+        if (existing) {
+            return existing;
+        }
+
         const user = this.usersRepository.create({ openid, nickname, avatar_url });
-        return this.usersRepository.save(user);
+        try {
+            return await this.usersRepository.save(user);
+        } catch (error: any) {
+            // UNIQUE 约束失败，说明用户已被其他进程创建，重新查询
+            const message = String(error?.message ?? '');
+            if (message.includes('UNIQUE constraint failed') && message.includes('users.openid')) {
+                // 等待后重新查询，确保获取到新创建的用户
+                await new Promise(resolve => setTimeout(resolve, 50));
+                const found = await this.findOneByOpenid(openid);
+                if (found) return found;
+            }
+            throw error;
+        }
     }
 
     async findOne(id: string): Promise<User | null> {

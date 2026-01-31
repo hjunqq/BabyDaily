@@ -26,4 +26,13 @@ export class BabyService {
     async findOne(id: string): Promise<Baby | null> {
         return this.babyRepository.findOne({ where: { id } });
     }
+
+    async update(id: string, updates: Partial<Baby>): Promise<Baby> {
+        await this.babyRepository.update(id, updates);
+        const updated = await this.findOne(id);
+        if (!updated) {
+            throw new Error('Baby not found after update');
+        }
+        return updated;
+    }
 }

@@ -56,7 +56,7 @@ export const RecordsDesktop = () => {
           value={query}
           onValueChanged={e => setQuery(e.value)}
         />
-        <Button text="+ 新建记录" type="default" stylingMode="contained" height={40} onClick={() => navigate('/web/record')} />
+        <Button text="+ 新建记录" type="default" stylingMode="contained" height={40} onClick={() => navigate('/record')} />
       </div>
       <div className="bd-card">
         <List
@@ -65,7 +65,7 @@ export const RecordsDesktop = () => {
           itemRender={(item: BabyRecord) => (
             <div
               style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #E8DCD6', cursor: 'pointer' }}
-              onClick={() => navigate(`/web/record/${item.id}`)}
+              onClick={() => navigate(`/record/${item.id}`)}
             >
               <div>
                 <strong>{new Date(item.time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</strong> · {mapRecordType(item.type)}

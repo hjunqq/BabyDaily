@@ -2,18 +2,18 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const navItems = [
-  { id: 0, icon: '🏠', label: '首页', path: '/mobile' },
-  { id: 1, icon: '📋', label: '记录', path: '/mobile/records' },
-  { id: 2, icon: '📊', label: '统计', path: '/mobile/statistics' },
+  { id: 0, icon: '🏠', label: '首页', path: '/' },
+  { id: 1, icon: '📋', label: '记录', path: '/records' },
+  { id: 2, icon: '📊', label: '统计', path: '/statistics' },
   { id: 3, icon: '☰', label: '更多', path: '#more' },
 ];
 
 const moreMenuItems = [
-  { icon: '🧷', label: '换尿布', path: '/mobile/record' },
-  { icon: '👶', label: '宝宝档案', path: '/mobile/baby' },
-  { icon: '👗', label: '穿搭相册', path: '/mobile/ootd' },
-  { icon: '👨‍👩‍👧', label: '家庭成员', path: '/mobile/family' },
-  { icon: '⚙️', label: '设置', path: '/mobile/settings' },
+  { icon: '➕', label: '新建记录', path: '/record' },
+  { icon: '👶', label: '宝宝档案', path: '/baby' },
+  { icon: '👗', label: '穿搭相册', path: '/ootd' },
+  { icon: '👨‍👩‍👧', label: '家庭成员', path: '/family' },
+  { icon: '⚙️', label: '设置', path: '/settings' },
 ];
 
 interface MobileLayoutProps {
@@ -28,7 +28,7 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
   const getActiveIndex = () => {
     for (let i = 0; i < navItems.length - 1; i++) {
       if (location.pathname === navItems[i].path ||
-        (navItems[i].path !== '/mobile' && location.pathname.startsWith(navItems[i].path))) {
+        (navItems[i].path !== '/' && location.pathname.startsWith(navItems[i].path))) {
         return i;
       }
     }

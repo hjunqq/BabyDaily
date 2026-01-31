@@ -55,9 +55,9 @@ export const OotdService = {
     },
 
     // 上传 OOTD 图片
-    uploadOotd: async (payload: { baby_id: string; files: FileList; tags?: string[]; date?: string }): Promise<OotdItem> => {
+    uploadOotd: async (payload: { babyId: string; files: FileList; tags?: string[]; date?: string }): Promise<OotdItem> => {
         const form = new FormData();
-        form.append('baby_id', payload.baby_id);
+        form.append('baby_id', payload.babyId);
         form.append('date', payload.date || new Date().toISOString().slice(0, 10));
         if (payload.tags?.length) form.append('tags', payload.tags.join(','));
         Array.from(payload.files).forEach((file) => form.append('files', file));

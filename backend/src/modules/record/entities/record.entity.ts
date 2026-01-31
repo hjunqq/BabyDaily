@@ -10,6 +10,8 @@ export enum RecordType {
     HEALTH = 'HEALTH',
     GROWTH = 'GROWTH',
     MILESTONE = 'MILESTONE',
+    VITA_AD = 'VITA_AD',
+    VITA_D3 = 'VITA_D3',
 }
 
 @Entity('records')
@@ -24,7 +26,7 @@ export class Record {
     creator_id: string;
 
     @Column({
-        type: 'enum',
+        type: 'simple-enum',
         enum: RecordType,
     })
     type: RecordType;
@@ -35,10 +37,10 @@ export class Record {
     @Column({ nullable: true })
     end_time: Date;
 
-    @Column('jsonb', { nullable: true })
+    @Column('simple-json', { nullable: true })
     details: any;
 
-    @Column('text', { array: true, nullable: true })
+    @Column('simple-array', { nullable: true })
     media_urls: string[];
 
     @Column({ nullable: true })

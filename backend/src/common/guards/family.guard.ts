@@ -10,7 +10,7 @@ export class FamilyGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
         const user = request.user;
-        const babyId = request.params?.babyId || request.body?.baby_id;
+        const babyId = request.params?.babyId || request.body?.babyId || request.body?.baby_id;
 
         if (!babyId || !user?.userId) {
             throw new ForbiddenException({

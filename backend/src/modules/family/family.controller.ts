@@ -10,7 +10,7 @@ export class FamilyController {
 
     @Post()
     create(@Request() req: any, @Body() dto: CreateFamilyDto) {
-        return this.familyService.create(req.user.userId, dto.name);
+        return this.familyService.create(req.user.userId, dto.name, req.user.openid);
     }
 
     @Get('my')

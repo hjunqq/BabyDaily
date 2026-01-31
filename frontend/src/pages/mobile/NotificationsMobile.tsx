@@ -25,7 +25,7 @@ export const NotificationsMobile = () => {
   }, []);
 
   const handleRead = async (item: NotificationItem) => {
-    if (item.is_read) return;
+    if (item.isRead) return;
     const updated = await BabyService.markNotificationRead(item.id);
     setItems(prev => prev.map(row => row.id === updated.id ? updated : row));
   };
@@ -65,9 +65,9 @@ export const NotificationsMobile = () => {
               style={{ padding: '10px 0', borderBottom: '1px solid #E8DCD6', cursor: 'pointer' }}
               onClick={() => handleRead(item)}
             >
-              <div style={{ fontWeight: item.is_read ? 500 : 700 }}>{item.title}</div>
+              <div style={{ fontWeight: item.isRead ? 500 : 700 }}>{item.title}</div>
               {item.content && <div style={{ fontSize: 12, color: '#6b524b' }}>{item.content}</div>}
-              <div style={{ fontSize: 12, color: '#6b524b' }}>{new Date(item.created_at).toLocaleString('zh-CN')}</div>
+              <div style={{ fontSize: 12, color: '#6b524b' }}>{new Date(item.createdAt).toLocaleString('zh-CN')}</div>
             </div>
           )}
         />

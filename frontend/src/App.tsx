@@ -84,34 +84,53 @@ function App() {
             </RequireAuth>
           } />
 
-          <Route path="/web" element={<RequireAuth><Layout><Dashboard /></Layout></RequireAuth>} />
-          <Route path="/web/records" element={<RequireAuth><Layout><RecordsDesktop /></Layout></RequireAuth>} />
-          <Route path="/web/record" element={<RequireAuth><Layout><RecordDesktop /></Layout></RequireAuth>} />
-          <Route path="/web/record/:id" element={<RequireAuth><Layout><RecordDetailDesktop /></Layout></RequireAuth>} />
-          <Route path="/web/record/:id/edit" element={<RequireAuth><Layout><RecordEditDesktop /></Layout></RequireAuth>} />
-          <Route path="/web/statistics" element={<RequireAuth><Layout><StatisticsDesktop /></Layout></RequireAuth>} />
-          <Route path="/web/ootd" element={<RequireAuth><Layout><OotdDesktop /></Layout></RequireAuth>} />
-          <Route path="/web/profile" element={<RequireAuth><Layout><ProfileDesktop /></Layout></RequireAuth>} />
-          <Route path="/web/family" element={<RequireAuth><Layout><FamilyDesktop /></Layout></RequireAuth>} />
-          <Route path="/web/baby" element={<RequireAuth><Layout><BabyProfileDesktop /></Layout></RequireAuth>} />
-          <Route path="/web/settings" element={<RequireAuth><Layout><SettingsDesktop /></Layout></RequireAuth>} />
-          <Route path="/web/notifications" element={<RequireAuth><Layout><NotificationsDesktop /></Layout></RequireAuth>} />
-          <Route path="/web/api-test" element={<RequireAuth><Layout><ApiTestDesktop /></Layout></RequireAuth>} />
+          {/* Unified Responsive Routes */}
+          <Route path="/dashboard" element={<Navigate to="/" replace />} />
 
-          <Route path="/mobile" element={<RequireAuth><MobileLayout><MobileHome /></MobileLayout></RequireAuth>} />
-          <Route path="/mobile/records" element={<RequireAuth><MobileLayout><RecordsMobile /></MobileLayout></RequireAuth>} />
-          <Route path="/mobile/record" element={<RequireAuth><MobileLayout><RecordMobile /></MobileLayout></RequireAuth>} />
-          <Route path="/mobile/record/:id" element={<RequireAuth><MobileLayout><RecordDetailMobile /></MobileLayout></RequireAuth>} />
-          <Route path="/mobile/record/:id/edit" element={<RequireAuth><MobileLayout><RecordEditMobile /></MobileLayout></RequireAuth>} />
-          <Route path="/mobile/statistics" element={<RequireAuth><MobileLayout><StatisticsMobile /></MobileLayout></RequireAuth>} />
-          <Route path="/mobile/ootd" element={<RequireAuth><MobileLayout><OotdMobile /></MobileLayout></RequireAuth>} />
-          <Route path="/mobile/profile" element={<RequireAuth><MobileLayout><ProfileMobile /></MobileLayout></RequireAuth>} />
-          <Route path="/mobile/family" element={<RequireAuth><MobileLayout><FamilyMobile /></MobileLayout></RequireAuth>} />
-          <Route path="/mobile/baby" element={<RequireAuth><MobileLayout><BabyProfileMobile /></MobileLayout></RequireAuth>} />
-          <Route path="/mobile/settings" element={<RequireAuth><MobileLayout><SettingsMobile /></MobileLayout></RequireAuth>} />
-          <Route path="/mobile/notifications" element={<RequireAuth><MobileLayout><NotificationsMobile /></MobileLayout></RequireAuth>} />
-          <Route path="/mobile/api-test" element={<RequireAuth><MobileLayout><ApiTestMobile /></MobileLayout></RequireAuth>} />
-          <Route path="/mobile/onboarding" element={<MobileLayout><OnboardingMobile /></MobileLayout>} />
+          <Route path="/records" element={
+            <RequireAuth>
+              <ResponsivePage
+                desktop={<Layout><RecordsDesktop /></Layout>}
+                mobile={<MobileLayout><RecordsMobile /></MobileLayout>}
+              />
+            </RequireAuth>
+          } />
+
+          <Route path="/record" element={
+            <RequireAuth>
+              <ResponsivePage
+                desktop={<Layout><RecordDesktop /></Layout>}
+                mobile={<MobileLayout><RecordMobile /></MobileLayout>}
+              />
+            </RequireAuth>
+          } />
+
+          <Route path="/record/:id" element={
+            <RequireAuth>
+              <ResponsivePage
+                desktop={<Layout><RecordDetailDesktop /></Layout>}
+                mobile={<MobileLayout><RecordDetailMobile /></MobileLayout>}
+              />
+            </RequireAuth>
+          } />
+
+          <Route path="/record/:id/edit" element={
+            <RequireAuth>
+              <ResponsivePage
+                desktop={<Layout><RecordEditDesktop /></Layout>}
+                mobile={<MobileLayout><RecordEditMobile /></MobileLayout>}
+              />
+            </RequireAuth>
+          } />
+
+          <Route path="/statistics" element={
+            <RequireAuth>
+              <ResponsivePage
+                desktop={<Layout><StatisticsDesktop /></Layout>}
+                mobile={<MobileLayout><StatisticsMobile /></MobileLayout>}
+              />
+            </RequireAuth>
+          } />
 
           <Route path="/ootd" element={
             <RequireAuth>
@@ -122,7 +141,52 @@ function App() {
             </RequireAuth>
           } />
 
-          <Route path="/test" element={
+          <Route path="/profile" element={
+            <RequireAuth>
+              <ResponsivePage
+                desktop={<Layout><ProfileDesktop /></Layout>}
+                mobile={<MobileLayout><ProfileMobile /></MobileLayout>}
+              />
+            </RequireAuth>
+          } />
+
+          <Route path="/family" element={
+            <RequireAuth>
+              <ResponsivePage
+                desktop={<Layout><FamilyDesktop /></Layout>}
+                mobile={<MobileLayout><FamilyMobile /></MobileLayout>}
+              />
+            </RequireAuth>
+          } />
+
+          <Route path="/baby" element={
+            <RequireAuth>
+              <ResponsivePage
+                desktop={<Layout><BabyProfileDesktop /></Layout>}
+                mobile={<MobileLayout><BabyProfileMobile /></MobileLayout>}
+              />
+            </RequireAuth>
+          } />
+
+          <Route path="/settings" element={
+            <RequireAuth>
+              <ResponsivePage
+                desktop={<Layout><SettingsDesktop /></Layout>}
+                mobile={<MobileLayout><SettingsMobile /></MobileLayout>}
+              />
+            </RequireAuth>
+          } />
+
+          <Route path="/notifications" element={
+            <RequireAuth>
+              <ResponsivePage
+                desktop={<Layout><NotificationsDesktop /></Layout>}
+                mobile={<MobileLayout><NotificationsMobile /></MobileLayout>}
+              />
+            </RequireAuth>
+          } />
+
+          <Route path="/api-test" element={
             <RequireAuth>
               <ResponsivePage
                 desktop={<Layout><ApiTestDesktop /></Layout>}
@@ -130,6 +194,36 @@ function App() {
               />
             </RequireAuth>
           } />
+
+          {/* Legacy Redirects */}
+          <Route path="/web" element={<Navigate to="/" replace />} />
+          <Route path="/web/records" element={<Navigate to="/records" replace />} />
+          <Route path="/web/record" element={<Navigate to="/record" replace />} />
+          <Route path="/web/record/:id" element={<Navigate to="/record/:id" replace />} />
+          <Route path="/web/record/:id/edit" element={<Navigate to="/record/:id/edit" replace />} />
+          <Route path="/web/statistics" element={<Navigate to="/statistics" replace />} />
+          <Route path="/web/ootd" element={<Navigate to="/ootd" replace />} />
+          <Route path="/web/profile" element={<Navigate to="/profile" replace />} />
+          <Route path="/web/family" element={<Navigate to="/family" replace />} />
+          <Route path="/web/baby" element={<Navigate to="/baby" replace />} />
+          <Route path="/web/settings" element={<Navigate to="/settings" replace />} />
+          <Route path="/web/notifications" element={<Navigate to="/notifications" replace />} />
+          <Route path="/web/api-test" element={<Navigate to="/api-test" replace />} />
+
+          <Route path="/mobile" element={<Navigate to="/" replace />} />
+          <Route path="/mobile/records" element={<Navigate to="/records" replace />} />
+          <Route path="/mobile/record" element={<Navigate to="/record" replace />} />
+          <Route path="/mobile/record/:id" element={<Navigate to="/record/:id" replace />} />
+          <Route path="/mobile/record/:id/edit" element={<Navigate to="/record/:id/edit" replace />} />
+          <Route path="/mobile/statistics" element={<Navigate to="/statistics" replace />} />
+          <Route path="/mobile/ootd" element={<Navigate to="/ootd" replace />} />
+          <Route path="/mobile/profile" element={<Navigate to="/profile" replace />} />
+          <Route path="/mobile/family" element={<Navigate to="/family" replace />} />
+          <Route path="/mobile/baby" element={<Navigate to="/baby" replace />} />
+          <Route path="/mobile/settings" element={<Navigate to="/settings" replace />} />
+          <Route path="/mobile/notifications" element={<Navigate to="/notifications" replace />} />
+          <Route path="/mobile/api-test" element={<Navigate to="/api-test" replace />} />
+          <Route path="/mobile/onboarding" element={<RequireAuth><MobileLayout><OnboardingMobile /></MobileLayout></RequireAuth>} />
 
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

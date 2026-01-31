@@ -34,7 +34,7 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   // Static uploads
-  app.use('/uploads', express.static(join(__dirname, '..', '..', 'uploads')));
+  app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
 
   const port = Number(process.env.PORT ?? 3000);
   const host = process.env.HOST ?? '0.0.0.0';

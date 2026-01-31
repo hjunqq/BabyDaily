@@ -32,7 +32,7 @@ export const RecordDetailDesktop = () => {
   const handleDelete = async () => {
     if (!id) return;
     await BabyService.deleteRecord(id);
-    navigate('/web/records');
+    navigate('/records');
   };
 
   if (loading) {
@@ -74,7 +74,7 @@ export const RecordDetailDesktop = () => {
           <Item dataField="remark" label={{ text: '备注' }} />
         </Form>
         <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
-          <Button text="编辑" type="default" stylingMode="contained" height={40} onClick={() => navigate(`/web/record/${record.id}/edit`)} />
+          <Button text="编辑" type="default" stylingMode="contained" height={40} onClick={() => navigate(`/record/${record.id}/edit`)} />
           <Button text="删除" type="danger" stylingMode="outlined" height={40} onClick={handleDelete} />
         </div>
       </div>
