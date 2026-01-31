@@ -27,7 +27,8 @@ import { AppService } from './app.service';
         password: configService.get<string>('DATABASE_PASSWORD'),
         database: configService.get<string>('DATABASE_NAME'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // âš ï¸ ä»…åœ¨å¼€å‘çŽ¯å¢ƒå¼€å¯ï¼Œç”Ÿäº§çŽ¯å¢ƒè¯·å…³é—­      }),
+        synchronize: true, // âš ï¸ ä»…åœ¨å¼€å‘çŽ¯å¢ƒå¼€åï¼Œç”Ÿäº§çŽ¯å¢ƒè¯·å…³é—­
+      }),
       inject: [ConfigService],
     }),
     UsersModule,

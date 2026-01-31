@@ -10,6 +10,9 @@ export class SettingsController {
 
     @Get()
     getSettings(@Request() req: any) {
+        if (!req.user?.userId) {
+            throw new Error('User ID not found in request');
+        }
         return this.settingsService.getOrCreate(req.user.userId);
     }
 

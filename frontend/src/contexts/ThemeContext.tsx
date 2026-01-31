@@ -1,18 +1,23 @@
 ﻿import { createContext, useContext, useState, type ReactNode } from 'react';
 
-type Theme = 'B';
+type Theme = 'A' | 'B';
 
 interface ThemeContextType {
   theme: Theme;
+  toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [theme] = useState<Theme>('B');
+  const [theme, setTheme] = useState<Theme>('B');
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'A' ? 'B' : 'A');
+  };
 
   return (
-    <ThemeContext.Provider value={{ theme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
       <div className="bd-app">
         {children}
       </div>

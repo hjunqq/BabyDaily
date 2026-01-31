@@ -5,6 +5,13 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Helper functions
+function Initialize-FNM {
+    if (-not (Get-Command node -ErrorAction SilentlyContinue) -and (Get-Command fnm -ErrorAction SilentlyContinue)) {
+        Write-Host "[env] Node not found but fnm detected. Initializing fnm..." -ForegroundColor DarkGray
+        fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
+    }
+}
+
 function Ensure-Command {
     param(
         [Parameter(Mandatory = $true)][string]$Name,
@@ -56,8 +63,9 @@ function Start-ProcessWindow {
         [Parameter(Mandatory = $true)][string]$Command
     )
 
-    $escapedPath = $Path.Replace('`"', '``"')
-    $cmd = "cd `"$escapedPath`"; $Command"
+    $escapedPath = $Path.Replace('"', '`"')
+    $fnmCheck = 'if (Get-Command fnm -ErrorAction SilentlyContinue) { fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression }; '
+    $cmd = "cd `"$escapedPath`"; $fnmCheck$Command"
     Start-Process -FilePath "powershell" -ArgumentList @("-NoExit", "-Command", $cmd) -WorkingDirectory $Path
     Write-Host "[start] $Title -> $Command" -ForegroundColor Green
 }
@@ -70,6 +78,7 @@ $frontendPath = Join-Path $root "frontend"
 Write-Host "BabyDaily one-click start" -ForegroundColor Cyan
 Write-Host "Root: $root" -ForegroundColor DarkGray
 
+Initialize-FNM
 Ensure-Command -Name "node" -InstallHint "Install from https://nodejs.org/"
 Ensure-Command -Name "npm" -InstallHint "Install from https://nodejs.org/"
 
@@ -86,6 +95,6 @@ Start-ProcessWindow -Title "BabyDaily Backend" -Path $backendPath -Command "npm 
 Start-ProcessWindow -Title "BabyDaily Frontend" -Path $frontendPath -Command "npm run dev -- --host"
 
 Write-Host ""
-Write-Host "Backend: http://localhost:3000 (Swagger: /api/docs)" -ForegroundColor Yellow
+Write-Host "Backend: http://localhost:3001 (Swagger: /api/docs)" -ForegroundColor Yellow
 Write-Host "Frontend: http://localhost:5173 (Dashboard: /web, Mobile: /mobile, OOTD: /ootd)" -ForegroundColor Yellow
 Write-Host "Tip: use -SkipDocker to bypass docker compose if Postgres/Redis are already running." -ForegroundColor DarkGray

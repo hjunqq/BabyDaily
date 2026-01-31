@@ -30,7 +30,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
             displayExpr="text"
             selectionMode="single"
             selectedItemKeys={[active.id]}
-            onItemClick={e => navigate(e.itemData.path)}
+            onItemClick={e => e.itemData && navigate(e.itemData.path)}
           />
         </div>
       </aside>

@@ -39,7 +39,7 @@ export const RecordEditMobile = () => {
   const [type, setType] = useState<BabyRecord['type']>('FEED');
   const [time, setTime] = useState<Date>(new Date());
   const [remark, setRemark] = useState('');
-  const [amount, setAmount] = useState<number | null>(120);
+  const [amount, setAmount] = useState<number>(120);
   const [feedSubtype, setFeedSubtype] = useState('BOTTLE');
   const [duration, setDuration] = useState('');
   const [diaperType, setDiaperType] = useState('PEE');
@@ -130,7 +130,7 @@ export const RecordEditMobile = () => {
           {type === 'FEED' && (
             <>
               <SelectBox dataSource={feedSubtypes} valueExpr="id" displayExpr="text" value={feedSubtype} onValueChanged={e => setFeedSubtype(e.value)} />
-              <NumberBox value={amount} onValueChanged={e => setAmount(e.value)} placeholder="奶量 (ml)" />
+              <NumberBox value={amount} onValueChanged={e => setAmount(e.value ?? 0)} placeholder="奶量 (ml)" />
               <TextBox value={duration} onValueChanged={e => setDuration(e.value)} placeholder="持续时间 (如 15m)" />
             </>
           )}

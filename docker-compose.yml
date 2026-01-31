@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: babydaily
     ports:
-      - "5432:5432"
+      - "54320:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -19,7 +19,7 @@ services:
     container_name: babydaily-redis
     restart: always
     ports:
-      - "6379:6379"
+      - "63790:6379"
 
 volumes:
   postgres_data:
