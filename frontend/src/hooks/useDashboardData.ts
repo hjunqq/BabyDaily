@@ -95,8 +95,25 @@ const buildActivities = (records: BabyRecord[]): Activity[] => {
       else if (t === 'POO') detail = '便便';
       else detail = '尿尿';
     } else if (r.type === 'SLEEP') {
-      duration = '1h 30m';
+      const mins = (r.details as any)?.duration || 0;
+      const hours = Math.floor(mins / 60);
+      const remainMins = mins % 60;
+      duration = hours > 0 ? `${hours}h ${remainMins}m` : `${mins}m`;
       detail = '睡眠';
+    } else if (r.type === 'VITA_AD' || r.type === 'VITA_D3') {
+      const amount = (r.details as any)?.amount || 1;
+      const unit = (r.details as any)?.unit || '粒';
+      detail = `${amount}${unit}`;
+    } else if (r.type === 'BATH') {
+      detail = '洗澡';
+    } else if (r.type === 'HEALTH') {
+      detail = r.remark || '健康检查';
+    } else if (r.type === 'GROWTH') {
+      detail = r.remark || '成长记录';
+    } else if (r.type === 'MILESTONE') {
+      detail = r.remark || '里程碑';
+    } else {
+      detail = r.remark || '-';
     }
     return {
       id: r.id,
@@ -117,6 +134,18 @@ const mapCategory = (type: BabyRecord['type']) => {
       return '睡眠';
     case 'DIAPER':
       return '尿布';
+    case 'VITA_AD':
+      return '维生素 AD';
+    case 'VITA_D3':
+      return '维生素 D3';
+    case 'BATH':
+      return '洗澡';
+    case 'HEALTH':
+      return '健康';
+    case 'GROWTH':
+      return '成长';
+    case 'MILESTONE':
+      return '里程碑';
     default:
       return '记录';
   }

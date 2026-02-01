@@ -55,6 +55,12 @@ const getRecordIcon = (type: string, subtype?: string): string => {
   }
   if (type === 'SLEEP') return kindle ? '睡' : '💤';
   if (type === 'DIAPER') return kindle ? '尿' : '🧷';
+  if (type === 'VITA_AD') return kindle ? 'AD' : '💊';
+  if (type === 'VITA_D3') return kindle ? 'D3' : '☀️';
+  if (type === 'BATH') return kindle ? '浴' : '🛁';
+  if (type === 'HEALTH') return kindle ? '健' : '🏥';
+  if (type === 'GROWTH') return kindle ? '长' : '📏';
+  if (type === 'MILESTONE') return kindle ? '碑' : '🎉';
   return kindle ? '记' : '📝';
 };
 
@@ -65,6 +71,12 @@ const getRecordTypeName = (type: string, subtype?: string): string => {
   }
   if (type === 'SLEEP') return '睡眠';
   if (type === 'DIAPER') return '换尿布';
+  if (type === 'VITA_AD') return '维生素 AD';
+  if (type === 'VITA_D3') return '维生素 D3';
+  if (type === 'BATH') return '洗澡';
+  if (type === 'HEALTH') return '健康';
+  if (type === 'GROWTH') return '成长';
+  if (type === 'MILESTONE') return '里程碑';
   return '记录';
 };
 
@@ -81,6 +93,17 @@ const formatRecordValue = (record: any): string => {
     const hours = Math.floor(mins / 60);
     const remainMins = mins % 60;
     return hours > 0 ? `${hours}h ${remainMins}m` : `${mins}m`;
+  }
+  if (record.type === 'VITA_AD' || record.type === 'VITA_D3') {
+    const amount = record.details?.amount || 1;
+    const unit = record.details?.unit || '粒';
+    return `${amount}${unit}`;
+  }
+  if (record.type === 'DIAPER') {
+    const diaperType = record.details?.type;
+    if (diaperType === 'BOTH') return '尿 + 便';
+    if (diaperType === 'POO') return '便便';
+    return '尿尿';
   }
   return record.remark || '—';
 };

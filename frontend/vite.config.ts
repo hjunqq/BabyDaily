@@ -7,12 +7,48 @@ export default defineConfig({
   plugins: [
     react(),
     legacy({
-      targets: ['defaults', 'not IE 11', 'Safari >= 5'],
-      additionalLegacyPolyfills: ['regenerator-runtime/runtime'],
-      renderLegacyChunks: true,
+      // Kindle uses Chromium-based browser, no need for very old browser support
+      targets: ['defaults', 'Chrome >= 60'],
+      // Skip legacy chunks for faster build
+      renderLegacyChunks: false,
       modernPolyfills: true
     })
   ],
+  build: {
+    // Enable minification with terser
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: false, // Keep console for debugging
+        drop_debugger: true,
+        pure_funcs: ['console.log'] // Remove console.log in production
+      }
+    },
+    // Configure chunk splitting for better caching
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Split vendor libraries into separate chunks
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'vendor-react';
+            }
+            if (id.includes('recharts')) {
+              return 'vendor-charts';
+            }
+            // Let Vite handle devextreme automatically
+            return 'vendor';
+          }
+        }
+      }
+    },
+    // Enable CSS code splitting
+    cssCodeSplit: true,
+    // Increase chunk size warning limit
+    chunkSizeWarningLimit: 1000,
+    // Source maps for debugging (disable in production for smaller builds)
+    sourcemap: false
+  },
   server: {
     host: '0.0.0.0',
     proxy: {
