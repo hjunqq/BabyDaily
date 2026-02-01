@@ -7,10 +7,14 @@ import { Button } from 'devextreme-react/button';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useCurrentBaby } from '../hooks/useCurrentBaby';
 import { API_URL } from '../config/env';
+import { BabyEditModal } from '../components/desktop/BabyEditModal';
+import { useState } from 'react';
+import { Edit2 } from 'lucide-react';
 
 export const Dashboard = () => {
   const { baby } = useCurrentBaby();
   const { loading, error, summary, trends, activities, refresh } = useDashboardData();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const today = new Date();
   const dateStr = today.toLocaleDateString('zh-CN', {
@@ -47,7 +51,7 @@ export const Dashboard = () => {
     return `linear-gradient(90deg, #fff5f5 0%, ${tipColor} ${percentage}%, #ffffff ${percentage}%)`;
   };
 
-  const lastFeedTime = summary.lastFeedTime ? new Date(`2024-01-01 ${summary.lastFeedTime}`) : null; // summary only has time string, this is tricky. 
+
   // Wait, useDashboardData maps lastFeedTime to a formatted string. We lost the original date object.
   // Actually, summary.lastFeedTime is formatted string "HH:mm".
   // MobileHome calculates it from `records`. 
@@ -92,12 +96,27 @@ export const Dashboard = () => {
         )}
 
         <div>
-          <h2 className="bd-title" style={{ fontSize: 24, marginBottom: 4 }}>{baby?.name || '宝宝'}</h2>
+          <div className="flex items-center gap-3 mb-1">
+            <h2 className="bd-title" style={{ fontSize: 24, margin: 0 }}>{baby?.name || '宝宝'}</h2>
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="p-1.5 text-gray-400 hover:text-sakura-pink hover:bg-sakura-pink/10 rounded-full transition-colors"
+              title="编辑信息 / 清空记录"
+            >
+              <Edit2 size={18} />
+            </button>
+          </div>
           <div style={{ fontSize: 14, color: '#8b7670', opacity: 0.9 }}>
             今天已经出生 {bornDays} 天了
           </div>
         </div>
       </div>
+
+      <BabyEditModal
+        visible={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSuccess={refresh}
+      />
       <div className="bd-topbar">
         <TextBox placeholder="搜索记录..." width={320} stylingMode="outlined" />
         <div style={{ fontSize: 14, color: '#6b524b' }}>{dateStr}</div>

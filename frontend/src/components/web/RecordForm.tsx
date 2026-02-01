@@ -59,10 +59,10 @@ export const RecordForm = ({ onClose, onSuccess }: RecordFormProps) => {
             }
 
             await BabyService.createRecord({
-                baby_id: babyId,
+                babyId: babyId,
                 type,
                 time: new Date(time).toISOString(),
-                end_time: endTime ? new Date(endTime).toISOString() : undefined,
+                endTime: endTime ? new Date(endTime).toISOString() : undefined,
                 details,
             });
 

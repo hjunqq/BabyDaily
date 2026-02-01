@@ -1,4 +1,3 @@
-const DEFAULT_API_URL = 'http://127.0.0.1:3000';
+const DEFAULT_API_URL = '/api';
 
-export const API_URL =
-    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || DEFAULT_API_URL;
+export const API_URL = DEFAULT_API_URL;

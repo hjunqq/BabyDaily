@@ -18,7 +18,7 @@ export class Baby {
     name: string;
 
     @Column({
-        type: 'simple-enum',
+        type: 'enum',
         enum: Gender,
     })
     gender: Gender;

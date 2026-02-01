@@ -35,6 +35,16 @@ export class RecordController {
         return this.recordService.trend(babyId, query.days ?? 7);
     }
 
+    @Get('baby/:babyId/feed-timeline')
+    @UseGuards(FamilyGuard)
+    getFeedTimeline(
+        @Param('babyId') babyId: string,
+        @Query('dayStartHour') dayStartHour?: string,
+    ) {
+        const hour = dayStartHour ? parseInt(dayStartHour, 10) : 0;
+        return this.recordService.getFeedTimeline(babyId, hour);
+    }
+
     @Get('baby/:babyId/export')
     @UseGuards(FamilyGuard)
     async exportCsv(
@@ -85,8 +95,19 @@ export class RecordController {
         }, req.user.userId);
     }
 
+    @Delete('batch')
+    removeMany(@Body() body: { ids: string[] }, @Request() req: any) {
+        return this.recordService.removeManyWithGuard(body.ids, req.user.userId);
+    }
+
     @Delete(':id')
     remove(@Param('id') id: string, @Request() req: any) {
         return this.recordService.removeWithGuard(id, req.user.userId);
+    }
+
+    @Delete('baby/:babyId/all')
+    @UseGuards(FamilyGuard)
+    removeAll(@Param('babyId') babyId: string, @Request() req: any) {
+        return this.recordService.removeAllByBaby(babyId, req.user.userId);
     }
 }

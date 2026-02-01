@@ -11,10 +11,10 @@ interface RecordModalProps {
     initialData?: BabyRecord | null;
 }
 
-const RECORD_TYPES: { type: RecordType; label: string; icon: any; color: string; bg: string }[] = [
-    { type: 'FEED', label: 'Feed', icon: Milk, color: 'text-blue-500', bg: 'bg-blue-100' },
-    { type: 'DIAPER', label: 'Diaper', icon: Baby, color: 'text-orange-500', bg: 'bg-orange-100' },
-    { type: 'SLEEP', label: 'Sleep', icon: Moon, color: 'text-purple-500', bg: 'bg-purple-100' },
+const RECORD_TYPES: { type: RecordType; label: string; icon: any; emoji: string; color: string; bg: string }[] = [
+    { type: 'FEED', label: 'Feed', icon: Milk, emoji: '🍼', color: 'text-blue-500', bg: 'bg-blue-100' },
+    { type: 'DIAPER', label: 'Diaper', icon: Baby, emoji: '🧷', color: 'text-orange-500', bg: 'bg-orange-100' },
+    { type: 'SLEEP', label: 'Sleep', icon: Moon, emoji: '😴', color: 'text-purple-500', bg: 'bg-purple-100' },
 ];
 
 export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: RecordModalProps) => {
@@ -79,7 +79,7 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
                 }
                 await BabyService.createRecord({
                     type: selectedType,
-                    baby_id: babyId,
+                    babyId: babyId,
                     time: new Date().toISOString(),
                     details: details
                 });
@@ -131,18 +131,26 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
 
                         {details.subtype !== 'BREAST' && (
                             <div>
-                                <label className="block text-sm font-bold text-gray-500 mb-2">Amount (ml)</label>
-                                <div className="flex items-center gap-4">
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max="300"
-                                        step="10"
-                                        value={details.amount || 0}
-                                        onChange={(e) => setDetails({ ...details, amount: parseInt(e.target.value) })}
-                                        className="w-full accent-sakura-pink"
-                                    />
-                                    <span className="font-bold text-2xl w-20 text-right text-sakura-text">{details.amount}</span>
+                                <label className="block text-sm font-bold text-gray-500 mb-2">
+                                    奶量 (ml) - 按钮版本 ✓
+                                </label>
+                                <div className="grid grid-cols-4 gap-2 max-h-[240px] overflow-y-auto p-1">
+                                    {Array.from({ length: 19 }, (_, i) => 30 + i * 10).map(volume => (
+                                        <button
+                                            key={volume}
+                                            type="button"
+                                            onClick={() => setDetails({ ...details, amount: volume })}
+                                            className={`py-3 px-2 rounded-lg text-sm font-bold transition-all border-2 ${details.amount === volume
+                                                ? 'bg-sakura-pink text-white border-sakura-pink'
+                                                : 'bg-white text-gray-600 border-gray-200 hover:border-sakura-pink/50'
+                                                }`}
+                                        >
+                                            {volume}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="mt-2 text-center text-sm text-gray-500">
+                                    Selected: <span className="font-bold text-sakura-text text-lg">{details.amount || 0} ml</span>
                                 </div>
                             </div>
                         )}
@@ -230,8 +238,9 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
                                     onClick={() => handleTypeSelect(t.type)}
                                     className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-gray-50 hover:bg-sakura-pink/10 transition-colors group"
                                 >
-                                    <div className={`w-14 h-14 rounded-full flex items-center justify-center ${t.bg} ${t.color} group-hover:scale-110 transition-transform`}>
-                                        <t.icon size={24} />
+                                    <div className={`w-14 h-14 rounded-full flex items-center justify-center ${t.bg} ${t.color} group-hover:scale-110 transition-transform kindle-icon-container`}>
+                                        <span className="kindle-emoji text-2xl">{t.emoji}</span>
+                                        <t.icon size={24} className="kindle-svg-icon" />
                                     </div>
                                     <span className="font-medium text-sm text-gray-600">{t.label}</span>
                                 </button>

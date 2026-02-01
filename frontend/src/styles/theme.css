@@ -141,11 +141,12 @@ a {
   box-shadow: var(--shadow-soft);
 }
 
-.bd-mobile-shell {
-  max-width: 420px;
+.bd-mobile-shell,
+main.bd-mobile-shell {
+  max-width: 720px;
   margin: 0 auto;
   min-height: 100vh;
-  padding: 24px 18px 96px;
+  padding: 24px 24px 96px;
   background: #fff;
   box-shadow: var(--shadow-lite);
 }
@@ -208,7 +209,7 @@ a {
   left: 50%;
   transform: translateX(-50%);
   bottom: 0;
-  width: min(420px, 100%);
+  width: min(720px, 100%);
   background: #fff;
   border-top: 1px solid var(--line);
   padding: 8px 8px 12px;
@@ -479,7 +480,8 @@ a {
   background: #fff;
   border: none;
   border-radius: 20px;
-  padding: 24px 16px;
+  padding: 20px 16px;
+  min-height: 120px;
   box-shadow: var(--shadow-soft);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -503,20 +505,24 @@ a {
 }
 
 .bd-action-btn .icon {
-  font-size: 36px;
-  margin-bottom: 10px;
+  font-size: 32px;
+  margin-bottom: 8px;
+  line-height: 1;
 }
 
 .bd-action-btn .text {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--cocoa);
+  line-height: 1.2;
+  margin-bottom: 2px;
 }
 
 .bd-action-btn .sub-text {
-  font-size: 12px;
+  font-size: 11px;
   color: #8b7670;
-  margin-top: 4px;
+  margin-top: 2px;
+  line-height: 1.2;
 }
 
 /* 底部导航图标风格 */
@@ -525,7 +531,7 @@ a {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: min(420px, 100%);
+  width: min(720px, 100%);
   background: #fff;
   border-top: 1px solid var(--line);
   display: flex;
@@ -737,7 +743,7 @@ a {
   border-radius: 24px 24px 0 0;
   padding: 24px 20px 40px;
   width: 100%;
-  max-width: 420px;
+  max-width: 720px;
   animation: bd-slideUp 0.3s ease;
 }
 
@@ -757,4 +763,428 @@ a {
   background: var(--line);
   border-radius: 2px;
   margin: 0 auto 20px;
+}
+
+/* ==================== Kindle / E-ink 极致紧凑布局 (632 x 750px) ==================== */
+
+/* 默认隐藏阅读器摘要（非 Kindle 模式） */
+#reader-summary {
+  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+body.kindle-mode {
+  /* Restored default colors for Color E-ink/Tablets */
+  /* background: #fff !important; -> Removed */
+  /* color: #000 !important; -> Removed */
+  height: 100vh;
+  overflow: hidden;
+  font-size: 16px;
+}
+
+/* 移除所有元素的阴影和发光效果 - 保留此项以优化性能，但允许颜色 */
+body.kindle-mode * {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+body.kindle-mode .bd-mobile-shell {
+  padding: 10px 10px 0 !important;
+  max-width: 100% !important;
+  height: calc(100vh - 50px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  /* background: #fff !important; -> Allow default theme background */
+  box-sizing: border-box;
+}
+
+/* 0. Summary */
+body.kindle-mode #reader-summary {
+  margin-bottom: 10px !important;
+  padding-bottom: 8px !important;
+}
+
+/* 1. Last Feed - Compact Mode */
+body.kindle-mode .bd-last-feed-card {
+  margin-bottom: 12px !important;
+  height: auto !important;
+  min-height: auto !important;
+  flex-wrap: wrap !important;
+  padding: 12px 16px !important;
+  /* Increased from 6px 12px */
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+}
+
+body.kindle-mode .bd-last-feed-card .label {
+  font-size: 14px !important;
+  /* Increased from 12px */
+  margin-bottom: 4px !important;
+  /* color: #666 !important; -> Allow theme color */
+}
+
+body.kindle-mode .bd-last-feed-card .main-info {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 10px !important;
+  margin-bottom: 4px !important;
+  width: 100% !important;
+}
+
+body.kindle-mode .bd-last-feed-card .amount {
+  font-size: 40px !important;
+  /* Increased from 28px to make more prominent */
+  line-height: 1 !important;
+  font-weight: bold !important;
+}
+
+body.kindle-mode .bd-last-feed-card .type-tag {
+  font-size: 16px !important;
+  /* Increased from 14px */
+  padding: 2px 6px !important;
+  /* border: 1px solid #000 !important; -> Removed strict border */
+  border-radius: 4px !important;
+  /* background: transparent !important; -> Allow tag color */
+  /* color: #000 !important; -> Allow text color */
+  line-height: normal !important;
+}
+
+body.kindle-mode .bd-last-feed-card .time-ago {
+  font-size: 18px !important;
+  /* Increased from 14px to make more prominent */
+  font-weight: 600 !important;
+  /* Increased from normal */
+  color: #333 !important;
+  margin-top: 4px !important;
+  width: 100% !important;
+}
+
+/* 2. Stats */
+body.kindle-mode .bd-today-stats {
+  gap: 8px !important;
+  margin-bottom: 12px !important;
+  /* Increased from 8px to add space before action buttons */
+  height: auto !important;
+  /* Changed from fixed 60px to auto to prevent overflow */
+}
+
+body.kindle-mode .bd-stat-card {
+  padding: 8px !important;
+  min-height: 60px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+body.kindle-mode .bd-stat-card .icon {
+  font-size: 18px !important;
+  margin-bottom: 4px !important;
+  line-height: 1 !important;
+}
+
+body.kindle-mode .bd-stat-card .title {
+  font-size: 11px !important;
+  margin-bottom: 2px !important;
+  line-height: 1.2 !important;
+}
+
+body.kindle-mode .bd-stat-card .value {
+  font-size: 16px !important;
+  line-height: 1.2 !important;
+}
+
+body.kindle-mode .bd-stat-card .unit {
+  font-size: 11px !important;
+}
+
+/* 隐藏时间线 (Robust Selector: Selects the section that is NOT the stats card) */
+body.kindle-mode section.animate-slide-up.delay-2:not(.bd-today-stats) {
+  display: none !important;
+}
+
+/* 3. Actions */
+body.kindle-mode .bd-actions {
+  gap: 8px !important;
+  margin-bottom: 8px !important;
+  margin-top: 8px !important;
+  /* Add top margin to separate from stats */
+  font-weight: normal !important;
+}
+
+body.kindle-mode .bd-last-feed-card .time-detail {
+  display: none !important;
+}
+
+/* Action buttons - fix overlap issue */
+body.kindle-mode .bd-action-btn {
+  padding: 10px 8px !important;
+  min-height: 80px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+body.kindle-mode .bd-action-btn .icon {
+  font-size: 24px !important;
+  margin-bottom: 4px !important;
+  line-height: 1 !important;
+}
+
+body.kindle-mode .bd-action-btn .text {
+  font-size: 13px !important;
+  line-height: 1.2 !important;
+  margin-bottom: 2px !important;
+  font-weight: 600 !important;
+}
+
+body.kindle-mode .bd-action-btn .sub-text {
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+  margin-top: 2px !important;
+}
+
+/* 4. Recent List */
+body.kindle-mode .bd-recent-list {
+  padding: 10px !important;
+  margin-bottom: 10px !important;
+}
+
+body.kindle-mode .bd-recent-list h2 {
+  margin-bottom: 6px !important;
+}
+
+body.kindle-mode .bd-record-item {
+  height: 36px !important;
+}
+
+body.kindle-mode .bd-record-item:last-child {
+  border-bottom: none !important;
+}
+
+/* 底部导航 - 恢复显示并适配 Kindle */
+body.kindle-mode .bd-bottom-nav-new {
+  display: flex !important;
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 48px !important;
+  /* background: #fff !important; -> Allow default */
+  border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
+  /* Lighter border */
+  padding: 0 !important;
+  z-index: 99 !important;
+  justify-content: space-around !important;
+  align-items: center !important;
+  box-shadow: none !important;
+  transform: none !important;
+  /* 修复: 取消原本的居中位移，防止偏左 */
+}
+
+body.kindle-mode .bd-bottom-nav-new .bd-nav-item {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  background: transparent;
+  padding: 0;
+  /* color: #000 !important; -> Allow theme active colors */
+}
+
+body.kindle-mode .bd-bottom-nav-new .icon {
+  font-size: 20px !important;
+  margin-bottom: 2px;
+}
+
+body.kindle-mode .bd-bottom-nav-new .label {
+  font-size: 12px !important;
+  font-weight: normal;
+}
+
+body.kindle-mode .bd-mobile-shell {
+  padding: 12px 12px 0 !important;
+  max-width: 100% !important;
+  height: calc(100vh - 50px) !important;
+  /* 留出底部导航空间 */
+  display: flex !important;
+  flex-direction: column !important;
+  background: #fff !important;
+  box-sizing: border-box;
+}
+
+/* 文本辅助 */
+body.kindle-mode .kindle-icon {
+  width: auto !important;
+  height: auto !important;
+  line-height: 1 !important;
+  font-size: inherit !important;
+  border: none !important;
+}
+
+body.kindle-mode .icon-wrap {
+  width: 24px !important;
+  height: 24px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  font-size: 16px !important;
+  border: 1px solid #000;
+  border-radius: 4px;
+}
+
+/* ==================== Kindle Volume Button Grid ==================== */
+body.kindle-mode .grid.grid-cols-4 button {
+  border: 2px solid #333 !important;
+  background: #fff !important;
+  color: #000 !important;
+  font-weight: bold !important;
+  padding: 10px 8px !important;
+  min-height: 44px !important;
+  /* Touch-friendly size */
+}
+
+body.kindle-mode .grid.grid-cols-4 button.bg-sakura-pink {
+  background: #000 !important;
+  color: #fff !important;
+  border-color: #000 !important;
+}
+
+/* ==================== Kindle Icon Display ==================== */
+/* Hide SVG icons in Kindle mode, show emoji instead */
+body.kindle-mode .kindle-svg-icon {
+  display: none !important;
+}
+
+body.kindle-mode .kindle-emoji {
+  display: inline-block !important;
+  font-size: 24px !important;
+  line-height: 1 !important;
+}
+
+/* For non-Kindle mode, hide emoji and show SVG */
+body:not(.kindle-mode) .kindle-emoji {
+  display: none !important;
+}
+
+body:not(.kindle-mode) .kindle-svg-icon {
+  display: inline-block !important;
+}
+
+/* Kindle icon containers - simplified styling */
+body.kindle-mode .kindle-icon-container {
+  background: transparent !important;
+  border: 2px solid #333 !important;
+  box-shadow: none !important;
+}
+
+/* ==================== Kindle Online Indicator ==================== */
+.kindle-online-indicator {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.kindle-online-indicator .indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid #333;
+}
+
+.kindle-online-indicator .indicator-dot.online {
+  background: #4CAF50;
+}
+
+.kindle-online-indicator .indicator-dot.offline {
+  background: #F44336;
+  animation: pulse-offline 2s infinite;
+}
+
+.kindle-online-indicator .offline-text {
+  font-size: 14px;
+  line-height: 1;
+}
+
+@keyframes pulse-offline {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ==================== Kindle Screen Refresh Overlay ==================== */
+.kindle-refresh-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  background: #fff;
+  animation: kindle-refresh 1s ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes kindle-refresh {
+  0% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ==================== Kindle Modal Optimizations ==================== */
+body.kindle-mode .fixed.inset-0 {
+  background: rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: none !important;
+}
+
+body.kindle-mode .rounded-3xl,
+body.kindle-mode .rounded-2xl,
+body.kindle-mode .rounded-xl {
+  border-radius: 8px !important;
+}
+
+body.kindle-mode .shadow-2xl,
+body.kindle-mode .shadow-lg {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Simplify gradients in Kindle mode */
+body.kindle-mode .bg-gradient-to-r,
+body.kindle-mode .bg-gradient-to-b,
+body.kindle-mode [class*="gradient"] {
+  background: #fff !important;
 }

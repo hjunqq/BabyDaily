@@ -73,6 +73,7 @@ export interface UserSettings {
     theme: string;
     language: string;
     exportFormat: string;
+    dayStartHour?: number;  // 日切时间 (0-23)
 }
 
 export interface NotificationItem {
@@ -84,3 +85,21 @@ export interface NotificationItem {
     isRead: boolean;
     createdAt: string;
 }
+
+// 喂奶时间线数据
+export interface FeedTimelineItem {
+    id: string;
+    time: string;
+    amount: number;
+    subtype: 'BREAST' | 'BOTTLE' | 'SOLID';
+    duration?: number;
+}
+
+export interface FeedTimelineData {
+    dayStartHour: number;
+    from: string;
+    to: string;
+    totalMl: number;
+    items: FeedTimelineItem[];
+}
+

@@ -61,175 +61,202 @@ const RequireAuth = ({ children }: { children: React.ReactElement }) => {
   return children;
 };
 
+const useKindleMode = () => {
+  const location = useLocation();
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const isUrlMode = params.get('kindle') === '1';
+
+    // Auto-detect Kindle device via User Agent (case-insensitive)
+    // Checks for "Kindle" in UA string (common in E-ink browsers)
+    const isUAMode = /Kindle/i.test(navigator.userAgent);
+
+    if (isUrlMode || isUAMode) {
+      document.body.classList.add('kindle-mode');
+    } else {
+      document.body.classList.remove('kindle-mode');
+    }
+  }, [location]);
+};
+
 function App() {
   return (
     <Router>
-      <ThemeProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/landing" element={<Landing />} />
-
-          <Route path="/states/empty" element={<EmptyStatePage />} />
-          <Route path="/states/error" element={<ErrorStatePage />} />
-          <Route path="/states/loading" element={<LoadingStatePage />} />
-          <Route path="/states/skeleton" element={<SkeletonStatePage />} />
-          <Route path="/states/500" element={<ServerErrorPage />} />
-
-          <Route path="/" element={
-            <RequireAuth>
-              <ResponsivePage
-                desktop={<Layout><Dashboard /></Layout>}
-                mobile={<MobileLayout><MobileHome /></MobileLayout>}
-              />
-            </RequireAuth>
-          } />
-
-          {/* Unified Responsive Routes */}
-          <Route path="/dashboard" element={<Navigate to="/" replace />} />
-
-          <Route path="/records" element={
-            <RequireAuth>
-              <ResponsivePage
-                desktop={<Layout><RecordsDesktop /></Layout>}
-                mobile={<MobileLayout><RecordsMobile /></MobileLayout>}
-              />
-            </RequireAuth>
-          } />
-
-          <Route path="/record" element={
-            <RequireAuth>
-              <ResponsivePage
-                desktop={<Layout><RecordDesktop /></Layout>}
-                mobile={<MobileLayout><RecordMobile /></MobileLayout>}
-              />
-            </RequireAuth>
-          } />
-
-          <Route path="/record/:id" element={
-            <RequireAuth>
-              <ResponsivePage
-                desktop={<Layout><RecordDetailDesktop /></Layout>}
-                mobile={<MobileLayout><RecordDetailMobile /></MobileLayout>}
-              />
-            </RequireAuth>
-          } />
-
-          <Route path="/record/:id/edit" element={
-            <RequireAuth>
-              <ResponsivePage
-                desktop={<Layout><RecordEditDesktop /></Layout>}
-                mobile={<MobileLayout><RecordEditMobile /></MobileLayout>}
-              />
-            </RequireAuth>
-          } />
-
-          <Route path="/statistics" element={
-            <RequireAuth>
-              <ResponsivePage
-                desktop={<Layout><StatisticsDesktop /></Layout>}
-                mobile={<MobileLayout><StatisticsMobile /></MobileLayout>}
-              />
-            </RequireAuth>
-          } />
-
-          <Route path="/ootd" element={
-            <RequireAuth>
-              <ResponsivePage
-                desktop={<Layout><OotdDesktop /></Layout>}
-                mobile={<MobileLayout><OotdMobile /></MobileLayout>}
-              />
-            </RequireAuth>
-          } />
-
-          <Route path="/profile" element={
-            <RequireAuth>
-              <ResponsivePage
-                desktop={<Layout><ProfileDesktop /></Layout>}
-                mobile={<MobileLayout><ProfileMobile /></MobileLayout>}
-              />
-            </RequireAuth>
-          } />
-
-          <Route path="/family" element={
-            <RequireAuth>
-              <ResponsivePage
-                desktop={<Layout><FamilyDesktop /></Layout>}
-                mobile={<MobileLayout><FamilyMobile /></MobileLayout>}
-              />
-            </RequireAuth>
-          } />
-
-          <Route path="/baby" element={
-            <RequireAuth>
-              <ResponsivePage
-                desktop={<Layout><BabyProfileDesktop /></Layout>}
-                mobile={<MobileLayout><BabyProfileMobile /></MobileLayout>}
-              />
-            </RequireAuth>
-          } />
-
-          <Route path="/settings" element={
-            <RequireAuth>
-              <ResponsivePage
-                desktop={<Layout><SettingsDesktop /></Layout>}
-                mobile={<MobileLayout><SettingsMobile /></MobileLayout>}
-              />
-            </RequireAuth>
-          } />
-
-          <Route path="/notifications" element={
-            <RequireAuth>
-              <ResponsivePage
-                desktop={<Layout><NotificationsDesktop /></Layout>}
-                mobile={<MobileLayout><NotificationsMobile /></MobileLayout>}
-              />
-            </RequireAuth>
-          } />
-
-          <Route path="/api-test" element={
-            <RequireAuth>
-              <ResponsivePage
-                desktop={<Layout><ApiTestDesktop /></Layout>}
-                mobile={<MobileLayout><ApiTestMobile /></MobileLayout>}
-              />
-            </RequireAuth>
-          } />
-
-          {/* Legacy Redirects */}
-          <Route path="/web" element={<Navigate to="/" replace />} />
-          <Route path="/web/records" element={<Navigate to="/records" replace />} />
-          <Route path="/web/record" element={<Navigate to="/record" replace />} />
-          <Route path="/web/record/:id" element={<Navigate to="/record/:id" replace />} />
-          <Route path="/web/record/:id/edit" element={<Navigate to="/record/:id/edit" replace />} />
-          <Route path="/web/statistics" element={<Navigate to="/statistics" replace />} />
-          <Route path="/web/ootd" element={<Navigate to="/ootd" replace />} />
-          <Route path="/web/profile" element={<Navigate to="/profile" replace />} />
-          <Route path="/web/family" element={<Navigate to="/family" replace />} />
-          <Route path="/web/baby" element={<Navigate to="/baby" replace />} />
-          <Route path="/web/settings" element={<Navigate to="/settings" replace />} />
-          <Route path="/web/notifications" element={<Navigate to="/notifications" replace />} />
-          <Route path="/web/api-test" element={<Navigate to="/api-test" replace />} />
-
-          <Route path="/mobile" element={<Navigate to="/" replace />} />
-          <Route path="/mobile/records" element={<Navigate to="/records" replace />} />
-          <Route path="/mobile/record" element={<Navigate to="/record" replace />} />
-          <Route path="/mobile/record/:id" element={<Navigate to="/record/:id" replace />} />
-          <Route path="/mobile/record/:id/edit" element={<Navigate to="/record/:id/edit" replace />} />
-          <Route path="/mobile/statistics" element={<Navigate to="/statistics" replace />} />
-          <Route path="/mobile/ootd" element={<Navigate to="/ootd" replace />} />
-          <Route path="/mobile/profile" element={<Navigate to="/profile" replace />} />
-          <Route path="/mobile/family" element={<Navigate to="/family" replace />} />
-          <Route path="/mobile/baby" element={<Navigate to="/baby" replace />} />
-          <Route path="/mobile/settings" element={<Navigate to="/settings" replace />} />
-          <Route path="/mobile/notifications" element={<Navigate to="/notifications" replace />} />
-          <Route path="/mobile/api-test" element={<Navigate to="/api-test" replace />} />
-          <Route path="/mobile/onboarding" element={<RequireAuth><MobileLayout><OnboardingMobile /></MobileLayout></RequireAuth>} />
-
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </ThemeProvider>
+      <KindleModeWrapper />
     </Router>
   );
 }
+
+const KindleModeWrapper = () => {
+  useKindleMode();
+
+  return (
+    <ThemeProvider>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/landing" element={<Landing />} />
+
+        <Route path="/states/empty" element={<EmptyStatePage />} />
+        <Route path="/states/error" element={<ErrorStatePage />} />
+        <Route path="/states/loading" element={<LoadingStatePage />} />
+        <Route path="/states/skeleton" element={<SkeletonStatePage />} />
+        <Route path="/states/500" element={<ServerErrorPage />} />
+
+        <Route path="/" element={
+          <RequireAuth>
+            <ResponsivePage
+              desktop={<Layout><Dashboard /></Layout>}
+              mobile={<MobileLayout><MobileHome /></MobileLayout>}
+            />
+          </RequireAuth>
+        } />
+
+        {/* Unified Responsive Routes */}
+        <Route path="/dashboard" element={<Navigate to="/" replace />} />
+
+        <Route path="/records" element={
+          <RequireAuth>
+            <ResponsivePage
+              desktop={<Layout><RecordsDesktop /></Layout>}
+              mobile={<MobileLayout><RecordsMobile /></MobileLayout>}
+            />
+          </RequireAuth>
+        } />
+
+        <Route path="/record" element={
+          <RequireAuth>
+            <ResponsivePage
+              desktop={<Layout><RecordDesktop /></Layout>}
+              mobile={<MobileLayout><RecordMobile /></MobileLayout>}
+            />
+          </RequireAuth>
+        } />
+
+        <Route path="/record/:id" element={
+          <RequireAuth>
+            <ResponsivePage
+              desktop={<Layout><RecordDetailDesktop /></Layout>}
+              mobile={<MobileLayout><RecordDetailMobile /></MobileLayout>}
+            />
+          </RequireAuth>
+        } />
+
+        <Route path="/record/:id/edit" element={
+          <RequireAuth>
+            <ResponsivePage
+              desktop={<Layout><RecordEditDesktop /></Layout>}
+              mobile={<MobileLayout><RecordEditMobile /></MobileLayout>}
+            />
+          </RequireAuth>
+        } />
+
+        <Route path="/statistics" element={
+          <RequireAuth>
+            <ResponsivePage
+              desktop={<Layout><StatisticsDesktop /></Layout>}
+              mobile={<MobileLayout><StatisticsMobile /></MobileLayout>}
+            />
+          </RequireAuth>
+        } />
+
+        <Route path="/ootd" element={
+          <RequireAuth>
+            <ResponsivePage
+              desktop={<Layout><OotdDesktop /></Layout>}
+              mobile={<MobileLayout><OotdMobile /></MobileLayout>}
+            />
+          </RequireAuth>
+        } />
+
+        <Route path="/profile" element={
+          <RequireAuth>
+            <ResponsivePage
+              desktop={<Layout><ProfileDesktop /></Layout>}
+              mobile={<MobileLayout><ProfileMobile /></MobileLayout>}
+            />
+          </RequireAuth>
+        } />
+
+        <Route path="/family" element={
+          <RequireAuth>
+            <ResponsivePage
+              desktop={<Layout><FamilyDesktop /></Layout>}
+              mobile={<MobileLayout><FamilyMobile /></MobileLayout>}
+            />
+          </RequireAuth>
+        } />
+
+        <Route path="/baby" element={
+          <RequireAuth>
+            <ResponsivePage
+              desktop={<Layout><BabyProfileDesktop /></Layout>}
+              mobile={<MobileLayout><BabyProfileMobile /></MobileLayout>}
+            />
+          </RequireAuth>
+        } />
+
+        <Route path="/settings" element={
+          <RequireAuth>
+            <ResponsivePage
+              desktop={<Layout><SettingsDesktop /></Layout>}
+              mobile={<MobileLayout><SettingsMobile /></MobileLayout>}
+            />
+          </RequireAuth>
+        } />
+
+        <Route path="/notifications" element={
+          <RequireAuth>
+            <ResponsivePage
+              desktop={<Layout><NotificationsDesktop /></Layout>}
+              mobile={<MobileLayout><NotificationsMobile /></MobileLayout>}
+            />
+          </RequireAuth>
+        } />
+
+        <Route path="/api-test" element={
+          <RequireAuth>
+            <ResponsivePage
+              desktop={<Layout><ApiTestDesktop /></Layout>}
+              mobile={<MobileLayout><ApiTestMobile /></MobileLayout>}
+            />
+          </RequireAuth>
+        } />
+
+        {/* Legacy Redirects */}
+        <Route path="/web" element={<Navigate to="/" replace />} />
+        <Route path="/web/records" element={<Navigate to="/records" replace />} />
+        <Route path="/web/record" element={<Navigate to="/record" replace />} />
+        <Route path="/web/record/:id" element={<Navigate to="/record/:id" replace />} />
+        <Route path="/web/record/:id/edit" element={<Navigate to="/record/:id/edit" replace />} />
+        <Route path="/web/statistics" element={<Navigate to="/statistics" replace />} />
+        <Route path="/web/ootd" element={<Navigate to="/ootd" replace />} />
+        <Route path="/web/profile" element={<Navigate to="/profile" replace />} />
+        <Route path="/web/family" element={<Navigate to="/family" replace />} />
+        <Route path="/web/baby" element={<Navigate to="/baby" replace />} />
+        <Route path="/web/settings" element={<Navigate to="/settings" replace />} />
+        <Route path="/web/notifications" element={<Navigate to="/notifications" replace />} />
+        <Route path="/web/api-test" element={<Navigate to="/api-test" replace />} />
+
+        <Route path="/mobile" element={<Navigate to="/" replace />} />
+        <Route path="/mobile/records" element={<Navigate to="/records" replace />} />
+        <Route path="/mobile/record" element={<Navigate to="/record" replace />} />
+        <Route path="/mobile/record/:id" element={<Navigate to="/record/:id" replace />} />
+        <Route path="/mobile/record/:id/edit" element={<Navigate to="/record/:id/edit" replace />} />
+        <Route path="/mobile/statistics" element={<Navigate to="/statistics" replace />} />
+        <Route path="/mobile/ootd" element={<Navigate to="/ootd" replace />} />
+        <Route path="/mobile/profile" element={<Navigate to="/profile" replace />} />
+        <Route path="/mobile/family" element={<Navigate to="/family" replace />} />
+        <Route path="/mobile/baby" element={<Navigate to="/baby" replace />} />
+        <Route path="/mobile/settings" element={<Navigate to="/settings" replace />} />
+        <Route path="/mobile/notifications" element={<Navigate to="/notifications" replace />} />
+        <Route path="/mobile/api-test" element={<Navigate to="/api-test" replace />} />
+        <Route path="/mobile/onboarding" element={<RequireAuth><MobileLayout><OnboardingMobile /></MobileLayout></RequireAuth>} />
+
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </ThemeProvider>
+  );
+};
 
 export default App;

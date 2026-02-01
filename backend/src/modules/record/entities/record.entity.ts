@@ -26,7 +26,7 @@ export class Record {
     creator_id: string;
 
     @Column({
-        type: 'simple-enum',
+        type: 'enum',
         enum: RecordType,
     })
     type: RecordType;
@@ -37,10 +37,10 @@ export class Record {
     @Column({ nullable: true })
     end_time: Date;
 
-    @Column('simple-json', { nullable: true })
+    @Column('jsonb', { nullable: true })
     details: any;
 
-    @Column('simple-array', { nullable: true })
+    @Column('text', { array: true, nullable: true })
     media_urls: string[];
 
     @Column({ nullable: true })

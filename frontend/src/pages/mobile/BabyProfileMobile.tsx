@@ -180,9 +180,37 @@ export const BabyProfileMobile = () => {
       </div>
 
       {isEditing && (
-        <div style={{ marginTop: 20, textAlign: 'center' }}>
-          <Button text="取消" onClick={() => setIsEditing(false)} stylingMode="text" />
-        </div>
+        <>
+          <div style={{ marginTop: 20, textAlign: 'center' }}>
+            <Button text="取消" onClick={() => setIsEditing(false)} stylingMode="text" />
+          </div>
+
+          <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid #fee2e2' }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#ef4444', marginBottom: 12, textTransform: 'uppercase' }}>危险区域</div>
+            <Button
+              text="清空所有记录 (测试数据)"
+              type="danger"
+              stylingMode="outlined"
+              width="100%"
+              onClick={async () => {
+                // Use native confirm for mobile
+                if (window.confirm('确定要清空该宝宝的所有记录吗？\n此操作不可恢复！')) {
+                  try {
+                    await BabyService.deleteAllRecords(baby.id);
+                    alert('记录已全部清空');
+                    await refresh(); // Refresh stats
+                  } catch (err) {
+                    console.error(err);
+                    alert('清空失败');
+                  }
+                }
+              }}
+            />
+            <p style={{ fontSize: 12, color: '#fca5a5', marginTop: 8, textAlign: 'center' }}>
+              将删除该宝宝名下的所有喂养、睡眠、尿布记录。
+            </p>
+          </div>
+        </>
       )}
     </div>
   );

@@ -1,13 +1,46 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="宝宝日常记录与喂奶时间线" />
+  <meta property="og:title" content="BabyDaily - 宝宝日常" />
+  <meta property="og:description" content="记录宝宝的喂奶、睡眠和成长。" />
+  <title>BabyDaily - 宝宝日常</title>
+</head>
+
+<body>
+  <script>
+    // 检测 Kindle 浏览器并添加 kindle-mode 类
+    (function () {
+      var ua = navigator.userAgent.toLowerCase();
+      if (ua.indexOf('kindle') !== -1 || ua.indexOf('silk') !== -1) {
+        document.body.classList.add('kindle-mode');
+      }
+      // 也可以通过 URL 参数强制启用: ?kindle=1
+      if (window.location.search.indexOf('kindle=1') !== -1) {
+        document.body.classList.add('kindle-mode');
+      }
+    })();
+  </script>
+  <div id="root">
+    <article style="padding: 20px; font-family: serif;">
+      <h1>BabyDaily - 宝宝日常</h1>
+      <p><strong>👋 如果您正在使用 Kindle 的“文章模式”，请退出该模式。</strong></p>
+      <p>本页面已针对 Kindle 的<strong>普通网页模式</strong>进行了深度优化：</p>
+      <ul>
+        <li>大字体高对比度显示</li>
+        <li>已禁用动画防止闪烁</li>
+        <li>专门的 E-ink 图标设计</li>
+      </ul>
+      <p>请点击浏览器右上角菜单，关闭 Article Mode 即可获得最佳体验。</p>
+      <hr />
+      <p style="color: gray; font-size: 12px;">正在加载应用程序...</p>
+    </article>
+  </div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

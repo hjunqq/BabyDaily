@@ -17,6 +17,9 @@ export class UserSettings {
     @Column({ name: 'export_format', default: 'CSV' })
     exportFormat: string;
 
+    @Column({ name: 'day_start_hour', default: 0 })
+    dayStartHour: number;  // 0-23，默认 0 表示午夜
+
     @CreateDateColumn()
     created_at: Date;
 

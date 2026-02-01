@@ -1,0 +1,8 @@
+date,time,type,amount,unit,subtype,remark
+2024-05-20,08:30,FEED,180,ml,FORMULA,早晨第一顿
+2024-05-20,10:00,DIAPER,,,BOTH,量大
+2024-05-20,13:00,SLEEP,,,,,午睡
+2024-05-20,15:30,FEED,150,ml,BREAST,亲喂
+2024-05-20,18:00,DIAPER,,,PEE,
+2024-05-21,09:00,FEED,200,ml,FORMULA,胃口不错
+2024-05-21,20:00,SLEEP,,,,,哄睡半小时

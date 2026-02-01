@@ -26,8 +26,13 @@ export class UsersService {
             return await this.usersRepository.save(user);
         } catch (error: any) {
             // UNIQUE 约束失败，说明用户已被其他进程创建，重新查询
+            // Postgres error code 23505: unique_violation
             const message = String(error?.message ?? '');
-            if (message.includes('UNIQUE constraint failed') && message.includes('users.openid')) {
+            if (
+                (error?.code === '23505') ||
+                (message.includes('UNIQUE constraint failed') && message.includes('users.openid')) ||
+                (message.includes('duplicate key value violate unique constraint'))
+            ) {
                 // 等待后重新查询，确保获取到新创建的用户
                 await new Promise(resolve => setTimeout(resolve, 50));
                 const found = await this.findOneByOpenid(openid);

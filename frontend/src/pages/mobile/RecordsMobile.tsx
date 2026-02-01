@@ -1,10 +1,12 @@
 ﻿import { TextBox } from 'devextreme-react/text-box';
 import { List } from 'devextreme-react/list';
+import { Button } from 'devextreme-react/button';
 import { LoadIndicator } from 'devextreme-react/load-indicator';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCurrentBaby } from '../../hooks/useCurrentBaby';
 import { useRecords } from '../../hooks/useRecords';
+import { BabyService } from '../../services/api';
 import type { BabyRecord } from '../../types';
 
 export const RecordsMobile = () => {
@@ -13,6 +15,9 @@ export const RecordsMobile = () => {
   const { records, loading: recordsLoading, error: recordsError } = useRecords(baby?.id || null, 30, 0);
   const [query, setQuery] = useState('');
 
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   const filtered = useMemo(() => {
     if (!query) return records;
     return records.filter(item => {
@@ -20,6 +25,41 @@ export const RecordsMobile = () => {
       return `${item.type} ${detail}`.toLowerCase().includes(query.toLowerCase());
     });
   }, [records, query]);
+
+  const toggleSelection = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`确定要删除选中的 ${selectedIds.size} 条记录吗？`)) return;
+
+    try {
+      await BabyService.deleteRecords(Array.from(selectedIds));
+      // Refresh list - simplest way is to reload or invalidate cache if we had one.
+      // Since useRecords uses internal state, we might need to trigger a refresh.
+      // But useRecords doesn't expose refresh directly here? 
+      // Actually useRecords returns `mutate` or we can force remount.
+      // For now, let's just navigation or reload. 
+      // Better: expose refresh from useRecords or use a global event.
+      // Let's modify useRecords later if needed, but for now simple reload works.
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      alert('删除失败');
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map(r => r.id)));
+    }
+  };
 
   if (babyLoading || recordsLoading) {
     return (
@@ -45,8 +85,19 @@ export const RecordsMobile = () => {
   }
 
   return (
-    <div>
-      <h2 className="bd-title" style={{ fontSize: 22 }}>记录时间轴</h2>
+    <div style={{ paddingBottom: isSelectionMode ? 80 : 0 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <h2 className="bd-title" style={{ fontSize: 22, margin: 0 }}>记录时间轴</h2>
+        <Button
+          text={isSelectionMode ? '取消' : '选择'}
+          onClick={() => {
+            setIsSelectionMode(!isSelectionMode);
+            setSelectedIds(new Set());
+          }}
+          stylingMode="text"
+        />
+      </div>
+
       <TextBox
         placeholder="搜索记录"
         stylingMode="outlined"
@@ -60,17 +111,64 @@ export const RecordsMobile = () => {
           noDataText="暂无记录"
           itemRender={(item: BabyRecord) => (
             <div
-              style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #E8DCD6' }}
-              onClick={() => navigate(`/record/${item.id}`)}
+              style={{ display: 'flex', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #E8DCD6' }}
+              onClick={() => {
+                if (isSelectionMode) {
+                  toggleSelection(item.id);
+                } else {
+                  navigate(`/record/${item.id}`);
+                }
+              }}
             >
-              <div>
-                <strong>{new Date(item.time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</strong> · {mapRecordType(item.type)}
+              {isSelectionMode && (
+                <div style={{ marginRight: 12 }}>
+                  <div style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: 4,
+                    border: '2px solid #ddd',
+                    background: selectedIds.has(item.id) ? '#FF9AA2' : 'transparent',
+                    borderColor: selectedIds.has(item.id) ? '#FF9AA2' : '#ddd',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    {selectedIds.has(item.id) && <span style={{ color: '#fff', fontSize: 14 }}>✓</span>}
+                  </div>
+                </div>
+              )}
+              <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between' }}>
+                <div>
+                  <strong>{new Date(item.time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</strong> · {mapRecordType(item.type)}
+                </div>
+                <div style={{ fontWeight: 600 }}>{mapRecordDetail(item)}</div>
               </div>
-              <div style={{ fontWeight: 600 }}>{mapRecordDetail(item)}</div>
             </div>
           )}
         />
       </div>
+
+      {isSelectionMode && (
+        <div style={{
+          position: 'fixed', bottom: 60, left: 0, right: 0,
+          background: '#fff', borderTop: '1px solid #eee', padding: '12px 16px',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          boxShadow: '0 -2px 10px rgba(0,0,0,0.05)', zIndex: 999
+        }}>
+          <Button
+            text={selectedIds.size === filtered.length ? '取消全选' : '全选'}
+            stylingMode="text"
+            onClick={handleSelectAll}
+          />
+          <Button
+            text={`删除 (${selectedIds.size})`}
+            type="danger"
+            stylingMode="contained"
+            disabled={selectedIds.size === 0}
+            onClick={handleDeleteSelected}
+          />
+        </div>
+      )}
     </div>
   );
 };
@@ -97,19 +195,30 @@ const mapRecordType = (type: BabyRecord['type']) => {
 };
 
 const mapRecordDetail = (record: BabyRecord) => {
+  let main = '-';
+
   if (record.type === 'FEED') {
     const details: any = record.details || {};
     const amount = details.amount ? `${details.amount}${details.unit || 'ml'}` : '';
-    return amount || record.remark || '-';
-  }
-  if (record.type === 'DIAPER') {
+    main = amount;
+  } else if (record.type === 'DIAPER') {
     const t = (record.details as any)?.type;
-    if (t === 'BOTH') return '尿 + 便';
-    if (t === 'POO') return '便便';
-    return '尿尿';
+    if (t === 'BOTH') main = '尿 + 便';
+    else if (t === 'POO') main = '便便';
+    else main = '尿尿';
+  } else if (record.type === 'SLEEP') {
+    main = '睡眠';
   }
-  if (record.type === 'SLEEP') {
-    return record.remark || '睡眠';
+
+  // If there's no specific detail, use remark as main
+  if (main === '-' || !main) {
+    return record.remark || '-';
   }
-  return record.remark || '-';
+
+  // If there is detail AND remark, combine them
+  if (record.remark) {
+    return `${main} (${record.remark})`;
+  }
+
+  return main;
 };

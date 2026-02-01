@@ -20,7 +20,7 @@ export class FamilyMember {
     user_id: string;
 
     @Column({
-        type: 'simple-enum',
+        type: 'enum',
         enum: FamilyRole,
         default: FamilyRole.MEMBER,
     })

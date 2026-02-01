@@ -12,6 +12,51 @@ export class RecordService {
         private recordRepository: Repository<Record>,
     ) { }
 
+    /**
+     * Calculate time ago string in Chinese
+     * @param date The date to calculate from
+     * @returns Time ago string like "2小时30分钟前"
+     */
+    private getTimeAgo(date: Date): string {
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+
+        if (diffMins < 1) return '刚刚';
+        if (diffMins < 60) return `${diffMins}分钟前`;
+
+        const hours = Math.floor(diffMins / 60);
+        const mins = diffMins % 60;
+
+        if (hours < 24) {
+            return mins > 0 ? `${hours}小时${mins}分钟前` : `${hours}小时前`;
+        }
+
+        const days = Math.floor(hours / 24);
+        return `${days}天前`;
+    }
+
+    /**
+     * Format time as HH:MM
+     * @param date The date to format
+     * @returns Formatted time string like "14:30"
+     */
+    private formatTime(date: Date): string {
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+    }
+
+    /**
+     * Calculate elapsed milliseconds from a date to now
+     * @param date The date to calculate from
+     * @returns Elapsed milliseconds
+     */
+    private getElapsedMs(date: Date): number {
+        const now = new Date();
+        return now.getTime() - date.getTime();
+    }
+
     async create(userId: string, data: any): Promise<Record> {
         const record = this.recordRepository.create({
             ...data,
@@ -32,7 +77,22 @@ export class RecordService {
             skip: offset,
             relations: ['creator'],
         });
-        return mapToCamelCase(records);
+
+        // First convert to camelCase
+        const camelCaseRecords = mapToCamelCase(records);
+
+        // Then enrich with server-calculated time fields for Kindle compatibility
+        const enrichedRecords = camelCaseRecords.map((record: any) => {
+            const recordTime = new Date(record.time);
+            return {
+                ...record,
+                timeAgo: this.getTimeAgo(recordTime),
+                formattedTime: this.formatTime(recordTime),
+                elapsedMs: this.getElapsedMs(recordTime),
+            };
+        });
+
+        return enrichedRecords;
     }
 
     async findOneWithGuard(id: string, userId: string): Promise<any | null> {
@@ -69,7 +129,7 @@ export class RecordService {
     }
 
     async removeWithGuard(id: string, userId: string): Promise<void> {
-        const rec = await this.findOneWithGuard(id, userId);
+        const rec = await this.recordRepository.findOne({ where: { id } });
         if (!rec) {
             throw new NotFoundException({
                 message: 'Record not found',
@@ -83,6 +143,25 @@ export class RecordService {
             });
         }
         await this.recordRepository.delete(id);
+    }
+    async removeManyWithGuard(ids: string[], userId: string): Promise<void> {
+        if (!ids.length) return;
+
+        // 验证这些记录是否都属于该用户有权操作的家庭
+        // 简化起见，这里假设只检查第一条记录的权限，或者直接执行带条件的删除
+        // 更严谨的做法是查询出所有记录并检查 creator_id，但这里为了性能使用 QueryBuilder
+        // 限制条件：creator_id 必须是当前用户 (因为 update/remove 都有这个限制)
+
+        await this.recordRepository.createQueryBuilder()
+            .delete()
+            .from(Record)
+            .where("id IN (:...ids)", { ids })
+            .andWhere("creator_id = :userId", { userId })
+            .execute();
+    }
+
+    async removeAllByBaby(babyId: string, userId: string): Promise<void> {
+        await this.recordRepository.delete({ baby_id: babyId });
     }
 
     async summary(babyId: string, days = 1) {
@@ -123,6 +202,69 @@ export class RecordService {
             diaperSoiled: diaper_soiled,
             sleepMinutes: sleep_minutes,
             lastFeedTime: last_feed_time,
+        };
+    }
+
+    /**
+     * 获取基于日切时间的日期范围
+     * @param dayStartHour 一天开始的小时 (0-23)
+     * @returns { from, to } 日期范围
+     */
+    private getDayRange(dayStartHour: number = 0): { from: Date; to: Date } {
+        const now = new Date();
+        const todayStart = new Date(now);
+        todayStart.setHours(dayStartHour, 0, 0, 0);
+
+        // 如果当前时间早于日切时间，说明"今天"实际上从昨天开始
+        if (now.getHours() < dayStartHour) {
+            todayStart.setDate(todayStart.getDate() - 1);
+        }
+
+        const from = todayStart;
+        const to = now;
+
+        return { from, to };
+    }
+
+    /**
+     * 获取今日喂奶时间线
+     * @param babyId 宝宝ID
+     * @param dayStartHour 日切时间(小时)
+     */
+    async getFeedTimeline(babyId: string, dayStartHour: number = 0) {
+        const { from, to } = this.getDayRange(dayStartHour);
+
+        const records = await this.recordRepository.find({
+            where: {
+                baby_id: babyId,
+                type: RecordType.FEED,
+                time: Between(from, to),
+            },
+            order: { time: 'ASC' },
+        });
+
+        let totalMl = 0;
+        const items = records.map(r => {
+            const details = r.details as any;
+            const amount = details?.amount || 0;
+            if (details?.subtype !== 'BREAST') {
+                totalMl += amount;
+            }
+            return {
+                id: r.id,
+                time: r.time.toISOString(),
+                amount: amount,
+                subtype: details?.subtype || 'BOTTLE',
+                duration: details?.duration,
+            };
+        });
+
+        return {
+            dayStartHour,
+            from: from.toISOString(),
+            to: to.toISOString(),
+            totalMl,
+            items,
         };
     }
 

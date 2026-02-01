@@ -1,4 +1,4 @@
-﻿import { type Baby, type BabyRecord, type Family, type User, type UserSettings, type NotificationItem } from '../types';
+﻿import { type Baby, type BabyRecord, type Family, type User, type UserSettings, type NotificationItem, type FeedTimelineData } from '../types';
 import { API_URL } from '../config/env';
 let ACCESS_TOKEN = localStorage.getItem('access_token');
 let CURRENT_BABY_ID: string | null = localStorage.getItem('current_baby_id');
@@ -32,7 +32,15 @@ export const request = async (url: string, options: RequestInit = {}) => {
         throw new Error(errorData.message || `Request failed with status ${res.status}`);
     }
 
-    return res.json();
+    if (res.status === 204) {
+        return {};
+    }
+
+    try {
+        return await res.json();
+    } catch (e) {
+        return {}; // Handle empty or invalid JSON response
+    }
 };
 
 export const BabyService = {
@@ -246,6 +254,19 @@ export const BabyService = {
         });
     },
 
+    deleteAllRecords: async (babyId: string): Promise<void> => {
+        await request(`${API_URL}/records/baby/${babyId}/all`, {
+            method: 'DELETE',
+        });
+    },
+
+    deleteRecords: async (ids: string[]): Promise<void> => {
+        await request(`${API_URL}/records/batch`, {
+            method: 'DELETE',
+            body: JSON.stringify({ ids })
+        });
+    },
+
     getRecord: async (id: string): Promise<BabyRecord> => {
         return request(`${API_URL}/records/${id}`);
     },
@@ -266,6 +287,11 @@ export const BabyService = {
     getTrends: async (babyId: string, days = 7) => {
         const targetId = babyId === 'u-sakura-001' ? (CURRENT_BABY_ID || (await BabyService.ensureDevEnvironment()).id) : babyId;
         return request(`${API_URL}/records/baby/${targetId}/trend?days=${days}`);
+    },
+
+    getFeedTimeline: async (babyId: string, dayStartHour = 0): Promise<FeedTimelineData> => {
+        const targetId = babyId === 'u-sakura-001' ? (CURRENT_BABY_ID || (await BabyService.ensureDevEnvironment()).id) : babyId;
+        return request(`${API_URL}/records/baby/${targetId}/feed-timeline?dayStartHour=${dayStartHour}`);
     }
 };
 

@@ -20,8 +20,12 @@ import { AppService } from './app.service';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        type: 'sqlite',
-        database: configService.get<string>('DATABASE_PATH') ?? 'database/babydaily.sqlite',
+        type: 'postgres',
+        host: configService.get<string>('DB_HOST', 'postgres'),
+        port: configService.get<number>('DB_PORT', 5432),
+        username: configService.get<string>('DB_USERNAME', 'postgres'),
+        password: configService.get<string>('DB_PASSWORD', 'postgres'),
+        database: configService.get<string>('DB_DATABASE', 'babydaily'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: true, // Dev only; disable in production.
       }),

@@ -32,8 +32,8 @@ export const RecordEditForm = ({ recordId, onClose, onSuccess }: RecordEditFormP
                 const record = await BabyService.getRecord(recordId);
                 setType(record.type as RecordType);
                 setTime(new Date(record.time).toISOString().slice(0, 16));
-                if (record.end_time) {
-                    setEndTime(new Date(record.end_time).toISOString().slice(0, 16));
+                if (record.endTime) {
+                    setEndTime(new Date(record.endTime).toISOString().slice(0, 16));
                 }
                 if (isFeedDetails(record.details) && record.details.amount) {
                     setAmount(record.details.amount.toString());
@@ -80,7 +80,7 @@ export const RecordEditForm = ({ recordId, onClose, onSuccess }: RecordEditFormP
             await BabyService.updateRecord(recordId, {
                 type,
                 time: new Date(time).toISOString(),
-                end_time: endTime ? new Date(endTime).toISOString() : undefined,
+                endTime: endTime ? new Date(endTime).toISOString() : undefined,
                 details,
             } as any);
 
