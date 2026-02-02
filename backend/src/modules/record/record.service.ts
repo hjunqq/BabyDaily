@@ -8,6 +8,7 @@ import {
     enrichWithTimeFields,
     formatDateKey,
 } from './record.mapper';
+import { SettingsService } from '../settings/settings.service';
 
 /**
  * Record Service - Business logic layer
@@ -15,7 +16,10 @@ import {
  */
 @Injectable()
 export class RecordService {
-    constructor(private readonly recordRepo: RecordRepository) { }
+    constructor(
+        private readonly recordRepo: RecordRepository,
+        private readonly settingsService: SettingsService,
+    ) { }
 
     async create(userId: string, data: any): Promise<Record> {
         return this.recordRepo.create({
@@ -96,8 +100,14 @@ export class RecordService {
         await this.recordRepo.deleteByBabyId(babyId);
     }
 
-    async summary(babyId: string, days = 1) {
-        const from = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    async summary(babyId: string, userId: string) {
+        let dayStartHour = 0;
+        if (userId) {
+            const settings = await this.settingsService.getOrCreate(userId);
+            dayStartHour = settings.dayStartHour || 0;
+        }
+
+        const { from } = this.getDayRange(dayStartHour);
 
         const result = await this.recordRepo.aggregateSummary(babyId, from);
         const lastFeed = await this.recordRepo.findLastFeed(babyId);
@@ -113,14 +123,22 @@ export class RecordService {
 
     private getDayRange(dayStartHour: number = 0): { from: Date; to: Date } {
         const now = new Date();
-        const todayStart = new Date(now);
-        todayStart.setHours(dayStartHour, 0, 0, 0);
+        // Adjust to China Time (+8) for calculation
+        // Create a 'Fake UTC' Date that represents local China time
+        const chinaTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
 
-        if (now.getHours() < dayStartHour) {
-            todayStart.setDate(todayStart.getDate() - 1);
+        const startTarget = new Date(chinaTime);
+        startTarget.setUTCHours(dayStartHour, 0, 0, 0);
+
+        // If current china hour < start hour, it means we are in the early morning of 'calendar day', 
+        // but 'logical day' is yesterday.
+        if (chinaTime.getUTCHours() < dayStartHour) {
+            startTarget.setUTCDate(startTarget.getUTCDate() - 1);
         }
 
-        return { from: todayStart, to: now };
+        // Convert back to Real UTC by subtracting offset
+        const from = new Date(startTarget.getTime() - 8 * 60 * 60 * 1000);
+        return { from, to: now };
     }
 
     async getFeedTimeline(babyId: string, dayStartHour: number = 0) {
@@ -153,11 +171,17 @@ export class RecordService {
         };
     }
 
-    async trend(babyId: string, days = 7) {
-        const now = new Date();
-        const from = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+    async trend(babyId: string, days = 7, userId?: string) {
+        let dayStartHour = 0;
+        if (userId) {
+            const settings = await this.settingsService.getOrCreate(userId);
+            dayStartHour = settings.dayStartHour || 0;
+        }
 
-        const rawResult = await this.recordRepo.aggregateTrend(babyId, from);
+        const now = new Date();
+        const from = new Date(now.getTime() - (days + 1) * 24 * 60 * 60 * 1000);
+
+        const rawResult = await this.recordRepo.aggregateTrend(babyId, from, dayStartHour);
 
         // Build result map from DB data
         const bucket = new Map<string, { milkMl: number; solidG: number }>();
@@ -170,10 +194,18 @@ export class RecordService {
         });
 
         // Generate result for all days in range
+        // Must use the same logic as the SQL query:
+        // SQL: TO_CHAR(r.time - interval '${dayStartHour} hours', 'YYYY-MM-DD')
+        // Since r.time displays as China Time in PostgreSQL, we:
+        // 1. Convert current UTC time to China Time (+8h)
+        // 2. Subtract dayStartHour hours
+        // 3. Extract the date
         const result = [];
         for (let i = days - 1; i >= 0; i--) {
             const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-            const key = formatDateKey(d);
+            const chinaTime = new Date(d.getTime() + 8 * 60 * 60 * 1000);
+            const shiftedTime = new Date(chinaTime.getTime() - dayStartHour * 60 * 60 * 1000);
+            const key = shiftedTime.toISOString().slice(0, 10);
             const val = bucket.get(key) || { milkMl: 0, solidG: 0 };
             result.push({
                 date: key,

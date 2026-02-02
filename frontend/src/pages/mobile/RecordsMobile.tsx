@@ -13,7 +13,7 @@ import { mapRecordType, mapRecordDetail } from '../../utils/recordMappers';
 export const RecordsMobile = () => {
   const navigate = useNavigate();
   const { baby, loading: babyLoading, error: babyError } = useCurrentBaby();
-  const { records, loading: recordsLoading, error: recordsError } = useRecords(baby?.id || null, 30, 0);
+  const { records, loading: recordsLoading, error: recordsError, hasMore, loadMore } = useRecords(baby?.id || null);
   const [query, setQuery] = useState('');
 
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -203,6 +203,17 @@ export const RecordsMobile = () => {
             stylingMode="contained"
             disabled={selectedIds.size === 0}
             onClick={handleDeleteSelected}
+          />
+        </div>
+      )}
+      {hasMore && (
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <Button
+            text={recordsLoading ? '加载中...' : '加载更多'}
+            onClick={loadMore}
+            disabled={recordsLoading}
+            stylingMode="outlined"
+            width="100%"
           />
         </div>
       )}

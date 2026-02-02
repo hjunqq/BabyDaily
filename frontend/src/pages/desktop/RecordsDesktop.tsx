@@ -13,19 +13,51 @@ import { mapRecordType, mapRecordDetail } from '../../utils/recordMappers';
 export const RecordsDesktop = () => {
   const navigate = useNavigate();
   const { baby, loading: babyLoading, error: babyError } = useCurrentBaby();
-  const { records, loading: recordsLoading, error: recordsError } = useRecords(baby?.id || null, 50, 0);
+  const { records, loading: recordsLoading, error: recordsError, hasMore, loadMore } = useRecords(baby?.id || null);
   const [query, setQuery] = useState('');
 
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const filtered = useMemo(() => {
-    if (!query) return records;
-    return records.filter(item => {
+  const groupedData = useMemo(() => {
+    if (!records) return [];
+
+    // Filter first
+    const list = query ? records.filter(item => {
       const detail = mapRecordDetail(item);
       return `${item.type} ${detail}`.toLowerCase().includes(query.toLowerCase());
+    }) : records;
+
+    // Then group
+    const groups: { key: string; items: BabyRecord[] }[] = [];
+
+    list.forEach(item => {
+      const date = new Date(item.time);
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      let key = date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', weekday: 'short' });
+
+      if (date.toDateString() === today.toDateString()) {
+        key = '今天';
+      } else if (date.toDateString() === yesterday.toDateString()) {
+        key = '昨天';
+      }
+
+      const lastGroup = groups[groups.length - 1];
+      if (lastGroup && lastGroup.key === key) {
+        lastGroup.items.push(item);
+      } else {
+        groups.push({ key, items: [item] });
+      }
     });
+
+    return groups;
   }, [records, query]);
+
+  // Flatten for selection logic
+  const filtered = useMemo(() => groupedData.flatMap(g => g.items), [groupedData]);
 
   const toggleSelection = (id: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -56,7 +88,7 @@ export const RecordsDesktop = () => {
     }
   };
 
-  if (babyLoading || recordsLoading) {
+  if (babyLoading || recordsLoading && records.length === 0) {
     return (
       <div className="bd-state">
         <div className="bd-state-card">
@@ -111,11 +143,20 @@ export const RecordsDesktop = () => {
 
       <div className="bd-card">
         <List
-          dataSource={filtered}
+          dataSource={groupedData}
           noDataText="暂无记录"
+          grouped={true}
+          collapsibleGroups={false}
+          groupRender={(data) => <div className="bd-list-group-header" style={{
+            padding: '12px 16px',
+            background: '#F7EFEB',
+            color: '#6b524b',
+            fontWeight: 'bold',
+            fontSize: '14px'
+          }}>{data.key}</div>}
           itemRender={(item: BabyRecord) => (
             <div
-              style={{ display: 'flex', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #E8DCD6', cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #E8DCD6', cursor: 'pointer' }}
               onClick={() => {
                 if (isSelectionMode) toggleSelection(item.id);
                 else navigate(`/record/${item.id}`);
@@ -145,6 +186,17 @@ export const RecordsDesktop = () => {
             </div>
           )}
         />
+        {hasMore && (
+          <div style={{ padding: '20px', textAlign: 'center', borderTop: '1px solid #f0f0f0' }}>
+            <Button
+              text={recordsLoading ? '加载中...' : '加载更多'}
+              onClick={loadMore}
+              disabled={recordsLoading}
+              stylingMode="outlined"
+              width={200}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

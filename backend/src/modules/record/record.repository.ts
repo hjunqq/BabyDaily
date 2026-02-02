@@ -105,11 +105,29 @@ export class RecordRepository {
     /**
      * Aggregate trend data grouped by date
      */
-    async aggregateTrend(babyId: string, from: Date): Promise<any[]> {
-        return this.repo
+    async aggregateTrend(babyId: string, from: Date, dayStartHour: number = 0): Promise<any[]> {
+        // Validate dayStartHour is 0-23 (prevent SQL injection)
+        const safeHour = Math.max(0, Math.min(23, Math.floor(dayStartHour)));
+
+        // The correct logic for "logical date" with dayStartHour:
+        // PostgreSQL server seems to be configured with China timezone (UTC+8)
+        // So r.time displays as local time when using TO_CHAR
+        // 
+        // To get China Time date with dayStartHour offset:
+        // - Local display = China Time (already correct for dayStart=0)
+        // - For dayStart>0, subtract dayStartHour from local time before extracting date
+        //
+        // For example with dayStartHour=8:
+        // - A 04:00 China record should belong to previous day
+        // - Subtracting 8h from 04:00 gives 20:00 previous day -> date = previous day ✓
+        const dateFormula = safeHour === 0
+            ? `TO_CHAR(r.time, 'YYYY-MM-DD')`
+            : `TO_CHAR(r.time - interval '${safeHour} hours', 'YYYY-MM-DD')`;
+
+        const query = this.repo
             .createQueryBuilder('r')
             .select([
-                `TO_CHAR(r.time + interval '8 hours', 'YYYY-MM-DD') as day`,
+                `${dateFormula} as day`,
                 `SUM(CASE WHEN r.type = 'FEED' AND (r.details->>'subtype' IS NULL OR r.details->>'subtype' != 'SOLID') 
                     THEN COALESCE((r.details->>'amount')::int, 0) ELSE 0 END) as milk_ml`,
                 `SUM(CASE WHEN r.type = 'FEED' AND r.details->>'subtype' = 'SOLID' 
@@ -118,9 +136,10 @@ export class RecordRepository {
             .where('r.baby_id = :babyId', { babyId })
             .andWhere('r.time >= :from', { from })
             .andWhere('r.type = :type', { type: RecordType.FEED })
-            .groupBy('day')
-            .orderBy('day', 'ASC')
-            .getRawMany();
+            .groupBy(dateFormula)
+            .orderBy('day', 'ASC');
+
+        return query.getRawMany();
     }
 
     async findFeedsByTimeRange(babyId: string, from: Date, to: Date): Promise<Record[]> {

@@ -25,14 +25,14 @@ export class RecordController {
     // 具体路径要放在通配路径之前
     @Get('baby/:babyId/summary')
     @UseGuards(FamilyGuard)
-    summary(@Param('babyId') babyId: string, @Query() query: SummaryQueryDto) {
-        return this.recordService.summary(babyId, query.days ?? 1);
+    summary(@Param('babyId') babyId: string, @Request() req: any) {
+        return this.recordService.summary(babyId, req.user.userId);
     }
 
     @Get('baby/:babyId/trend')
     @UseGuards(FamilyGuard)
-    trend(@Param('babyId') babyId: string, @Query() query: SummaryQueryDto) {
-        return this.recordService.trend(babyId, query.days ?? 7);
+    trend(@Param('babyId') babyId: string, @Query() query: SummaryQueryDto, @Request() req: any) {
+        return this.recordService.trend(babyId, query.days ?? 7, req.user.userId);
     }
 
     @Get('baby/:babyId/feed-timeline')

@@ -127,7 +127,7 @@ const getCardBackground = (elapsedTimeMs: number): string => {
 
 export const MobileHome = () => {
   const { baby, loading: babyLoading, error: babyError } = useCurrentBaby();
-  const { records, loading: recordsLoading, error: recordsError } = useRecords(baby?.id || null, 5, 0);
+  const { records, loading: recordsLoading, error: recordsError } = useRecords(baby?.id || null, 5);
   const [summary, setSummary] = useState<any | null>(null);
   const [summaryError, setSummaryError] = useState<string | undefined>();
   const [showFeedModal, setShowFeedModal] = useState(false);
