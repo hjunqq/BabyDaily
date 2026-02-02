@@ -165,43 +165,39 @@ export class RecordService {
     }
 
     async summary(babyId: string, days = 1) {
-        const now = new Date();
-        const from = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-        const records = await this.recordRepository.find({
-            where: { baby_id: babyId, time: Between(from, now) },
+        const from = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+        // Use DB-level aggregation for better performance
+        const result = await this.recordRepository
+            .createQueryBuilder('r')
+            .select([
+                `SUM(CASE WHEN r.type = 'FEED' AND (r.details->>'subtype' IS NULL OR r.details->>'subtype' != 'SOLID') 
+                    THEN COALESCE((r.details->>'amount')::int, 0) ELSE 0 END) as milk_ml`,
+                `SUM(CASE WHEN r.type = 'DIAPER' AND r.details->>'type' IN ('PEE','BOTH') 
+                    THEN 1 ELSE 0 END) as diaper_wet`,
+                `SUM(CASE WHEN r.type = 'DIAPER' AND r.details->>'type' IN ('POO','BOTH') 
+                    THEN 1 ELSE 0 END) as diaper_soiled`,
+                `SUM(CASE WHEN r.type = 'SLEEP' 
+                    THEN EXTRACT(EPOCH FROM (COALESCE(r.end_time, r.time + interval '90 minutes') - r.time))/60 
+                    ELSE 0 END)::int as sleep_minutes`,
+            ])
+            .where('r.baby_id = :babyId', { babyId })
+            .andWhere('r.time >= :from', { from })
+            .getRawOne();
+
+        // Get last feed time separately (simpler query)
+        const lastFeed = await this.recordRepository.findOne({
+            where: { baby_id: babyId, type: RecordType.FEED },
             order: { time: 'DESC' },
-        });
-
-        let milk_ml = 0;
-        let diaper_wet = 0;
-        let diaper_soiled = 0;
-        let sleep_minutes = 0;
-        let last_feed_time: string | undefined;
-
-        records.forEach((r) => {
-            if (r.type === RecordType.FEED) {
-                const amount = (r.details as any)?.amount;
-                if (typeof amount === 'number') milk_ml += amount;
-                if (!last_feed_time) last_feed_time = r.time.toISOString();
-            }
-            if (r.type === RecordType.DIAPER) {
-                const t = (r.details as any)?.type;
-                if (t === 'PEE' || t === 'BOTH') diaper_wet += 1;
-                if (t === 'POO' || t === 'BOTH') diaper_soiled += 1;
-            }
-            if (r.type === RecordType.SLEEP) {
-                const end = r.end_time ? new Date(r.end_time).getTime() : new Date(r.time).getTime() + 90 * 60000;
-                const start = new Date(r.time).getTime();
-                sleep_minutes += Math.max(0, Math.round((end - start) / 60000));
-            }
+            select: ['time'],
         });
 
         return {
-            milkMl: milk_ml,
-            diaperWet: diaper_wet,
-            diaperSoiled: diaper_soiled,
-            sleepMinutes: sleep_minutes,
-            lastFeedTime: last_feed_time,
+            milkMl: parseInt(result?.milk_ml) || 0,
+            diaperWet: parseInt(result?.diaper_wet) || 0,
+            diaperSoiled: parseInt(result?.diaper_soiled) || 0,
+            sleepMinutes: parseInt(result?.sleep_minutes) || 0,
+            lastFeedTime: lastFeed?.time?.toISOString(),
         };
     }
 
@@ -271,37 +267,47 @@ export class RecordService {
     async trend(babyId: string, days = 7) {
         const now = new Date();
         const from = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-        const records = await this.recordRepository.find({
-            where: { baby_id: babyId, time: Between(from, now) },
-            order: { time: 'ASC' },
+
+        // Use DB-level aggregation grouped by date for better performance
+        const rawResult = await this.recordRepository
+            .createQueryBuilder('r')
+            .select([
+                `DATE(r.time) as day`,
+                `SUM(CASE WHEN r.type = 'FEED' AND (r.details->>'subtype' IS NULL OR r.details->>'subtype' != 'SOLID') 
+                    THEN COALESCE((r.details->>'amount')::int, 0) ELSE 0 END) as milk_ml`,
+                `SUM(CASE WHEN r.type = 'FEED' AND r.details->>'subtype' = 'SOLID' 
+                    THEN COALESCE((r.details->>'amount')::int, 0) ELSE 0 END) as solid_g`,
+            ])
+            .where('r.baby_id = :babyId', { babyId })
+            .andWhere('r.time >= :from', { from })
+            .andWhere('r.type = :type', { type: RecordType.FEED })
+            .groupBy('DATE(r.time)')
+            .orderBy('day', 'ASC')
+            .getRawMany();
+
+        // Build result map from DB data
+        const bucket = new Map<string, { milkMl: number; solidG: number }>();
+        rawResult.forEach((row: any) => {
+            const dayStr = row.day instanceof Date
+                ? row.day.toISOString().slice(0, 10)
+                : String(row.day);
+            bucket.set(dayStr, {
+                milkMl: parseInt(row.milk_ml) || 0,
+                solidG: parseInt(row.solid_g) || 0,
+            });
         });
 
-        const bucket = new Map<string, { milk_ml: number; solid_g: number }>();
-        const fmt = (d: Date) => d.toISOString().slice(0, 10);
-
-        records.forEach((r) => {
-            const day = fmt(r.time);
-            if (!bucket.has(day)) bucket.set(day, { milk_ml: 0, solid_g: 0 });
-            const entry = bucket.get(day)!;
-            if (r.type === RecordType.FEED) {
-                const details = (r.details as any) || {};
-                if (details.subtype === 'SOLID') {
-                    entry.solid_g += details.amount || 0;
-                } else {
-                    entry.milk_ml += details.amount || 0;
-                }
-            }
-        });
-
+        // Generate result for all days in range
         const result = [];
+        const fmt = (d: Date) => d.toISOString().slice(0, 10);
         for (let i = days - 1; i >= 0; i--) {
             const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
             const key = fmt(d);
-            const val = bucket.get(key) || { milk_ml: 0, solid_g: 0 };
+            const val = bucket.get(key) || { milkMl: 0, solidG: 0 };
             result.push({
                 date: key,
-                milkMl: val.milk_ml,
-                solidG: val.solid_g,
+                milkMl: val.milkMl,
+                solidG: val.solidG,
             });
         }
         return result;

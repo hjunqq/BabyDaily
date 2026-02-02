@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 import { Baby } from '../../baby/entities/baby.entity';
 import { User } from '../../users/entities/user.entity';
 
@@ -15,6 +15,8 @@ export enum RecordType {
 }
 
 @Entity('records')
+@Index('idx_records_baby_time', ['baby_id', 'time'])
+@Index('idx_records_baby_type_time', ['baby_id', 'type', 'time'])
 export class Record {
     @PrimaryGeneratedColumn('uuid')
     id: string;

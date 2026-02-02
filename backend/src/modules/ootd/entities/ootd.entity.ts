@@ -1,8 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 import { Baby } from '../../baby/entities/baby.entity';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('ootd')
+@Index('idx_ootd_baby_date', ['baby_id', 'date'])
 export class Ootd {
     @PrimaryGeneratedColumn('uuid')
     id: string;
