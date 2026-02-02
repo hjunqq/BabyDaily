@@ -1,15 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { Ootd } from './entities/ootd.entity';
 import { ErrorCodes } from '../../common/enums/error-codes.enum';
 import { mapToCamelCase } from '../../common/utils/mapping';
+import { FamilyService } from '../family/family.service';
 
 @Injectable()
 export class OotdService {
     constructor(
         @InjectRepository(Ootd)
         private ootdRepository: Repository<Ootd>,
+        private familyService: FamilyService,
     ) { }
 
     async create(userId: string, data: Partial<Ootd>): Promise<any> {
@@ -23,17 +25,20 @@ export class OotdService {
     }
 
     async findAllByBaby(babyId: string, page = 1, limit = 20, tags?: string[]): Promise<any[]> {
-        const where: any = { baby_id: babyId };
+        // Use QueryBuilder with parameterized queries to prevent SQL injection
+        const qb = this.ootdRepository.createQueryBuilder('ootd')
+            .where('ootd.baby_id = :babyId', { babyId })
+            .orderBy('ootd.date', 'DESC')
+            .addOrderBy('ootd.created_at', 'DESC')
+            .skip((page - 1) * limit)
+            .take(limit);
+
         if (tags && tags.length) {
-            where.tags = () => `tags && ARRAY[${tags.map(t => `'${t}'`).join(',')}]`;
+            // Use parameterized query for array overlap - prevents SQL injection
+            qb.andWhere('ootd.tags && :tags', { tags });
         }
 
-        const items = await this.ootdRepository.find({
-            where,
-            order: { date: 'DESC', created_at: 'DESC' },
-            skip: (page - 1) * limit,
-            take: limit,
-        });
+        const items = await qb.getMany();
         return mapToCamelCase(items);
     }
 
@@ -56,6 +61,27 @@ export class OotdService {
         return item ? mapToCamelCase(item) : null;
     }
 
+    async findOneWithOwnerCheck(id: string, userId: string): Promise<any> {
+        const ootd = await this.ootdRepository.findOne({ where: { id } });
+        if (!ootd) {
+            throw new NotFoundException({
+                message: 'OOTD not found',
+                code: ErrorCodes.NOT_FOUND,
+            });
+        }
+
+        // Check if user has access to this baby's data
+        const hasAccess = await this.familyService.isBabyBelongToUserFamily(ootd.baby_id, userId);
+        if (!hasAccess) {
+            throw new ForbiddenException({
+                message: 'No permission for this OOTD data',
+                code: ErrorCodes.AUTH_FORBIDDEN,
+            });
+        }
+
+        return mapToCamelCase(ootd);
+    }
+
     async like(id: string): Promise<any> {
         const ootd = await this.ootdRepository.findOne({ where: { id } });
         if (!ootd) {
@@ -70,6 +96,27 @@ export class OotdService {
     }
 
     async remove(id: string): Promise<void> {
+        await this.ootdRepository.delete(id);
+    }
+
+    async removeWithOwnerCheck(id: string, userId: string): Promise<void> {
+        const ootd = await this.ootdRepository.findOne({ where: { id } });
+        if (!ootd) {
+            throw new NotFoundException({
+                message: 'OOTD not found',
+                code: ErrorCodes.NOT_FOUND,
+            });
+        }
+
+        // Check if user has access to this baby's data
+        const hasAccess = await this.familyService.isBabyBelongToUserFamily(ootd.baby_id, userId);
+        if (!hasAccess) {
+            throw new ForbiddenException({
+                message: 'No permission to delete this OOTD',
+                code: ErrorCodes.AUTH_FORBIDDEN,
+            });
+        }
+
         await this.ootdRepository.delete(id);
     }
 }

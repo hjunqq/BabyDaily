@@ -4,6 +4,14 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 
+function getRequiredJwtSecret(configService: ConfigService): string {
+    const secret = configService.get<string>('JWT_SECRET');
+    if (!secret) {
+        throw new Error('JWT_SECRET environment variable is required but not set');
+    }
+    return secret;
+}
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
     constructor(
@@ -13,7 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
-            secretOrKey: configService.get<string>('JWT_SECRET') || 'defaultSecret',
+            secretOrKey: getRequiredJwtSecret(configService),
         });
     }
 

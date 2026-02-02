@@ -9,11 +9,12 @@ import { extname } from 'path';
 import { ErrorCodes } from '../../common/enums/error-codes.enum';
 
 @Controller('ootd')
-@UseGuards(AuthGuard('jwt'), FamilyGuard)
+@UseGuards(AuthGuard('jwt'))
 export class OotdController {
     constructor(private readonly ootdService: OotdService) { }
 
     @Post()
+    @UseGuards(FamilyGuard)
     create(@Request() req: any, @Body() createOotdDto: CreateOotdDto) {
         return this.ootdService.create(req.user.userId, {
             ...createOotdDto,
@@ -22,6 +23,7 @@ export class OotdController {
     }
 
     @Post('upload')
+    @UseGuards(FamilyGuard)
     @UseInterceptors(FilesInterceptor('files', 3, {
         storage: diskStorage({
             destination: './uploads/ootd',
@@ -61,6 +63,7 @@ export class OotdController {
     }
 
     @Get('baby/:babyId')
+    @UseGuards(FamilyGuard)
     findAllByBaby(
         @Param('babyId') babyId: string,
         @Query('page') page: string,
@@ -77,6 +80,7 @@ export class OotdController {
     }
 
     @Get('calendar/:babyId/:year/:month')
+    @UseGuards(FamilyGuard)
     findByMonth(
         @Param('babyId') babyId: string,
         @Param('year') year: string,
@@ -85,9 +89,10 @@ export class OotdController {
         return this.ootdService.findByMonth(babyId, parseInt(year), parseInt(month));
     }
 
+    // Routes without babyId in params - validate ownership in service layer
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.ootdService.findOne(id);
+    findOne(@Param('id') id: string, @Request() req: any) {
+        return this.ootdService.findOneWithOwnerCheck(id, req.user.userId);
     }
 
     @Post(':id/like')
@@ -96,7 +101,7 @@ export class OotdController {
     }
 
     @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.ootdService.remove(id);
+    remove(@Param('id') id: string, @Request() req: any) {
+        return this.ootdService.removeWithOwnerCheck(id, req.user.userId);
     }
 }

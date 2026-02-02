@@ -1,4 +1,4 @@
-﻿import { Controller, Get, Param, UseGuards, Request, Patch, Body } from '@nestjs/common';
+﻿import { Controller, Get, UseGuards, Request, Patch, Body } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from './users.service';
 
@@ -17,8 +17,5 @@ export class UsersController {
         return this.usersService.update(req.user.userId, body);
     }
 
-    @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.usersService.findOne(id);
-    }
+    // GET /users/:id removed for security - users should only access their own data via /users/me
 }
