@@ -189,16 +189,38 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      <div style={{ marginTop: 24 }} className="bd-card">
-        <div className="bd-section-title">喂养趋势（7 天）</div>
-        <Chart dataSource={trends} size={{ height: 220 }}>
-          <ArgumentAxis />
-          <ValueAxis />
-          <Series valueField="milk" argumentField="name" name="奶量 (ml)" type="line" color="#F3B6C2" />
-          <Series valueField="solid" argumentField="name" name="辅食 (g)" type="line" color="#BFD9C6" />
-          <Legend verticalAlignment="bottom" horizontalAlignment="center" />
-          <Tooltip enabled />
-        </Chart>
+      <div className="bd-grid two" style={{ marginTop: 24 }}>
+        <div className="bd-card">
+          <div className="bd-section-title">喂养趋势（7 天）- 奶量</div>
+          <Chart dataSource={trends} size={{ height: 220 }}>
+            <ArgumentAxis valueMarginsEnabled={false} discreteAxisDivisionMode="crossLabels" />
+            <ValueAxis />
+            <Series
+              valueField="milk"
+              argumentField="name"
+              type="splinearea"
+              color="#FF9AA2"
+            />
+            <Tooltip enabled customizeTooltip={(arg: any) => ({ text: `${arg.valueText} ml` })} />
+            <Legend visible={false} />
+          </Chart>
+        </div>
+        <div className="bd-card">
+          <div className="bd-section-title">喂养趋势（7 天）- 辅食</div>
+          <Chart dataSource={trends} size={{ height: 220 }}>
+            <ArgumentAxis valueMarginsEnabled={false} />
+            <ValueAxis />
+            <Series
+              valueField="solid"
+              argumentField="name"
+              type="bar"
+              color="#B5EAD7"
+              barPadding={0.3}
+            />
+            <Tooltip enabled customizeTooltip={(arg: any) => ({ text: `${arg.valueText} g` })} />
+            <Legend visible={false} />
+          </Chart>
+        </div>
       </div>
 
       <div style={{ marginTop: 24 }} className="bd-card">

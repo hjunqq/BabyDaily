@@ -1,4 +1,4 @@
-﻿import { Chart, Series, ArgumentAxis, ValueAxis, Tooltip, Legend } from 'devextreme-react/chart';
+﻿import { Chart, Series, ArgumentAxis, ValueAxis, Tooltip, Legend, ZoomAndPan, ScrollBar } from 'devextreme-react/chart';
 import { LoadIndicator } from 'devextreme-react/load-indicator';
 import { useEffect, useState } from 'react';
 import { useCurrentBaby } from '../../hooks/useCurrentBaby';
@@ -9,13 +9,16 @@ export const StatisticsMobile = () => {
   const [trendData, setTrendData] = useState<{ day: string; milk: number; solid: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | undefined>();
+  // Initial visual range (show last 7 days of data)
+  const [visualRange, setVisualRange] = useState<any>({});
 
   useEffect(() => {
     const load = async () => {
       if (!baby?.id) return;
       try {
         setLoading(true);
-        const data = await BabyService.getTrends(baby.id, 7);
+        // Load 60 days of data to allow scrolling back
+        const data = await BabyService.getTrends(baby.id, 60);
         const mapped = Array.isArray(data)
           ? data.map((item: any) => ({
             day: item.date?.slice(5) || '',
@@ -24,6 +27,14 @@ export const StatisticsMobile = () => {
           }))
           : [];
         setTrendData(mapped);
+
+        // Set initial visual range to last 7 entries if available
+        if (mapped.length > 0) {
+          const end = mapped[mapped.length - 1].day;
+          const start = mapped[Math.max(0, mapped.length - 7)].day;
+          setVisualRange({ startValue: start, endValue: end });
+        }
+
       } catch (err: any) {
         setError(err?.message || '加载趋势失败');
       } finally {
@@ -61,22 +72,52 @@ export const StatisticsMobile = () => {
       <h2 className="bd-title" style={{ fontSize: 22 }}>趋势统计</h2>
       <div className="bd-card" style={{ marginTop: 12 }}>
         <div style={{ fontWeight: 600, marginBottom: 8 }}>奶量趋势</div>
-        <Chart dataSource={trendData} size={{ height: 180 }}>
-          <ArgumentAxis />
+        <Chart
+          dataSource={trendData}
+          size={{ height: 260 }}
+        >
+          <ArgumentAxis
+            visualRange={visualRange}
+            onVisualRangeChange={setVisualRange}
+            valueMarginsEnabled={false}
+            discreteAxisDivisionMode="crossLabels"
+          />
           <ValueAxis />
-          <Series valueField="milk" argumentField="day" type="line" color="#F3B6C2" />
-          <Tooltip enabled />
+          <Series
+            valueField="milk"
+            argumentField="day"
+            type="splinearea"
+            color="#FF9AA2"
+          />
+          <Tooltip enabled customizeTooltip={(arg: any) => ({ text: `${arg.valueText} ml` })} />
           <Legend visible={false} />
+          <ZoomAndPan argumentAxis="both" />
+          <ScrollBar visible={true} />
         </Chart>
       </div>
       <div className="bd-card" style={{ marginTop: 12 }}>
         <div style={{ fontWeight: 600, marginBottom: 8 }}>辅食趋势</div>
-        <Chart dataSource={trendData} size={{ height: 180 }}>
-          <ArgumentAxis />
+        <Chart
+          dataSource={trendData}
+          size={{ height: 260 }}
+        >
+          <ArgumentAxis
+            visualRange={visualRange}
+            onVisualRangeChange={setVisualRange}
+            valueMarginsEnabled={false}
+          />
           <ValueAxis />
-          <Series valueField="solid" argumentField="day" type="bar" color="#BFD9C6" />
-          <Tooltip enabled />
+          <Series
+            valueField="solid"
+            argumentField="day"
+            type="bar"
+            color="#B5EAD7"
+            barPadding={0.3}
+          />
+          <Tooltip enabled customizeTooltip={(arg: any) => ({ text: `${arg.valueText} g` })} />
           <Legend visible={false} />
+          <ZoomAndPan argumentAxis="both" />
+          <ScrollBar visible={true} />
         </Chart>
       </div>
     </div>

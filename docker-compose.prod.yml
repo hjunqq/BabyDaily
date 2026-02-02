@@ -17,6 +17,7 @@ services:
       - DB_DATABASE=babydaily
       - JWT_SECRET=super-secret-key
       - TZ=Asia/Shanghai
+      - ENABLE_DEV_LOGIN=true
     volumes:
       - ./uploads:/app/uploads
     depends_on:

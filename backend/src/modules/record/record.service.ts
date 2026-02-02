@@ -162,9 +162,7 @@ export class RecordService {
         // Build result map from DB data
         const bucket = new Map<string, { milkMl: number; solidG: number }>();
         rawResult.forEach((row: any) => {
-            const dayStr = row.day instanceof Date
-                ? row.day.toISOString().slice(0, 10)
-                : String(row.day);
+            const dayStr = String(row.day);
             bucket.set(dayStr, {
                 milkMl: parseInt(row.milk_ml) || 0,
                 solidG: parseInt(row.solid_g) || 0,

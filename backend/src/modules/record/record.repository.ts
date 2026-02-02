@@ -109,7 +109,7 @@ export class RecordRepository {
         return this.repo
             .createQueryBuilder('r')
             .select([
-                `DATE(r.time) as day`,
+                `TO_CHAR(r.time + interval '8 hours', 'YYYY-MM-DD') as day`,
                 `SUM(CASE WHEN r.type = 'FEED' AND (r.details->>'subtype' IS NULL OR r.details->>'subtype' != 'SOLID') 
                     THEN COALESCE((r.details->>'amount')::int, 0) ELSE 0 END) as milk_ml`,
                 `SUM(CASE WHEN r.type = 'FEED' AND r.details->>'subtype' = 'SOLID' 
@@ -118,7 +118,7 @@ export class RecordRepository {
             .where('r.baby_id = :babyId', { babyId })
             .andWhere('r.time >= :from', { from })
             .andWhere('r.type = :type', { type: RecordType.FEED })
-            .groupBy('DATE(r.time)')
+            .groupBy('day')
             .orderBy('day', 'ASC')
             .getRawMany();
     }

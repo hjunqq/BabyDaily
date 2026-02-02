@@ -39,6 +39,7 @@ export const SettingsDesktop = () => {
         theme: settings.theme,
         language: settings.language,
         exportFormat: settings.exportFormat,
+        dayStartHour: settings.dayStartHour,
       });
       setSettings(updated);
     } finally {
@@ -126,6 +127,22 @@ export const SettingsDesktop = () => {
           <Item dataField="theme" label={{ text: '主题' }} />
           <Item dataField="language" label={{ text: '语言' }} />
           <Item dataField="exportFormat" label={{ text: '导出格式' }} />
+          <Item
+            dataField="dayStartHour"
+            label={{ text: '日切时间 (一天从几点开始)' }}
+            editorType="dxSelectBox"
+            editorOptions={{
+              items: [
+                { value: 0, text: '00:00 (午夜)' },
+                { value: 6, text: '06:00' },
+                { value: 7, text: '07:00' },
+                { value: 8, text: '08:00' },
+              ],
+              valueExpr: 'value',
+              displayExpr: 'text',
+              placeholder: '选择日切时间'
+            }}
+          />
         </Form>
         <Button text={saving ? '保存中...' : '保存设置'} type="default" stylingMode="contained" height={40} onClick={handleSave} disabled={saving} />
       </div>

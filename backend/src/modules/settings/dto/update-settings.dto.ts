@@ -1,4 +1,4 @@
-﻿import { IsOptional, IsString } from 'class-validator';
+﻿import { IsOptional, IsString, IsNumber } from 'class-validator';
 
 export class UpdateSettingsDto {
     @IsOptional()
@@ -12,4 +12,8 @@ export class UpdateSettingsDto {
     @IsOptional()
     @IsString()
     exportFormat?: string;
+
+    @IsOptional()
+    @IsNumber()
+    dayStartHour?: number;
 }

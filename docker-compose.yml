@@ -2,6 +2,7 @@ services:
 
   backend:
     build: ./backend
+    image: babydaily-backend
     container_name: babydaily-backend
     restart: always
     environment:
@@ -34,6 +35,7 @@ services:
 
   frontend:
     build: ./frontend
+    image: babydaily-frontend
     container_name: babydaily-frontend
     restart: always
     ports:

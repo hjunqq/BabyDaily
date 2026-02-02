@@ -14,7 +14,10 @@ export class AuthController {
 
     @Post('login/dev')
     async loginDev() {
-        if (process.env.NODE_ENV !== 'development') {
+        const isDev = process.env.NODE_ENV === 'development';
+        const isDevLoginEnabled = process.env.ENABLE_DEV_LOGIN === 'true';
+
+        if (!isDev && !isDevLoginEnabled) {
             throw new ForbiddenException({
                 message: 'Dev login only available in development mode',
                 code: ErrorCodes.AUTH_FORBIDDEN,

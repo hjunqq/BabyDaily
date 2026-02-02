@@ -19,13 +19,46 @@ export const RecordsMobile = () => {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const filtered = useMemo(() => {
-    if (!query) return records;
-    return records.filter(item => {
+  const groupedData = useMemo(() => {
+    if (!records) return [];
+
+    // Filter first
+    const list = query ? records.filter(item => {
       const detail = mapRecordDetail(item);
       return `${item.type} ${detail}`.toLowerCase().includes(query.toLowerCase());
+    }) : records;
+
+    // Then group
+    const groups: { key: string; items: BabyRecord[] }[] = [];
+
+    list.forEach(item => {
+      const date = new Date(item.time);
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      let key = date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', weekday: 'short' });
+
+      if (date.toDateString() === today.toDateString()) {
+        key = '今天';
+      } else if (date.toDateString() === yesterday.toDateString()) {
+        key = '昨天';
+      }
+
+      const lastGroup = groups[groups.length - 1];
+      if (lastGroup && lastGroup.key === key) {
+        lastGroup.items.push(item);
+      } else {
+        groups.push({ key, items: [item] });
+      }
     });
+
+    return groups;
   }, [records, query]);
+
+  // Compatibility for 'filtered' usage in other parts if any (but we specifically targeted the rendering)
+  // We need to update handleSelectAll and handleDeleteSelected to work with groupedData or flattened list
+  const flatList = useMemo(() => groupedData.flatMap(g => g.items), [groupedData]);
 
   const toggleSelection = (id: string) => {
     const next = new Set(selectedIds);
@@ -55,10 +88,10 @@ export const RecordsMobile = () => {
   };
 
   const handleSelectAll = () => {
-    if (selectedIds.size === filtered.length) {
+    if (selectedIds.size === flatList.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(filtered.map(r => r.id)));
+      setSelectedIds(new Set(flatList.map(r => r.id)));
     }
   };
 
@@ -108,8 +141,11 @@ export const RecordsMobile = () => {
       />
       <div className="bd-card" style={{ marginTop: 12 }}>
         <List
-          dataSource={filtered}
+          dataSource={groupedData}
           noDataText="暂无记录"
+          grouped={true}
+          collapsibleGroups={false}
+          groupRender={(data) => <div className="bd-list-group-header">{data.key}</div>}
           itemRender={(item: BabyRecord) => (
             <div
               style={{ display: 'flex', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #E8DCD6' }}
@@ -157,7 +193,7 @@ export const RecordsMobile = () => {
           boxShadow: '0 -2px 10px rgba(0,0,0,0.05)', zIndex: 999
         }}>
           <Button
-            text={selectedIds.size === filtered.length ? '取消全选' : '全选'}
+            text={selectedIds.size === flatList.length ? '取消全选' : '全选'}
             stylingMode="text"
             onClick={handleSelectAll}
           />

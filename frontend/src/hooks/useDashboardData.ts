@@ -163,7 +163,7 @@ const mapTrends = (res: any[]): TrendPoint[] => {
   if (!Array.isArray(res) || !res.length) return [];
   return res.map(item => ({
     name: item.date?.slice(5) || '',
-    milk: item.milk ?? 0,
-    solid: item.solid ?? 0,
+    milk: item.milkMl ?? 0,
+    solid: item.solidG ?? 0,
   }));
 };
