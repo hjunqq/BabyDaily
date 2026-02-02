@@ -7,10 +7,13 @@ export default defineConfig({
   plugins: [
     react(),
     legacy({
-      // Kindle uses Chromium-based browser, no need for very old browser support
-      targets: ['defaults', 'Chrome >= 60'],
-      // Skip legacy chunks for faster build
-      renderLegacyChunks: false,
+      // Kindle uses old Chromium-based browser without ES6 support
+      // Target ES5 for maximum compatibility
+      targets: ['ie >= 11', 'Chrome >= 49', 'Safari >= 10', 'defaults'],
+      // Generate legacy chunks for old browsers
+      renderLegacyChunks: true,
+      // Include all necessary polyfills
+      additionalLegacyPolyfills: ['regenerator-runtime/runtime'],
       modernPolyfills: true
     })
   ],
