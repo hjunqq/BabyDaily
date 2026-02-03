@@ -8,6 +8,8 @@ type Summary = {
   diaperSoiled: number;
   sleepMinutes: number;
   lastFeedTime?: string;
+  todayAdTaken: boolean;
+  todayD3Taken: boolean;
 };
 
 type TrendPoint = { name: string; milk: number; solid: number };
@@ -28,6 +30,8 @@ const emptySummary: Summary = {
   diaperSoiled: 0,
   sleepMinutes: 0,
   lastFeedTime: undefined,
+  todayAdTaken: false,
+  todayD3Taken: false,
 };
 
 export const useDashboardData = () => {
@@ -54,7 +58,7 @@ export const useDashboardData = () => {
         throw new Error('接口返回为空，无法展示仪表盘数据');
       }
 
-      const summary = mapSummary(summaryResp);
+      const summary = mapSummary(summaryResp, records);
       const trends = mapTrends(trendsResp);
       const activities = buildActivities(records);
 
@@ -151,13 +155,30 @@ const mapCategory = (type: BabyRecord['type']) => {
   }
 };
 
-const mapSummary = (res: any): Summary => ({
-  milkMl: res.milkMl ?? 0,
-  diaperWet: res.diaperWet ?? 0,
-  diaperSoiled: res.diaperSoiled ?? 0,
-  sleepMinutes: res.sleepMinutes ?? 0,
-  lastFeedTime: res.lastFeedTime ? new Date(res.lastFeedTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : undefined,
-});
+const mapSummary = (res: any, records: BabyRecord[]): Summary => {
+  // 计算今日 AD/D3 状态
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+  const todayAdTaken = records.some(r => {
+    const recordDate = new Date(r.time);
+    return r.type === 'VITA_AD' && recordDate >= todayStart;
+  });
+  const todayD3Taken = records.some(r => {
+    const recordDate = new Date(r.time);
+    return r.type === 'VITA_D3' && recordDate >= todayStart;
+  });
+
+  return {
+    milkMl: res.milkMl ?? 0,
+    diaperWet: res.diaperWet ?? 0,
+    diaperSoiled: res.diaperSoiled ?? 0,
+    sleepMinutes: res.sleepMinutes ?? 0,
+    lastFeedTime: res.lastFeedTime ? new Date(res.lastFeedTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : undefined,
+    todayAdTaken,
+    todayD3Taken,
+  };
+};
 
 const mapTrends = (res: any[]): TrendPoint[] => {
   if (!Array.isArray(res) || !res.length) return [];

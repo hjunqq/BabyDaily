@@ -131,9 +131,11 @@ export const MobileHome = () => {
   const [summary, setSummary] = useState<any | null>(null);
   const [summaryError, setSummaryError] = useState<string | undefined>();
   const [showFeedModal, setShowFeedModal] = useState(false);
-  const [showSleepModal, setShowSleepModal] = useState(false);
+  const [showDiaperModal, setShowDiaperModal] = useState(false);
   const [showSupplementModal, setShowSupplementModal] = useState({ visible: false, type: 'VITA_AD' as 'VITA_AD' | 'VITA_D3' });
   const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [todayAdTaken, setTodayAdTaken] = useState(false);
+  const [todayD3Taken, setTodayD3Taken] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -154,14 +156,31 @@ export const MobileHome = () => {
     BabyService.getSettings().then(setSettings).catch(() => { });
   }, []);
 
+  // 检查今日AD/D3是否已记录
+  useEffect(() => {
+    if (records.length > 0) {
+      const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+      const hasAd = records.some(r => {
+        const recordDate = new Date(r.time);
+        return r.type === 'VITA_AD' && recordDate >= todayStart;
+      });
+      const hasD3 = records.some(r => {
+        const recordDate = new Date(r.time);
+        return r.type === 'VITA_D3' && recordDate >= todayStart;
+      });
+
+      setTodayAdTaken(hasAd);
+      setTodayD3Taken(hasD3);
+    }
+  }, [records]);
+
   // 查找最近一次喂奶记录
   const lastFeedRecord = records.find(r => r.type === 'FEED');
 
   // 今日统计
   const todayMilk = summary?.milkMl ?? 0;
-  const todaySleepMins = summary?.sleepMinutes ?? 0;
-  const sleepHours = Math.floor(todaySleepMins / 60);
-  const sleepMins = todaySleepMins % 60;
 
   // 加载状态
   if (babyLoading || recordsLoading) {
@@ -311,11 +330,13 @@ export const MobileHome = () => {
           <div className="title">今日奶量</div>
           <div className="value">{todayMilk}<span className="unit"> ml</span></div>
         </div>
-        <div className="bd-stat-card sleep">
-          <div className="icon">{isKindleMode() ? '睡' : '💤'}</div>
-          <div className="title">今日睡眠</div>
-          <div className="value">
-            {sleepHours}<span className="unit">h</span> {sleepMins}<span className="unit">m</span>
+        <div className="bd-stat-card supplement">
+          <div className="icon">{isKindleMode() ? '💊' : '💊'}</div>
+          <div className="title">今日 AD/D3</div>
+          <div className="value" style={{ fontSize: 18 }}>
+            <span style={{ color: todayAdTaken ? '#4CAF50' : '#ccc' }}>AD {todayAdTaken ? '✓' : '—'}</span>
+            <span style={{ margin: '0 8px' }}>|</span>
+            <span style={{ color: todayD3Taken ? '#FF9800' : '#ccc' }}>D3 {todayD3Taken ? '✓' : '—'}</span>
           </div>
         </div>
       </section>
@@ -327,10 +348,10 @@ export const MobileHome = () => {
           <span className="text">记录喂奶</span>
           <span className="sub-text">瓶喂 / 亲喂</span>
         </button>
-        <button className="bd-action-btn sleep" onClick={() => setShowSleepModal(true)}>
-          <span className="icon">{isKindleMode() ? '睡' : '💤'}</span>
-          <span className="text">记录睡眠</span>
-          <span className="sub-text">开始 / 结束</span>
+        <button className="bd-action-btn diaper" onClick={() => setShowDiaperModal(true)}>
+          <span className="icon">{isKindleMode() ? '尿' : '🧷'}</span>
+          <span className="text">记录尿布</span>
+          <span className="sub-text">尿尿 / 便便</span>
         </button>
         <button className="bd-action-btn supplement" onClick={() => setShowSupplementModal({ visible: true, type: 'VITA_AD' })}>
           <span className="icon">{isKindleMode() ? 'AD' : '💊'}</span>
@@ -387,7 +408,7 @@ export const MobileHome = () => {
           <h2>今日数据统计</h2>
           <p>
             在喂养方面，今天总共摄入奶量 {todayMilk} 毫升。
-            在睡眠方面，今天总共睡眠 {sleepHours} 小时 {sleepMins} 分钟。
+            AD: {todayAdTaken ? '已服用' : '未服用'}，D3: {todayD3Taken ? '已服用' : '未服用'}。
           </p>
 
           <h2>最近的活动记录</h2>
@@ -421,13 +442,13 @@ export const MobileHome = () => {
         />
       )}
 
-      {/* 睡眠记录弹窗 */}
-      {showSleepModal && (
-        <SleepModal
+      {/* 尿布记录弹窗 */}
+      {showDiaperModal && (
+        <DiaperModal
           babyId={baby?.id || ''}
-          onClose={() => setShowSleepModal(false)}
+          onClose={() => setShowDiaperModal(false)}
           onSuccess={() => {
-            setShowSleepModal(false);
+            setShowDiaperModal(false);
             window.location.reload(); // 简单刷新
           }}
         />
@@ -578,19 +599,19 @@ const FeedModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: ()
   );
 };
 
-// 睡眠记录弹窗组件
-const SleepModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: () => void; onSuccess: () => void }) => {
-  const [duration, setDuration] = useState(90);
+// 尿布记录弹窗组件
+const DiaperModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: () => void; onSuccess: () => void }) => {
+  const [diaperType, setDiaperType] = useState<'PEE' | 'POO' | 'BOTH'>('PEE');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
       await BabyService.createRecord({
-        type: 'SLEEP',
+        type: 'DIAPER',
         babyId: babyId,
         time: new Date().toISOString(),
-        details: { isNap: true, duration }
+        details: { type: diaperType }
       });
       onSuccess();
     } catch (err) {
@@ -605,16 +626,14 @@ const SleepModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: (
     <div className="bd-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="bd-modal-sheet">
         <div className="bd-modal-handle" />
-        <h2 style={{ textAlign: 'center', marginBottom: 20 }}>💤 记录睡眠</h2>
+        <h2 style={{ textAlign: 'center', marginBottom: 20 }}>🧷 记录尿布</h2>
 
         <div style={{ marginBottom: 18 }}>
-          <label style={{ display: 'block', fontSize: 13, color: '#8b7670', marginBottom: 8 }}>睡眠时长 (分钟)</label>
+          <label style={{ display: 'block', fontSize: 13, color: '#8b7670', marginBottom: 8 }}>尿布类型</label>
           <div className="bd-quick-select">
-            {[30, 60, 90, 120, 180].map(v => (
-              <button key={v} className={duration === v ? 'active' : ''} onClick={() => setDuration(v)}>
-                {v >= 60 ? `${v / 60}h` : `${v}m`}
-              </button>
-            ))}
+            <button className={diaperType === 'PEE' ? 'active' : ''} onClick={() => setDiaperType('PEE')}>💧 尿尿</button>
+            <button className={diaperType === 'POO' ? 'active' : ''} onClick={() => setDiaperType('POO')}>💩 便便</button>
+            <button className={diaperType === 'BOTH' ? 'active' : ''} onClick={() => setDiaperType('BOTH')}>💧💩 都有</button>
           </div>
         </div>
 
@@ -625,7 +644,7 @@ const SleepModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: (
           style={{
             width: '100%',
             padding: 16,
-            background: '#BFD9C6',
+            background: '#FFB347',
             color: '#fff',
             border: 'none',
             borderRadius: 16,
@@ -656,6 +675,7 @@ const SleepModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: (
     </div>
   );
 };
+
 // 补充剂记录弹窗
 const SupplementModal = ({ babyId, type, onClose, onSuccess }: { babyId: string; type: 'VITA_AD' | 'VITA_D3'; onClose: () => void; onSuccess: () => void }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);

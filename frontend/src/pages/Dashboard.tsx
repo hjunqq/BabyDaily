@@ -145,20 +145,23 @@ export const Dashboard = () => {
           </div>
         </div>
 
-        {/* 💤 睡眠卡片 */}
+        {/* 💊 AD/D3 状态卡片 */}
         <div className="bd-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-            <div className="bd-kpi-title" style={{ fontSize: 16, color: '#8b7670' }}>睡眠时长</div>
-            <div style={{ fontSize: 24 }}>💤</div>
+            <div className="bd-kpi-title" style={{ fontSize: 16, color: '#8b7670' }}>今日 AD/D3</div>
+            <div style={{ fontSize: 24 }}>💊</div>
           </div>
-          <div className="bd-kpi-value" style={{ fontSize: 28 }}>
-            {Math.floor(summary.sleepMinutes / 60)}<span style={{ fontSize: 16, color: '#8b7670' }}>h</span> {summary.sleepMinutes % 60}<span style={{ fontSize: 16, color: '#8b7670' }}>m</span>
+          <div className="bd-kpi-value" style={{ fontSize: 24, display: 'flex', gap: 16 }}>
+            <span style={{ color: summary.todayAdTaken ? '#4CAF50' : '#ccc' }}>
+              AD {summary.todayAdTaken ? '✓' : '—'}
+            </span>
+            <span style={{ color: summary.todayD3Taken ? '#FF9800' : '#ccc' }}>
+              D3 {summary.todayD3Taken ? '✓' : '—'}
+            </span>
           </div>
-          <div className="bd-kpi-sub" style={{ marginTop: 4 }}>夜间与小睡合计</div>
-          <div style={{ marginTop: 12 }}>
-            <ProgressBar min={0} max={720} value={summary.sleepMinutes} showStatus={false} />
-          </div>
+          <div className="bd-kpi-sub" style={{ marginTop: 4 }}>每日一粒</div>
         </div>
+
 
         {/* 🧷 尿布卡片 */}
         <div className="bd-card">

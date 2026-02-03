@@ -1,13 +1,13 @@
-﻿import React from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { Layout } from './components/Layout';
 import { MobileLayout } from './layouts/MobileLayout';
 import { useIsMobile } from './hooks/useIsMobile';
 import { BabyService } from './services/api';
+import { LoadIndicator } from 'devextreme-react/load-indicator';
 
 import { Landing } from './pages/Landing';
-import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { MobileHome } from './pages/MobileHome';
 
@@ -52,12 +52,50 @@ const ResponsivePage = ({ desktop, mobile }: { desktop: React.ReactElement; mobi
 };
 
 const RequireAuth = ({ children }: { children: React.ReactElement }) => {
-  const location = useLocation();
-  const isAuthed = BabyService.isAuthenticated();
+  const [ready, setReady] = useState(BabyService.isAuthenticated());
+  const [error, setError] = useState<string | null>(null);
 
-  if (!isAuthed) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  useEffect(() => {
+    if (!ready) {
+      BabyService.loginDev()
+        .then(() => BabyService.ensureDevEnvironment())
+        .then(() => setReady(true))
+        .catch((err) => {
+          console.error('自动登录失败:', err);
+          setError(err.message || '登录失败');
+        });
+    }
+  }, [ready]);
+
+  if (error) {
+    return (
+      <div className="bd-state">
+        <div className="bd-state-card">
+          <div style={{ fontSize: 42 }}>⚠️</div>
+          <h3>连接失败</h3>
+          <p style={{ color: '#6b524b' }}>{error}</p>
+          <button
+            onClick={() => { setError(null); setReady(false); }}
+            style={{ marginTop: 16, padding: '8px 24px', background: '#F3B6C2', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}
+          >
+            重试
+          </button>
+        </div>
+      </div>
+    );
   }
+
+  if (!ready) {
+    return (
+      <div className="bd-state">
+        <div className="bd-state-card">
+          <div style={{ fontSize: 18, marginBottom: 8 }}>加载中...</div>
+          <LoadIndicator visible />
+        </div>
+      </div>
+    );
+  }
+
   return children;
 };
 
@@ -94,7 +132,7 @@ const KindleModeWrapper = () => {
   return (
     <ThemeProvider>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="/landing" element={<Landing />} />
 
         <Route path="/states/empty" element={<EmptyStatePage />} />
