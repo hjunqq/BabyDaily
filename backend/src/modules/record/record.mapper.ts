@@ -39,7 +39,7 @@ export function mapDetailsToSnakeCase(details: any): any {
 }
 
 /**
- * Calculate time ago string in Chinese
+ * Calculate time ago string in Chinese (using Beijing timezone)
  */
 export function getTimeAgo(date: Date): string {
     const now = new Date();
@@ -61,12 +61,16 @@ export function getTimeAgo(date: Date): string {
 }
 
 /**
- * Format time as HH:MM
+ * Format time as HH:MM in Beijing timezone (Asia/Shanghai)
  */
 export function formatTime(date: Date): string {
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
+    // 使用北京时区格式化时间
+    return date.toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'Asia/Shanghai'
+    });
 }
 
 /**

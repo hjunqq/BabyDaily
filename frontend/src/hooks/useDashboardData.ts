@@ -156,17 +156,26 @@ const mapCategory = (type: BabyRecord['type']) => {
 };
 
 const mapSummary = (res: any, records: BabyRecord[]): Summary => {
-  // 计算今日 AD/D3 状态
-  const today = new Date();
-  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  // 计算今日 AD/D3 状态（考虑日切时间 dayStartHour）
+  // 注意：这里我们没有 settings，只能使用默认值 0
+  // 更精确的做法是在调用时传入 dayStartHour
+  const dayStartHour = 0; // TODO: 从 settings 获取
+
+  const now = new Date();
+  const todayLogicalStart = new Date(now);
+  todayLogicalStart.setHours(dayStartHour, 0, 0, 0);
+
+  if (now.getHours() < dayStartHour) {
+    todayLogicalStart.setDate(todayLogicalStart.getDate() - 1);
+  }
 
   const todayAdTaken = records.some(r => {
     const recordDate = new Date(r.time);
-    return r.type === 'VITA_AD' && recordDate >= todayStart;
+    return r.type === 'VITA_AD' && recordDate >= todayLogicalStart;
   });
   const todayD3Taken = records.some(r => {
     const recordDate = new Date(r.time);
-    return r.type === 'VITA_D3' && recordDate >= todayStart;
+    return r.type === 'VITA_D3' && recordDate >= todayLogicalStart;
   });
 
   return {

@@ -111,7 +111,7 @@ const formatRecordValue = (record: any): string => {
 // 获取卡片动态背景色
 const getCardBackground = (elapsedTimeMs: number): string => {
   const hours = elapsedTimeMs / (1000 * 60 * 60);
-  const maxHours = 5;
+  const maxHours = 4;
   const percentage = Math.min((hours / maxHours) * 100, 100);
 
   // 动态计算末端颜色 (Tip Color)
@@ -129,6 +129,7 @@ export const MobileHome = () => {
   const { baby, loading: babyLoading, error: babyError } = useCurrentBaby();
   const { records, loading: recordsLoading, error: recordsError } = useRecords(baby?.id || null, 5);
   const [summary, setSummary] = useState<any | null>(null);
+  const [todayFeedCount, setTodayFeedCount] = useState(0);
   const [summaryError, setSummaryError] = useState<string | undefined>();
   const [showFeedModal, setShowFeedModal] = useState(false);
   const [showDiaperModal, setShowDiaperModal] = useState(false);
@@ -156,25 +157,44 @@ export const MobileHome = () => {
     BabyService.getSettings().then(setSettings).catch(() => { });
   }, []);
 
-  // 检查今日AD/D3是否已记录
+  // 检查今日AD/D3是否已记录（考虑日切时间 dayStartHour）
   useEffect(() => {
     if (records.length > 0) {
-      const today = new Date();
-      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      // 获取日切时间，默认为 0（午夜）
+      const dayStartHour = settings?.dayStartHour ?? 0;
+
+      // 计算"今天"的逻辑开始时间
+      // 例如 dayStartHour=8 时，今天从今天早上8点开始，到明天早上8点结束
+      // 如果现在是凌晨4点且 dayStartHour=8，则"今天"实际上是从昨天早上8点开始的
+      const now = new Date();
+      const todayLogicalStart = new Date(now);
+      todayLogicalStart.setHours(dayStartHour, 0, 0, 0);
+
+      // 如果当前时间早于日切时间，则"今天"从昨天的日切时间开始
+      if (now.getHours() < dayStartHour) {
+        todayLogicalStart.setDate(todayLogicalStart.getDate() - 1);
+      }
 
       const hasAd = records.some(r => {
         const recordDate = new Date(r.time);
-        return r.type === 'VITA_AD' && recordDate >= todayStart;
+        return r.type === 'VITA_AD' && recordDate >= todayLogicalStart;
       });
       const hasD3 = records.some(r => {
         const recordDate = new Date(r.time);
-        return r.type === 'VITA_D3' && recordDate >= todayStart;
+        return r.type === 'VITA_D3' && recordDate >= todayLogicalStart;
       });
 
       setTodayAdTaken(hasAd);
       setTodayD3Taken(hasD3);
+
+      // 计算今日喂奶次数
+      const todayFeedRecords = records.filter(r => {
+        const recordDate = new Date(r.time);
+        return r.type === 'FEED' && recordDate >= todayLogicalStart;
+      });
+      setTodayFeedCount(todayFeedRecords.length);
     }
-  }, [records]);
+  }, [records, settings?.dayStartHour]);
 
   // 查找最近一次喂奶记录
   const lastFeedRecord = records.find(r => r.type === 'FEED');
@@ -267,7 +287,7 @@ export const MobileHome = () => {
                 top: 0,
                 left: 0,
                 bottom: 0,
-                width: `${Math.min((elapsedTimeMs / (5 * 60 * 60 * 1000)) * 100, 100)}%`,
+                width: `${Math.min((elapsedTimeMs / (4 * 60 * 60 * 1000)) * 100, 100)}%`,
                 background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%)',
                 animation: 'shimmer 2s infinite',
                 pointerEvents: 'none',
@@ -328,7 +348,13 @@ export const MobileHome = () => {
         <div className="bd-stat-card feed">
           <div className="icon">{isKindleMode() ? '奶' : '🍼'}</div>
           <div className="title">今日奶量</div>
-          <div className="value">{todayMilk}<span className="unit"> ml</span></div>
+          <div className="value">
+            {todayMilk}<span className="unit"> ml</span>
+            {/* Kindle模式下显示次数 */}
+            {isKindleMode() && todayFeedCount > 0 && (
+              <span style={{ fontSize: 14, marginLeft: 8, color: '#8b7670' }}>({todayFeedCount}次)</span>
+            )}
+          </div>
         </div>
         <div className="bd-stat-card supplement">
           <div className="icon">{isKindleMode() ? '💊' : '💊'}</div>
@@ -340,6 +366,8 @@ export const MobileHome = () => {
           </div>
         </div>
       </section>
+
+
 
       {/* 快捷操作按钮 */}
       <div className="bd-actions animate-slide-up delay-3">

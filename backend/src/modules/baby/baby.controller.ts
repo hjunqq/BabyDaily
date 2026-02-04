@@ -53,6 +53,7 @@ export class BabyController {
                 cb(null, `${randomName}${extname(file.originalname)}`);
             },
         }),
+        limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
     }))
     async uploadAvatar(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
         const avatarUrl = `/uploads/avatars/${file.filename}`;

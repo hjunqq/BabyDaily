@@ -904,10 +904,7 @@ body.kindle-mode .bd-stat-card .unit {
   font-size: 11px !important;
 }
 
-/* 隐藏时间线 (Robust Selector: Selects the section that is NOT the stats card) */
-body.kindle-mode section.animate-slide-up.delay-2:not(.bd-today-stats) {
-  display: none !important;
-}
+/* 时间线在 Kindle 模式下也显示 */
 
 /* 3. Actions */
 body.kindle-mode .bd-actions {
