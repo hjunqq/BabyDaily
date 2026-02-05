@@ -153,9 +153,17 @@ export class RecordService {
             if (details?.subtype !== 'BREAST') {
                 totalMl += amount;
             }
+            // 使用北京时区格式化时间，确保 Kindle 兼容
+            const formattedTime = r.time.toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+                timeZone: 'Asia/Shanghai'
+            });
             return {
                 id: r.id,
                 time: r.time.toISOString(),
+                formattedTime,  // 服务器预计算的时间，Kindle 直接使用
                 amount: amount,
                 subtype: details?.subtype || 'BOTTLE',
                 duration: details?.duration,

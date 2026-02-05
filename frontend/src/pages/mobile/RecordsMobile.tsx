@@ -176,7 +176,7 @@ export const RecordsMobile = () => {
               )}
               <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between' }}>
                 <div>
-                  <strong>{new Date(item.time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</strong> · {mapRecordType(item.type)}
+                  <strong>{(item as any).formattedTime || new Date(item.time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</strong> · {mapRecordType(item.type)}
                 </div>
                 <div style={{ fontWeight: 600 }}>{mapRecordDetail(item)}</div>
               </div>

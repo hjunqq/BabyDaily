@@ -87,8 +87,8 @@ export const FeedTimelineChart = ({ babyId, dayStartHour = 0 }: FeedTimelineChar
                 gap: 8
             }}>
                 {items.map((item) => {
-                    const itemTime = new Date(item.time);
-                    const timeStr = itemTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                    // 优先使用服务器预计算的时间（Kindle兼容）
+                    const timeStr = item.formattedTime || new Date(item.time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
                     const isBreast = item.subtype === 'BREAST';
 
                     return (
