@@ -118,6 +118,9 @@ export class RecordService {
             diaperSoiled: parseInt(result?.diaper_soiled ?? '0') || 0,
             sleepMinutes: parseInt(result?.sleep_minutes ?? '0') || 0,
             lastFeedTime: lastFeed?.time?.toISOString(),
+            feedCount: parseInt(result?.feed_count ?? '0') || 0,
+            todayAdTaken: (parseInt(result?.ad_taken ?? '0') || 0) > 0,
+            todayD3Taken: (parseInt(result?.d3_taken ?? '0') || 0) > 0,
         };
     }
 

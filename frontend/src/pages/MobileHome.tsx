@@ -129,14 +129,12 @@ export const MobileHome = () => {
   const { baby, loading: babyLoading, error: babyError } = useCurrentBaby();
   const { records, loading: recordsLoading, error: recordsError } = useRecords(baby?.id || null, 5);
   const [summary, setSummary] = useState<any | null>(null);
-  const [todayFeedCount, setTodayFeedCount] = useState(0);
   const [summaryError, setSummaryError] = useState<string | undefined>();
   const [showFeedModal, setShowFeedModal] = useState(false);
   const [showDiaperModal, setShowDiaperModal] = useState(false);
   const [showSupplementModal, setShowSupplementModal] = useState({ visible: false, type: 'VITA_AD' as 'VITA_AD' | 'VITA_D3' });
   const [settings, setSettings] = useState<UserSettings | null>(null);
-  const [todayAdTaken, setTodayAdTaken] = useState(false);
-  const [todayD3Taken, setTodayD3Taken] = useState(false);
+  // todayAdTaken, todayD3Taken, todayFeedCount 现在从 summary 获取
 
   useEffect(() => {
     const load = async () => {
@@ -157,44 +155,10 @@ export const MobileHome = () => {
     BabyService.getSettings().then(setSettings).catch(() => { });
   }, []);
 
-  // 检查今日AD/D3是否已记录（考虑日切时间 dayStartHour）
-  useEffect(() => {
-    if (records.length > 0) {
-      // 获取日切时间，默认为 0（午夜）
-      const dayStartHour = settings?.dayStartHour ?? 0;
-
-      // 计算"今天"的逻辑开始时间
-      // 例如 dayStartHour=8 时，今天从今天早上8点开始，到明天早上8点结束
-      // 如果现在是凌晨4点且 dayStartHour=8，则"今天"实际上是从昨天早上8点开始的
-      const now = new Date();
-      const todayLogicalStart = new Date(now);
-      todayLogicalStart.setHours(dayStartHour, 0, 0, 0);
-
-      // 如果当前时间早于日切时间，则"今天"从昨天的日切时间开始
-      if (now.getHours() < dayStartHour) {
-        todayLogicalStart.setDate(todayLogicalStart.getDate() - 1);
-      }
-
-      const hasAd = records.some(r => {
-        const recordDate = new Date(r.time);
-        return r.type === 'VITA_AD' && recordDate >= todayLogicalStart;
-      });
-      const hasD3 = records.some(r => {
-        const recordDate = new Date(r.time);
-        return r.type === 'VITA_D3' && recordDate >= todayLogicalStart;
-      });
-
-      setTodayAdTaken(hasAd);
-      setTodayD3Taken(hasD3);
-
-      // 计算今日喂奶次数
-      const todayFeedRecords = records.filter(r => {
-        const recordDate = new Date(r.time);
-        return r.type === 'FEED' && recordDate >= todayLogicalStart;
-      });
-      setTodayFeedCount(todayFeedRecords.length);
-    }
-  }, [records, settings?.dayStartHour]);
+  // AD/D3 状态和喂奶次数现在从后端 summary API 获取，确保数据准确
+  const todayAdTaken = summary?.todayAdTaken ?? false;
+  const todayD3Taken = summary?.todayD3Taken ?? false;
+  const todayFeedCount = summary?.feedCount ?? 0;
 
   // 查找最近一次喂奶记录
   const lastFeedRecord = records.find(r => r.type === 'FEED');

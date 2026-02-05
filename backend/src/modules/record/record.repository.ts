@@ -74,6 +74,9 @@ export class RecordRepository {
         diaper_wet: string;
         diaper_soiled: string;
         sleep_minutes: string;
+        feed_count: string;
+        ad_taken: string;
+        d3_taken: string;
     } | null> {
         const result = await this.repo
             .createQueryBuilder('r')
@@ -87,6 +90,9 @@ export class RecordRepository {
                 `SUM(CASE WHEN r.type = 'SLEEP' 
                     THEN EXTRACT(EPOCH FROM (COALESCE(r.end_time, r.time + interval '90 minutes') - r.time))/60 
                     ELSE 0 END)::int as sleep_minutes`,
+                `SUM(CASE WHEN r.type = 'FEED' THEN 1 ELSE 0 END) as feed_count`,
+                `SUM(CASE WHEN r.type = 'VITA_AD' THEN 1 ELSE 0 END) as ad_taken`,
+                `SUM(CASE WHEN r.type = 'VITA_D3' THEN 1 ELSE 0 END) as d3_taken`,
             ])
             .where('r.baby_id = :babyId', { babyId })
             .andWhere('r.time >= :from', { from })

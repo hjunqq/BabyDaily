@@ -93,6 +93,7 @@ export interface FeedTimelineItem {
     amount: number;
     subtype: 'BREAST' | 'BOTTLE' | 'SOLID';
     duration?: number;
+    formattedTime?: string;  // 服务器预计算的时间格式（Kindle兼容）
 }
 
 export interface FeedTimelineData {
