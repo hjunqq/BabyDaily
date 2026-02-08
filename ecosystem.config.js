@@ -12,7 +12,7 @@ module.exports = {
                 NODE_ENV: 'production',
                 PORT: 3000,
                 DB_HOST: 'localhost',
-                DB_PORT: 54320,
+                DB_PORT: 5432,
                 DB_USERNAME: 'postgres',
                 DB_PASSWORD: 'postgres',
                 DB_DATABASE: 'babydaily',
