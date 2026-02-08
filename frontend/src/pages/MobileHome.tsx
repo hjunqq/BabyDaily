@@ -1,4 +1,4 @@
-import { type CSSProperties, useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { type CSSProperties, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LoadIndicator } from 'devextreme-react/load-indicator';
 import { BabyService } from '../services/api';
@@ -117,16 +117,31 @@ const getProgress = (time: string | undefined, maxMs: number) => {
 
 const CountdownBar = ({ label, time, maxMs, color }: { label: string; time?: string; maxMs: number; color: string }) => {
   const progress = getProgress(time, maxMs);
+  const progressRatio = progress / 100;
+  const lightness = 95 - (progressRatio * 40);
+  const saturation = 50 + (progressRatio * 40);
+
+  // 解析颜色的hue值用于生成渐变
+  const hueMatch = color.match(/\d+/);
+  const hue = hueMatch ? parseInt(hueMatch[0]) : 200;
+  const tipColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  const baseColor = `hsl(${hue}, 30%, 97%)`;
+
   return (
-    <div className="bd-countdown-card">
-      <div className="bd-countdown-head">
-        <span>{label}</span>
-        <strong>{getSimpleCountdown(time)}</strong>
+    <div
+      className="bd-countdown-card"
+      style={{
+        background: `linear-gradient(90deg, ${baseColor} 0%, ${tipColor} ${progress}%, #ffffff ${progress}%)`,
+        position: 'relative',
+        overflow: 'hidden',
+        border: '1px solid rgba(0,0,0,0.05)',
+        borderLeft: `3px solid ${color}`,
+      }}
+    >
+      <div className="bd-countdown-content">
+        <span className="bd-countdown-label">{label}</span>
+        <span className="bd-countdown-time">{getSimpleCountdown(time)}</span>
       </div>
-      <div className="bd-countdown-track">
-        <div className="bd-countdown-fill" style={{ width: `${progress}%`, background: color }} />
-      </div>
-      <div className="bd-countdown-foot">{progress >= 100 ? '已超过建议周期' : `进度 ${Math.round(progress)}%`}</div>
     </div>
   );
 };
@@ -302,9 +317,9 @@ export const MobileHome = () => {
       <section className="bd-home-block animate-slide-up delay-2" aria-label="关键倒计时">
         <h3 className="bd-section-title" style={{ marginBottom: 10 }}>护理倒计时</h3>
         <div className="bd-countdown-grid">
-          <CountdownBar label="尿尿" time={summary?.lastPeeTime || summary?.lastDiaperTime} maxMs={24 * HOUR} color="#64b5f6" />
-          <CountdownBar label="便便" time={summary?.lastPooTime || summary?.lastDiaperTime} maxMs={7 * DAY} color="#ffb74d" />
-          <CountdownBar label="洗澡" time={summary?.lastBathTime} maxMs={5 * DAY} color="#4db6ac" />
+          <CountdownBar label="尿尿" time={summary?.lastPeeTime || summary?.lastDiaperTime} maxMs={24 * HOUR} color="#2196F3" />
+          <CountdownBar label="便便" time={summary?.lastPooTime || summary?.lastDiaperTime} maxMs={7 * DAY} color="#FF9800" />
+          <CountdownBar label="洗澡" time={summary?.lastBathTime} maxMs={5 * DAY} color="#009688" />
         </div>
       </section>
 

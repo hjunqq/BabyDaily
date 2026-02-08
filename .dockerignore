@@ -10,9 +10,11 @@ build
 .DS_Store
 Thumbs.db
 *.md
+!README.md
 coverage
 .nyc_output
 .vscode
 .idea
 *.swp
 *.swo
+uploads
