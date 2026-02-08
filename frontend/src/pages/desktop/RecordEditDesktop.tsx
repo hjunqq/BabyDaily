@@ -15,6 +15,7 @@ const recordTypes = [
   { id: 'FEED', text: '喂奶' },
   { id: 'DIAPER', text: '尿布' },
   { id: 'SLEEP', text: '睡眠' },
+  { id: 'BATH', text: '洗澡' },
 ];
 
 const feedSubtypes = [
@@ -42,6 +43,7 @@ export const RecordEditDesktop = () => {
   const [amount, setAmount] = useState<number>(120);
   const [feedSubtype, setFeedSubtype] = useState('BOTTLE');
   const [duration, setDuration] = useState('');
+  const [bathDuration, setBathDuration] = useState<number>(10);
   const [diaperType, setDiaperType] = useState('PEE');
   const [isNap, setIsNap] = useState(true);
   const [location, setLocation] = useState('');
@@ -70,6 +72,10 @@ export const RecordEditDesktop = () => {
           setIsNap(!!details.isNap);
           setLocation(details.location || '');
         }
+        if (record.type === 'BATH') {
+          const details: any = record.details || {};
+          setBathDuration(details.duration ?? 10);
+        }
       } catch (err: any) {
         setError(err?.message || '加载记录失败');
       } finally {
@@ -83,7 +89,7 @@ export const RecordEditDesktop = () => {
     if (!id) return;
     setSaving(true);
     try {
-      const details = buildDetails(type, { amount, feedSubtype, duration, diaperType, isNap, location });
+      const details = buildDetails(type, { amount, feedSubtype, duration, diaperType, isNap, location, bathDuration });
       await BabyService.updateRecord(id, {
         type,
         time: time.toISOString(),
@@ -146,6 +152,10 @@ export const RecordEditDesktop = () => {
             </>
           )}
 
+          {type === 'BATH' && (
+            <NumberBox value={bathDuration} onValueChanged={e => setBathDuration(e.value ?? 10)} placeholder="洗澡时长 (分钟)" />
+          )}
+
           <TextArea value={remark} onValueChanged={e => setRemark(e.value)} placeholder="备注" />
 
           <Button text={saving ? '保存中...' : '保存修改'} type="default" stylingMode="contained" height={40} onClick={handleSubmit} disabled={saving} />
@@ -173,6 +183,12 @@ const buildDetails = (type: BabyRecord['type'], form: any) => {
     return {
       isNap: form.isNap,
       location: form.location || undefined,
+    };
+  }
+  if (type === 'BATH') {
+    return {
+      duration: form.bathDuration || undefined,
+      unit: 'min',
     };
   }
   return {};

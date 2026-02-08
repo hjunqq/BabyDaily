@@ -15,6 +15,7 @@ const recordTypes = [
   { id: 'FEED', text: '喂奶' },
   { id: 'DIAPER', text: '尿布' },
   { id: 'SLEEP', text: '睡眠' },
+  { id: 'BATH', text: '洗澡' },
   { id: 'VITA_AD', text: '维生素 AD' },
   { id: 'VITA_D3', text: '维生素 D3' },
 ];
@@ -40,6 +41,7 @@ export const RecordMobile = () => {
   const [amount, setAmount] = useState<number>(120);
   const [feedSubtype, setFeedSubtype] = useState('BOTTLE');
   const [duration, setDuration] = useState('');
+  const [bathDuration, setBathDuration] = useState<number>(10);
   const [diaperType, setDiaperType] = useState('PEE');
   const [isNap, setIsNap] = useState(true);
   const [location, setLocation] = useState('');
@@ -49,7 +51,7 @@ export const RecordMobile = () => {
     if (!baby?.id) return;
     setSaving(true);
     try {
-      const details = buildDetails(type, { amount, feedSubtype, duration, diaperType, isNap, location });
+      const details = buildDetails(type, { amount, feedSubtype, duration, diaperType, isNap, location, bathDuration });
       await BabyService.createRecord({
         babyId: baby.id,
         type,
@@ -90,20 +92,24 @@ export const RecordMobile = () => {
             </>
           )}
 
+          {type === 'BATH' && (
+            <NumberBox value={bathDuration} onValueChanged={e => setBathDuration(e.value ?? 10)} placeholder="洗澡时长 (分钟)" />
+          )}
+
           {(type === 'VITA_AD' || type === 'VITA_D3') && (
             <NumberBox value={amount} onValueChanged={e => setAmount(e.value ?? 1)} placeholder="数量 (粒)" />
           )}
 
           <TextArea value={remark} onValueChanged={e => setRemark(e.value)} placeholder="备注" />
 
-          <div style={{ marginTop: 8 }}>
+          {type === 'FEED' && <div style={{ marginTop: 8 }}>
             <div className="bd-section-title" style={{ fontSize: 13, marginBottom: 8 }}>快捷量表</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {['60', '90', '120', '150'].map(item => (
                 <Button key={item} text={`${item} ml`} stylingMode="outlined" height={32} onClick={() => setAmount(Number(item))} />
               ))}
             </div>
-          </div>
+          </div>}
         </div>
       </div>
       <div className="bd-fab">
@@ -131,6 +137,12 @@ const buildDetails = (type: BabyRecord['type'], form: any) => {
     return {
       isNap: form.isNap,
       location: form.location || undefined,
+    };
+  }
+  if (type === 'BATH') {
+    return {
+      duration: form.bathDuration || undefined,
+      unit: 'min',
     };
   }
   if (type === 'VITA_AD' || type === 'VITA_D3') {

@@ -45,6 +45,9 @@ export const mapRecordDetail = (record: BabyRecord): string => {
         else main = '尿尿';
     } else if (record.type === 'SLEEP') {
         main = '睡眠';
+    } else if (record.type === 'BATH') {
+        const details: any = record.details || {};
+        main = details.duration ? `${details.duration}分钟` : '洗澡';
     } else if (record.type === 'VITA_AD' || record.type === 'VITA_D3') {
         const details: any = record.details || {};
         const amount = details.amount ? `${details.amount}${details.unit || '粒'}` : '1粒';

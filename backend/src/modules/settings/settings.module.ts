@@ -5,9 +5,9 @@ import { SettingsController } from './settings.controller';
 import { UserSettings } from './entities/user-settings.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([UserSettings])],
-    providers: [SettingsService],
-    controllers: [SettingsController],
-    exports: [SettingsService],
+  imports: [TypeOrmModule.forFeature([UserSettings])],
+  providers: [SettingsService],
+  controllers: [SettingsController],
+  exports: [SettingsService],
 })
-export class SettingsModule { }
+export class SettingsModule {}

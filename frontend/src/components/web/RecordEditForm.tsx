@@ -10,7 +10,7 @@ interface RecordEditFormProps {
     onSuccess: () => void;
 }
 
-type RecordType = 'FEED' | 'SLEEP' | 'DIAPER';
+type RecordType = 'FEED' | 'SLEEP' | 'DIAPER' | 'BATH';
 
 const isFeedDetails = (d: any): d is FeedDetails => d && typeof d === 'object' && 'subtype' in d;
 const isDiaperDetails = (d: any): d is DiaperDetails => d && typeof d === 'object' && 'type' in d;
@@ -121,7 +121,7 @@ export const RecordEditForm = ({ recordId, onClose, onSuccess }: RecordEditFormP
                     <div>
                         <label className="block text-sm font-medium text-sakura-text mb-2">记录类型</label>
                         <div className="px-4 py-2 bg-gray-100 rounded-lg text-sm text-gray-600">
-                            {type === 'FEED' ? '喂养' : type === 'SLEEP' ? '睡眠' : '尿布'}
+                            {type === 'FEED' ? '喂养' : type === 'SLEEP' ? '睡眠' : type === 'DIAPER' ? '尿布' : '洗澡'}
                         </div>
                     </div>
 

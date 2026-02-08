@@ -110,6 +110,60 @@ a {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.bd-home-layout {
+  display: grid;
+  gap: 16px;
+}
+
+.bd-home-hero {
+  padding: 20px;
+}
+
+.bd-home-block {
+  margin-top: 0;
+}
+
+.bd-countdown-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.bd-countdown-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.bd-countdown-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.bd-countdown-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #f2ece9;
+  overflow: hidden;
+}
+
+.bd-countdown-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width .3s ease;
+}
+
+.bd-countdown-foot {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #8b7670;
+}
+
 .bd-pill {
   display: inline-flex;
   align-items: center;
@@ -143,10 +197,11 @@ a {
 
 .bd-mobile-shell,
 main.bd-mobile-shell {
-  max-width: 720px;
+  max-width: 980px;
+  width: min(980px, 100%);
   margin: 0 auto;
   min-height: 100vh;
-  padding: 24px 24px 96px;
+  padding: 24px 28px 96px;
   background: #fff;
   box-shadow: var(--shadow-lite);
 }
@@ -339,6 +394,17 @@ main.bd-mobile-shell {
   .bd-hero {
     grid-template-columns: 1fr;
   }
+
+  .bd-countdown-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .bd-mobile-shell,
+  main.bd-mobile-shell {
+    padding: 20px 20px 96px;
+  }
 }
 
 @media (max-width: 720px) {
@@ -348,6 +414,14 @@ main.bd-mobile-shell {
 
   .bd-sidebar {
     display: none;
+  }
+
+  .bd-mini-countdowns {
+    grid-template-columns: 1fr;
+  }
+
+  .bd-countdown-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -504,6 +578,40 @@ main.bd-mobile-shell {
   background: linear-gradient(135deg, #e6f5eb 0%, #fff 50%);
 }
 
+.bd-action-btn.diaper {
+  background: linear-gradient(135deg, #fff0d9 0%, #fff 50%);
+}
+
+.bd-action-btn.bath {
+  background: linear-gradient(135deg, #e3f4f6 0%, #fff 50%);
+}
+
+.bd-mini-countdowns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.bd-mini-count-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+
+.bd-mini-count-title {
+  font-size: 12px;
+  color: #8b7670;
+  margin-bottom: 4px;
+}
+
+.bd-mini-count-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #5f4a43;
+}
+
 .bd-action-btn .icon {
   font-size: 32px;
   margin-bottom: 8px;
@@ -531,7 +639,7 @@ main.bd-mobile-shell {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: min(720px, 100%);
+  width: min(980px, 100%);
   background: #fff;
   border-top: 1px solid var(--line);
   display: flex;
@@ -578,8 +686,8 @@ main.bd-mobile-shell {
   display: none;
   position: fixed;
   bottom: 70px;
-  right: 50%;
-  transform: translateX(calc(210px - 80px));
+  right: max(12px, calc((100vw - min(980px, 100vw)) / 2 + 12px));
+  transform: none;
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(74, 52, 46, 0.2);
@@ -596,12 +704,12 @@ main.bd-mobile-shell {
 @keyframes bd-fadeIn {
   from {
     opacity: 0;
-    transform: translateX(calc(210px - 80px)) translateY(10px);
+    transform: translateY(10px);
   }
 
   to {
     opacity: 1;
-    transform: translateX(calc(210px - 80px)) translateY(0);
+    transform: translateY(0);
   }
 }
 

@@ -1,20 +1,26 @@
-import { IsString, IsOptional, IsArray, IsDateString, IsUrl } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsArray,
+  IsDateString,
+  IsUrl,
+} from 'class-validator';
 
 export class CreateOotdDto {
-    @IsString()
-    baby_id: string;
+  @IsString()
+  baby_id: string;
 
-    @IsUrl()
-    image_url: string;
+  @IsUrl()
+  image_url: string;
 
-    @IsOptional()
-    @IsUrl()
-    thumbnail_url?: string;
+  @IsOptional()
+  @IsUrl()
+  thumbnail_url?: string;
 
-    @IsArray()
-    @IsString({ each: true })
-    tags: string[];
+  @IsArray()
+  @IsString({ each: true })
+  tags: string[];
 
-    @IsDateString()
-    date: string;
+  @IsDateString()
+  date: string;
 }

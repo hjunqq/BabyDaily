@@ -50,6 +50,8 @@ export const RecordEditMobile = () => {
   const [diaperType, setDiaperType] = useState<'PEE' | 'POO' | 'BOTH'>('PEE');
   // SLEEP
   const [sleepDuration, setSleepDuration] = useState(60);
+  // BATH
+  const [bathDuration, setBathDuration] = useState(10);
 
   useEffect(() => {
     const load = async () => {
@@ -71,6 +73,8 @@ export const RecordEditMobile = () => {
           setDiaperType(d.type || 'PEE');
         } else if (record.type === 'SLEEP') {
           setSleepDuration(d.duration || 60);
+        } else if (record.type === 'BATH') {
+          setBathDuration(d.duration || 10);
         }
       } catch (err: any) {
         setError(err?.message || '加载记录失败');
@@ -97,6 +101,8 @@ export const RecordEditMobile = () => {
         details = { type: diaperType };
       } else if (type === 'SLEEP') {
         details = { isNap: true, duration: sleepDuration }; // Assume Nap for quick edit, or could add toggle
+      } else if (type === 'BATH') {
+        details = { duration: bathDuration, unit: 'min' };
       } else if (type === 'VITA_AD' || type === 'VITA_D3') {
         details = { amount: 1, unit: '粒' };
       }
@@ -257,6 +263,22 @@ export const RecordEditMobile = () => {
             </div>
             <div style={{ marginTop: 8, textAlign: 'center', fontWeight: 'bold', color: '#97c1a9' }}>
               Selected: {sleepDuration < 60 ? `${sleepDuration}m` : `${(sleepDuration / 60).toFixed(1)}h`}
+            </div>
+          </div>
+        )}
+
+        {type === 'BATH' && (
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ display: 'block', fontSize: 13, color: '#8b7670', marginBottom: 8 }}>洗澡时长</label>
+            <div style={quickSelectStyle}>
+              {[5, 10, 15, 20, 30, 40].map(v => (
+                <button key={v} onClick={() => setBathDuration(v)} style={selectionBtnStyle(bathDuration === v)}>
+                  {v}m
+                </button>
+              ))}
+            </div>
+            <div style={{ marginTop: 8, textAlign: 'center', fontWeight: 'bold', color: '#7DBBC3' }}>
+              Selected: {bathDuration}m
             </div>
           </div>
         )}

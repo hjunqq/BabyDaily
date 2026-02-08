@@ -78,6 +78,9 @@ export const RecordDetailMobile = () => {
     } else if (record.type === 'DIAPER') {
       const diaper = record.details as any;
       formData.diaperType = mapDiaperType(diaper.type);
+    } else if (record.type === 'BATH') {
+      const bath = record.details as any;
+      formData.bathDuration = bath?.duration ? `${bath.duration} 分钟` : '未填写';
     }
   }
 
@@ -100,11 +103,14 @@ export const RecordDetailMobile = () => {
           {record.type === 'DIAPER' && (
             <Item dataField="diaperType" label={{ text: '尿布详情' }} />
           )}
+          {record.type === 'BATH' && (
+            <Item dataField="bathDuration" label={{ text: '洗澡时长' }} />
+          )}
           <Item dataField="remark" label={{ text: '备注' }} />
         </Form>
       </div>
-      <div className="bd-fab">
-        <Button text="编辑记录" type="default" stylingMode="contained" height={44} onClick={() => navigate(`/record/${record.id}/edit`)} />
+      <div className="bd-fab" style={{ right: 16, bottom: 84, left: 16 }}>
+        <Button text="编辑记录" type="default" stylingMode="contained" height={44} width="100%" onClick={() => navigate(`/record/${record.id}/edit`)} />
       </div>
     </div>
   );

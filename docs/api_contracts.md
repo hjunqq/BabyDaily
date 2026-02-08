@@ -1,5 +1,5 @@
 # BabyDaily API 契约文档（修订版）
-**更新时间**：2026-02-02
+**更新时间**：2026-02-08
 
 ## 认证
 
@@ -60,7 +60,14 @@
   "diaperWet": 4,
   "diaperSoiled": 2,
   "sleepMinutes": 180,
-  "lastFeedTime": "2024-02-15T14:30:00.000Z"
+  "lastFeedTime": "2024-02-15T14:30:00.000Z",
+  "lastPeeTime": "2024-02-15T15:10:00.000Z",
+  "lastPooTime": "2024-02-15T18:20:00.000Z",
+  "lastDiaperTime": "2024-02-15T15:10:00.000Z",
+  "lastBathTime": "2024-02-15T20:00:00.000Z",
+  "feedCount": 6,
+  "todayAdTaken": true,
+  "todayD3Taken": false
 }
 ```
 

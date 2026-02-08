@@ -8,9 +8,12 @@ import { Baby } from '../baby/entities/baby.entity';
 import { UsersModule } from '../users/users.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Family, FamilyMember, Baby]), UsersModule],
-    controllers: [FamilyController],
-    providers: [FamilyService],
-    exports: [FamilyService],
+  imports: [
+    TypeOrmModule.forFeature([Family, FamilyMember, Baby]),
+    UsersModule,
+  ],
+  controllers: [FamilyController],
+  providers: [FamilyService],
+  exports: [FamilyService],
 })
-export class FamilyModule { }
+export class FamilyModule {}

@@ -9,28 +9,28 @@ import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './jwt.strategy';
 
 function getRequiredJwtSecret(configService: ConfigService): string {
-    const secret = configService.get<string>('JWT_SECRET');
-    if (!secret) {
-        throw new Error('JWT_SECRET environment variable is required but not set');
-    }
-    return secret;
+  const secret = configService.get<string>('JWT_SECRET');
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is required but not set');
+  }
+  return secret;
 }
 
 @Module({
-    imports: [
-        UsersModule,
-        PassportModule,
-        HttpModule,
-        JwtModule.registerAsync({
-            imports: [ConfigModule],
-            useFactory: async (configService: ConfigService) => ({
-                secret: getRequiredJwtSecret(configService),
-                signOptions: { expiresIn: '7d' },
-            }),
-            inject: [ConfigService],
-        }),
-    ],
-    providers: [AuthService, JwtStrategy],
-    controllers: [AuthController],
+  imports: [
+    UsersModule,
+    PassportModule,
+    HttpModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        secret: getRequiredJwtSecret(configService),
+        signOptions: { expiresIn: '7d' },
+      }),
+      inject: [ConfigService],
+    }),
+  ],
+  providers: [AuthService, JwtStrategy],
+  controllers: [AuthController],
 })
-export class AuthModule { }
+export class AuthModule {}

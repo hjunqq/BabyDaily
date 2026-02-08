@@ -10,9 +10,9 @@ import { FamilyGuard } from '../../common/guards/family.guard';
 import { SettingsModule } from '../settings/settings.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Record]), FamilyModule, SettingsModule],
-    controllers: [RecordController],
-    providers: [RecordService, RecordRepository, FamilyGuard],
-    exports: [RecordService],
+  imports: [TypeOrmModule.forFeature([Record]), FamilyModule, SettingsModule],
+  controllers: [RecordController],
+  providers: [RecordService, RecordRepository, FamilyGuard],
+  exports: [RecordService],
 })
-export class RecordModule { }
+export class RecordModule {}

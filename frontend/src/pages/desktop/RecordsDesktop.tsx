@@ -13,7 +13,7 @@ import { mapRecordType, mapRecordDetail } from '../../utils/recordMappers';
 export const RecordsDesktop = () => {
   const navigate = useNavigate();
   const { baby, loading: babyLoading, error: babyError } = useCurrentBaby();
-  const { records, loading: recordsLoading, error: recordsError, hasMore, loadMore } = useRecords(baby?.id || null);
+  const { records, loading: recordsLoading, error: recordsError, hasMore, loadMore, refresh } = useRecords(baby?.id || null);
   const [query, setQuery] = useState('');
 
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -81,7 +81,9 @@ export const RecordsDesktop = () => {
 
     try {
       await BabyService.deleteRecords(Array.from(selectedIds));
-      window.location.reload();
+      await refresh();
+      setSelectedIds(new Set());
+      setIsSelectionMode(false);
     } catch (error) {
       console.error(error);
       alert('删除失败');

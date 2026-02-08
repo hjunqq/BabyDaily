@@ -21,7 +21,10 @@ async function bootstrap() {
   );
 
   // Enable global exception filters
-  app.useGlobalFilters(new AllExceptionsFilter(), new BusinessExceptionFilter());
+  app.useGlobalFilters(
+    new AllExceptionsFilter(),
+    new BusinessExceptionFilter(),
+  );
 
   // Swagger docs
   const config = new DocumentBuilder()

@@ -8,7 +8,7 @@ interface RecordFormProps {
     onSuccess: () => void;
 }
 
-type RecordType = 'FEED' | 'SLEEP' | 'DIAPER';
+type RecordType = 'FEED' | 'SLEEP' | 'DIAPER' | 'BATH';
 
 export const RecordForm = ({ onClose, onSuccess }: RecordFormProps) => {
     const [type, setType] = useState<RecordType>('FEED');
@@ -93,7 +93,7 @@ export const RecordForm = ({ onClose, onSuccess }: RecordFormProps) => {
                     <div>
                         <label className="block text-sm font-medium text-sakura-text mb-2">记录类型</label>
                         <div className="grid grid-cols-3 gap-2">
-                            {(['FEED', 'SLEEP', 'DIAPER'] as RecordType[]).map((t) => (
+                            {(['FEED', 'SLEEP', 'DIAPER', 'BATH'] as RecordType[]).map((t) => (
                                 <button
                                     key={t}
                                     type="button"
@@ -103,7 +103,7 @@ export const RecordForm = ({ onClose, onSuccess }: RecordFormProps) => {
                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}
                                 >
-                                    {t === 'FEED' ? '喂养' : t === 'SLEEP' ? '睡眠' : '尿布'}
+                                    {t === 'FEED' ? '喂养' : t === 'SLEEP' ? '睡眠' : t === 'DIAPER' ? '尿布' : '洗澡'}
                                 </button>
                             ))}
                         </div>
@@ -164,6 +164,12 @@ export const RecordForm = ({ onClose, onSuccess }: RecordFormProps) => {
                                     </button>
                                 ))}
                             </div>
+                        </div>
+                    )}
+
+                    {type === 'BATH' && (
+                        <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                            洗澡记录默认按当前时间保存，可在备注里填写时长和细节。
                         </div>
                     )}
 

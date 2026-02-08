@@ -1,28 +1,34 @@
-﻿import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+﻿import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('user_settings')
 export class UserSettings {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @Column({ name: 'user_id', unique: true })
-    userId: string;
+  @Column({ name: 'user_id', unique: true })
+  userId: string;
 
-    @Column({ default: 'B' })
-    theme: string;
+  @Column({ default: 'B' })
+  theme: string;
 
-    @Column({ default: 'zh-CN' })
-    language: string;
+  @Column({ default: 'zh-CN' })
+  language: string;
 
-    @Column({ name: 'export_format', default: 'CSV' })
-    exportFormat: string;
+  @Column({ name: 'export_format', default: 'CSV' })
+  exportFormat: string;
 
-    @Column({ name: 'day_start_hour', default: 0 })
-    dayStartHour: number;  // 0-23，默认 0 表示午夜
+  @Column({ name: 'day_start_hour', default: 0 })
+  dayStartHour: number; // 0-23，默认 0 表示午夜
 
-    @CreateDateColumn()
-    created_at: Date;
+  @CreateDateColumn()
+  created_at: Date;
 
-    @UpdateDateColumn()
-    updated_at: Date;
+  @UpdateDateColumn()
+  updated_at: Date;
 }

@@ -62,7 +62,7 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
   return (
     <div className="bd-app">
       <main className="bd-mobile-shell">
-        <article>
+        <article style={{ width: '100%' }}>
           {children}
         </article>
       </main>

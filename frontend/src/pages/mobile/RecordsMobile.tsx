@@ -13,7 +13,7 @@ import { mapRecordType, mapRecordDetail } from '../../utils/recordMappers';
 export const RecordsMobile = () => {
   const navigate = useNavigate();
   const { baby, loading: babyLoading, error: babyError } = useCurrentBaby();
-  const { records, loading: recordsLoading, error: recordsError, hasMore, loadMore } = useRecords(baby?.id || null);
+  const { records, loading: recordsLoading, error: recordsError, hasMore, loadMore, refresh } = useRecords(baby?.id || null);
   const [query, setQuery] = useState('');
 
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -73,14 +73,9 @@ export const RecordsMobile = () => {
 
     try {
       await BabyService.deleteRecords(Array.from(selectedIds));
-      // Refresh list - simplest way is to reload or invalidate cache if we had one.
-      // Since useRecords uses internal state, we might need to trigger a refresh.
-      // But useRecords doesn't expose refresh directly here? 
-      // Actually useRecords returns `mutate` or we can force remount.
-      // For now, let's just navigation or reload. 
-      // Better: expose refresh from useRecords or use a global event.
-      // Let's modify useRecords later if needed, but for now simple reload works.
-      window.location.reload();
+      await refresh();
+      setSelectedIds(new Set());
+      setIsSelectionMode(false);
     } catch (error) {
       console.error(error);
       alert('删除失败');

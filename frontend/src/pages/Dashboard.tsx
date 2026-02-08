@@ -1,15 +1,50 @@
-﻿import { TextBox } from 'devextreme-react/text-box';
 import { DataGrid, Column } from 'devextreme-react/data-grid';
 import { Chart, Series, ArgumentAxis, ValueAxis, Tooltip, Legend } from 'devextreme-react/chart';
-import { ProgressBar } from 'devextreme-react/progress-bar';
 import { LoadIndicator } from 'devextreme-react/load-indicator';
 import { Button } from 'devextreme-react/button';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useCurrentBaby } from '../hooks/useCurrentBaby';
 import { API_URL } from '../config/env';
 import { BabyEditModal } from '../components/desktop/BabyEditModal';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Edit2 } from 'lucide-react';
+
+const HOUR = 60 * 60 * 1000;
+const DAY = 24 * HOUR;
+
+const getElapsed = (time?: string) => (time ? Math.max(0, Date.now() - new Date(time).getTime()) : undefined);
+
+const formatElapsed = (elapsedMs?: number) => {
+  if (elapsedMs === undefined) return '暂无记录';
+  if (elapsedMs < 60_000) return '刚刚';
+  const mins = Math.floor(elapsedMs / 60_000);
+  if (mins < 60) return `${mins}分钟前`;
+  const hours = Math.floor(mins / 60);
+  const remainMins = mins % 60;
+  if (hours < 24) return remainMins ? `${hours}小时${remainMins}分钟前` : `${hours}小时前`;
+  return `${Math.floor(hours / 24)}天前`;
+};
+
+const getProgress = (elapsedMs: number | undefined, maxMs: number) => {
+  if (elapsedMs === undefined) return 0;
+  return Math.min((elapsedMs / maxMs) * 100, 100);
+};
+
+const CountdownBar = ({ label, elapsedMs, maxMs, color }: { label: string; elapsedMs?: number; maxMs: number; color: string }) => {
+  const pct = getProgress(elapsedMs, maxMs);
+  return (
+    <div className="bd-countdown-card">
+      <div className="bd-countdown-head">
+        <span>{label}</span>
+        <strong>{formatElapsed(elapsedMs)}</strong>
+      </div>
+      <div className="bd-countdown-track">
+        <div className="bd-countdown-fill" style={{ width: `${pct}%`, background: color }} />
+      </div>
+      <div className="bd-countdown-foot">{pct >= 100 ? '已超过建议周期' : `进度 ${Math.round(pct)}%`}</div>
+    </div>
+  );
+};
 
 export const Dashboard = () => {
   const { baby } = useCurrentBaby();
@@ -21,10 +56,17 @@ export const Dashboard = () => {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-    weekday: 'long'
+    weekday: 'long',
   });
 
-  const bornDays = baby?.birthday ? Math.floor((today.getTime() - new Date(baby.birthday).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+  const bornDays = baby?.birthday ? Math.floor((today.getTime() - new Date(baby.birthday).getTime()) / DAY) : 0;
+
+  const elapsed = useMemo(() => ({
+    feed: getElapsed(summary.lastFeedTime),
+    pee: getElapsed(summary.lastPeeTime || summary.lastDiaperTime),
+    poo: getElapsed(summary.lastPooTime || summary.lastDiaperTime),
+    bath: getElapsed(summary.lastBathTime),
+  }), [summary.lastFeedTime, summary.lastPeeTime, summary.lastPooTime, summary.lastDiaperTime, summary.lastBathTime]);
 
   if (loading) {
     return (
@@ -36,34 +78,6 @@ export const Dashboard = () => {
       </div>
     );
   }
-
-  // 获取卡片动态背景色
-  const getCardBackground = (elapsedTimeMs: number): string => {
-    const hours = elapsedTimeMs / (1000 * 60 * 60);
-    const maxHours = 5;
-    const percentage = Math.min((hours / maxHours) * 100, 100);
-
-    const progressRatio = Math.min(hours / maxHours, 1);
-    const lightness = 95 - (progressRatio * 40);
-    const saturation = 50 + (progressRatio * 40);
-    const tipColor = `hsl(350, ${saturation}%, ${lightness}%)`;
-
-    return `linear-gradient(90deg, #fff5f5 0%, ${tipColor} ${percentage}%, #ffffff ${percentage}%)`;
-  };
-
-
-  // Wait, useDashboardData maps lastFeedTime to a formatted string. We lost the original date object.
-  // Actually, summary.lastFeedTime is formatted string "HH:mm".
-  // MobileHome calculates it from `records`. 
-  // Let's check how MobileHome does it. It finds `lastFeedRecord`.
-  // Dashboard hook exposes `activities` which are mapped from records, but maybe not raw records.
-  // I should probably use `useRecords` hook in Dashboard as well or rely on summary if I can parse it, but parsing "HH:mm" is not enough for "days ago".
-  // However, `useDashboardData` is specific to this page.
-  // Let's modify `Dashboard` to fetch records or use what we have.
-  // Actually, `useDashboardData` calls `BabyService.getRecords`.
-  // Let's see if we can get the raw last feed time or calculate it properly.
-  // MobileHome uses `records`. 
-  // Let's proceed with adding `getCardBackground` first, and then address the data source.
 
   if (error) {
     return (
@@ -79,131 +93,75 @@ export const Dashboard = () => {
   }
 
   return (
-    <div>
-      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
-        {baby?.avatarUrl ? (
-          <div style={{ width: 64, height: 64, borderRadius: '50%', overflow: 'hidden', border: '3px solid #fff', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-            <img
-              src={baby.avatarUrl.startsWith('http') ? baby.avatarUrl : `${API_URL}${baby.avatarUrl}`}
-              alt={baby.name}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          </div>
-        ) : (
-          <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#F7EFEB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>
-            👶
-          </div>
-        )}
-
-        <div>
-          <div className="flex items-center gap-3 mb-1">
+    <div className="bd-home-layout">
+      <section className="bd-card bd-home-hero">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          {baby?.avatarUrl ? (
+            <div style={{ width: 64, height: 64, borderRadius: '50%', overflow: 'hidden', border: '3px solid #fff', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+              <img
+                src={baby.avatarUrl.startsWith('http') ? baby.avatarUrl : `${API_URL}${baby.avatarUrl}`}
+                alt={baby.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+          ) : (
+            <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#F7EFEB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>👶</div>
+          )}
+          <div style={{ flex: 1 }}>
             <h2 className="bd-title" style={{ fontSize: 24, margin: 0 }}>{baby?.name || '宝宝'}</h2>
-            <button
-              onClick={() => setIsEditModalOpen(true)}
-              className="p-1.5 text-gray-400 hover:text-sakura-pink hover:bg-sakura-pink/10 rounded-full transition-colors"
-              title="编辑信息 / 清空记录"
-            >
-              <Edit2 size={18} />
-            </button>
+            <p style={{ margin: '6px 0 0', color: '#8b7670' }}>{dateStr} · 出生 {bornDays} 天</p>
           </div>
-          <div style={{ fontSize: 14, color: '#8b7670', opacity: 0.9 }}>
-            今天已经出生 {bornDays} 天了
-          </div>
+          <button
+            onClick={() => setIsEditModalOpen(true)}
+            className="p-1.5 text-gray-400 hover:text-sakura-pink hover:bg-sakura-pink/10 rounded-full transition-colors"
+            title="编辑信息"
+          >
+            <Edit2 size={18} />
+          </button>
         </div>
-      </div>
+      </section>
 
-      <BabyEditModal
-        visible={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        onSuccess={refresh}
-      />
-      <div className="bd-topbar">
-        <TextBox placeholder="搜索记录..." width={320} stylingMode="outlined" />
-        <div style={{ fontSize: 14, color: '#6b524b' }}>{dateStr}</div>
-      </div>
+      <BabyEditModal visible={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} onSuccess={refresh} />
 
-      <div className="bd-grid kpi">
-        {/* 🍼 喂奶卡片 */}
-        <div className="bd-card" style={{
-          background: summary.lastFeedTime ? getCardBackground(new Date().getTime() - new Date().setHours(parseInt(summary.lastFeedTime.split(':')[0]), parseInt(summary.lastFeedTime.split(':')[1]))) : '#fff',
-          // Note: The time parsing above is very rough and assumes "today". 
-          // Better to use a real diff if possible, but for visual parity it might be "okay" for now or I need to fetch real records.
-          // Let's try to match the style first.
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-            <div className="bd-kpi-title" style={{ fontSize: 16, color: '#8b7670' }}>奶量总计</div>
-            <div style={{ fontSize: 24 }}>🍼</div>
-          </div>
-          <div className="bd-kpi-value" style={{ fontSize: 28 }}>{summary.milkMl} <span style={{ fontSize: 16, color: '#8b7670' }}>ml</span></div>
-          <div className="bd-kpi-sub" style={{ marginTop: 4 }}>
-            {summary.lastFeedTime ? `上次喂奶: ${summary.lastFeedTime}` : '今日尚未喂奶'}
-          </div>
-          <div style={{ marginTop: 12 }}>
-            <ProgressBar min={0} max={1000} value={summary.milkMl} showStatus={false} />
-          </div>
-        </div>
-
-        {/* 💊 AD/D3 状态卡片 */}
+      <section className="bd-grid kpi">
         <div className="bd-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-            <div className="bd-kpi-title" style={{ fontSize: 16, color: '#8b7670' }}>今日 AD/D3</div>
-            <div style={{ fontSize: 24 }}>💊</div>
-          </div>
-          <div className="bd-kpi-value" style={{ fontSize: 24, display: 'flex', gap: 16 }}>
-            <span style={{ color: summary.todayAdTaken ? '#4CAF50' : '#ccc' }}>
-              AD {summary.todayAdTaken ? '✓' : '—'}
-            </span>
-            <span style={{ color: summary.todayD3Taken ? '#FF9800' : '#ccc' }}>
-              D3 {summary.todayD3Taken ? '✓' : '—'}
-            </span>
-          </div>
-          <div className="bd-kpi-sub" style={{ marginTop: 4 }}>每日一粒</div>
+          <div className="bd-kpi-title">今日奶量</div>
+          <div className="bd-kpi-value">{summary.milkMl} <span style={{ fontSize: 16, color: '#8b7670' }}>ml</span></div>
+          <div className="bd-kpi-sub">上次喂奶：{formatElapsed(elapsed.feed)}</div>
         </div>
-
-
-        {/* 🧷 尿布卡片 */}
         <div className="bd-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-            <div className="bd-kpi-title" style={{ fontSize: 16, color: '#8b7670' }}>尿布更换</div>
-            <div style={{ fontSize: 24 }}>🧷</div>
-          </div>
-          <div className="bd-kpi-value" style={{ fontSize: 28 }}>{summary.diaperWet + summary.diaperSoiled} <span style={{ fontSize: 16, color: '#8b7670' }}>次</span></div>
-          <div className="bd-kpi-sub" style={{ marginTop: 4 }}>
-            湿 {summary.diaperWet} / 脏 {summary.diaperSoiled}
-          </div>
-          <div style={{ marginTop: 12 }}>
-            <ProgressBar min={0} max={20} value={summary.diaperWet + summary.diaperSoiled} showStatus={false} />
-          </div>
+          <div className="bd-kpi-title">尿布统计</div>
+          <div className="bd-kpi-value">{summary.diaperWet + summary.diaperSoiled}<span style={{ fontSize: 16, color: '#8b7670' }}> 次</span></div>
+          <div className="bd-kpi-sub">尿尿 {summary.diaperWet} / 便便 {summary.diaperSoiled}</div>
         </div>
-
-        {/* 📊 趋势卡片 */}
         <div className="bd-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-            <div className="bd-kpi-title" style={{ fontSize: 16, color: '#8b7670' }}>记录天数</div>
-            <div style={{ fontSize: 24 }}>📅</div>
-          </div>
-          <div className="bd-kpi-value" style={{ fontSize: 28 }}>{trends.length} <span style={{ fontSize: 16, color: '#8b7670' }}>天</span></div>
-          <div className="bd-kpi-sub" style={{ marginTop: 4 }}>持续记录中</div>
-          <div style={{ marginTop: 12 }}>
-            <ProgressBar min={0} max={30} value={trends.length} showStatus={false} />
-          </div>
+          <div className="bd-kpi-title">今日补剂</div>
+          <div className="bd-kpi-value" style={{ fontSize: 22 }}>{summary.todayAdTaken ? 'AD ✓' : 'AD —'} / {summary.todayD3Taken ? 'D3 ✓' : 'D3 —'}</div>
+          <div className="bd-kpi-sub">每日一粒</div>
         </div>
-      </div>
+        <div className="bd-card">
+          <div className="bd-kpi-title">连续记录</div>
+          <div className="bd-kpi-value">{trends.length}<span style={{ fontSize: 16, color: '#8b7670' }}> 天</span></div>
+          <div className="bd-kpi-sub">最近 7 天趋势</div>
+        </div>
+      </section>
 
-      <div className="bd-grid two" style={{ marginTop: 24 }}>
+      <section className="bd-home-block">
+        <h3 className="bd-section-title">护理倒计时</h3>
+        <div className="bd-countdown-grid">
+          <CountdownBar label="尿尿" elapsedMs={elapsed.pee} maxMs={24 * HOUR} color="#64b5f6" />
+          <CountdownBar label="便便" elapsedMs={elapsed.poo} maxMs={7 * DAY} color="#ffb74d" />
+          <CountdownBar label="洗澡" elapsedMs={elapsed.bath} maxMs={5 * DAY} color="#4db6ac" />
+        </div>
+      </section>
+
+      <section className="bd-grid two bd-home-block">
         <div className="bd-card">
           <div className="bd-section-title">喂养趋势（7 天）- 奶量</div>
           <Chart dataSource={trends} size={{ height: 220 }}>
             <ArgumentAxis valueMarginsEnabled={false} discreteAxisDivisionMode="crossLabels" />
             <ValueAxis />
-            <Series
-              valueField="milk"
-              argumentField="name"
-              type="splinearea"
-              color="#FF9AA2"
-            />
+            <Series valueField="milk" argumentField="name" type="splinearea" color="#FF9AA2" />
             <Tooltip enabled customizeTooltip={(arg: any) => ({ text: `${arg.valueText} ml` })} />
             <Legend visible={false} />
           </Chart>
@@ -213,20 +171,14 @@ export const Dashboard = () => {
           <Chart dataSource={trends} size={{ height: 220 }}>
             <ArgumentAxis valueMarginsEnabled={false} />
             <ValueAxis />
-            <Series
-              valueField="solid"
-              argumentField="name"
-              type="bar"
-              color="#B5EAD7"
-              barPadding={0.3}
-            />
+            <Series valueField="solid" argumentField="name" type="bar" color="#B5EAD7" barPadding={0.3} />
             <Tooltip enabled customizeTooltip={(arg: any) => ({ text: `${arg.valueText} g` })} />
             <Legend visible={false} />
           </Chart>
         </div>
-      </div>
+      </section>
 
-      <div style={{ marginTop: 24 }} className="bd-card">
+      <section className="bd-card bd-home-block">
         <div className="bd-section-title">近期活动</div>
         {activities.length === 0 ? (
           <div style={{ color: '#6b524b' }}>暂无记录</div>
@@ -238,7 +190,7 @@ export const Dashboard = () => {
             <Column dataField="duration" caption="时长" />
           </DataGrid>
         )}
-      </div>
+      </section>
     </div>
   );
 };

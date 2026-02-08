@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { type CSSProperties, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LoadIndicator } from 'devextreme-react/load-indicator';
 import { BabyService } from '../services/api';
@@ -8,12 +8,11 @@ import { useRecords } from '../hooks/useRecords';
 import { FeedTimelineChart } from '../components/mobile/FeedTimelineChart';
 import type { FeedDetails, UserSettings } from '../types';
 
-// 计算距今多长时间 - 优先使用服务器计算的值
-const getTimeAgo = (date: Date, serverTimeAgo?: string): string => {
-  // 如果服务器已经计算好了时间，直接使用（Kindle兼容）
-  if (serverTimeAgo) return serverTimeAgo;
+const HOUR = 60 * 60 * 1000;
+const DAY = 24 * HOUR;
 
-  // 否则使用客户端计算（非Kindle设备的后备方案）
+const getTimeAgo = (date: Date, serverTimeAgo?: string): string => {
+  if (serverTimeAgo) return serverTimeAgo;
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
@@ -23,36 +22,24 @@ const getTimeAgo = (date: Date, serverTimeAgo?: string): string => {
 
   const hours = Math.floor(diffMins / 60);
   const mins = diffMins % 60;
+  if (hours < 24) return mins > 0 ? `${hours}小时${mins}分钟前` : `${hours}小时前`;
 
-  if (hours < 24) {
-    return mins > 0 ? `${hours}小时${mins}分钟前` : `${hours}小时前`;
-  }
-
-  const days = Math.floor(hours / 24);
-  return `${days}天前`;
+  return `${Math.floor(hours / 24)}天前`;
 };
 
-// 格式化时间 - 优先使用服务器计算的值
 const formatTime = (date: Date, serverFormattedTime?: string): string => {
-  // 如果服务器已经计算好了时间，直接使用（Kindle兼容）
   if (serverFormattedTime) return serverFormattedTime;
-
-  // 否则使用客户端计算（非Kindle设备的后备方案）
   return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
 };
 
-// 检测是否是 Kindle 模式
 const isKindleMode = (): boolean => {
   if (typeof document === 'undefined') return false;
   return document.body.classList.contains('kindle-mode');
 };
 
-// 获取记录图标 - Kindle 模式下使用文字
 const getRecordIcon = (type: string, subtype?: string): string => {
   const kindle = isKindleMode();
-  if (type === 'FEED') {
-    return kindle ? (subtype === 'BREAST' ? '母' : '奶') : (subtype === 'BREAST' ? '🤱' : '🍼');
-  }
+  if (type === 'FEED') return kindle ? (subtype === 'BREAST' ? '母' : '奶') : (subtype === 'BREAST' ? '🤱' : '🍼');
   if (type === 'SLEEP') return kindle ? '睡' : '💤';
   if (type === 'DIAPER') return kindle ? '尿' : '🧷';
   if (type === 'VITA_AD') return kindle ? 'AD' : '💊';
@@ -64,11 +51,8 @@ const getRecordIcon = (type: string, subtype?: string): string => {
   return kindle ? '记' : '📝';
 };
 
-// 获取记录类型名称
 const getRecordTypeName = (type: string, subtype?: string): string => {
-  if (type === 'FEED') {
-    return subtype === 'BREAST' ? '亲喂' : '瓶喂';
-  }
+  if (type === 'FEED') return subtype === 'BREAST' ? '亲喂' : '瓶喂';
   if (type === 'SLEEP') return '睡眠';
   if (type === 'DIAPER') return '换尿布';
   if (type === 'VITA_AD') return '维生素 AD';
@@ -80,12 +64,9 @@ const getRecordTypeName = (type: string, subtype?: string): string => {
   return '记录';
 };
 
-// 格式化记录值
 const formatRecordValue = (record: any): string => {
   if (record.type === 'FEED') {
-    if (record.details?.subtype === 'BREAST') {
-      return `${record.details?.duration || 0} 分钟`;
-    }
+    if (record.details?.subtype === 'BREAST') return `${record.details?.duration || 0} 分钟`;
     return `${record.details?.amount || 0} ml`;
   }
   if (record.type === 'SLEEP') {
@@ -105,68 +86,93 @@ const formatRecordValue = (record: any): string => {
     if (diaperType === 'POO') return '便便';
     return '尿尿';
   }
+  if (record.type === 'BATH') {
+    const duration = record.details?.duration;
+    return duration ? `${duration}分钟` : (record.remark || '洗澡');
+  }
   return record.remark || '—';
 };
 
-// 获取卡片动态背景色
 const getCardBackground = (elapsedTimeMs: number): string => {
   const hours = elapsedTimeMs / (1000 * 60 * 60);
   const maxHours = 4;
   const percentage = Math.min((hours / maxHours) * 100, 100);
-
-  // 动态计算末端颜色 (Tip Color)
-  // 随着时间推移，末端颜色变得更红更深
   const progressRatio = Math.min(hours / maxHours, 1);
-  const lightness = 95 - (progressRatio * 40); // 95% -> 55%
-  const saturation = 50 + (progressRatio * 40); // 50% -> 90%
+  const lightness = 95 - (progressRatio * 40);
+  const saturation = 50 + (progressRatio * 40);
   const tipColor = `hsl(350, ${saturation}%, ${lightness}%)`;
-
-  // 渐变: 起点(极淡粉) ->此处(动态深红) -> 之后(白/透明)
   return `linear-gradient(90deg, #fff5f5 0%, ${tipColor} ${percentage}%, #ffffff ${percentage}%)`;
+};
+
+const getSimpleCountdown = (time?: string) => {
+  if (!time) return '暂无记录';
+  return getTimeAgo(new Date(time));
+};
+
+const getProgress = (time: string | undefined, maxMs: number) => {
+  if (!time) return 0;
+  const elapsed = Math.max(0, Date.now() - new Date(time).getTime());
+  return Math.min((elapsed / maxMs) * 100, 100);
+};
+
+const CountdownBar = ({ label, time, maxMs, color }: { label: string; time?: string; maxMs: number; color: string }) => {
+  const progress = getProgress(time, maxMs);
+  return (
+    <div className="bd-countdown-card">
+      <div className="bd-countdown-head">
+        <span>{label}</span>
+        <strong>{getSimpleCountdown(time)}</strong>
+      </div>
+      <div className="bd-countdown-track">
+        <div className="bd-countdown-fill" style={{ width: `${progress}%`, background: color }} />
+      </div>
+      <div className="bd-countdown-foot">{progress >= 100 ? '已超过建议周期' : `进度 ${Math.round(progress)}%`}</div>
+    </div>
+  );
 };
 
 export const MobileHome = () => {
   const { baby, loading: babyLoading, error: babyError } = useCurrentBaby();
-  const { records, loading: recordsLoading, error: recordsError } = useRecords(baby?.id || null, 5);
+  const { records, loading: recordsLoading, error: recordsError, refresh: refreshRecords } = useRecords(baby?.id || null, 12);
   const [summary, setSummary] = useState<any | null>(null);
   const [summaryError, setSummaryError] = useState<string | undefined>();
   const [showFeedModal, setShowFeedModal] = useState(false);
   const [showDiaperModal, setShowDiaperModal] = useState(false);
+  const [showBathModal, setShowBathModal] = useState(false);
   const [showSupplementModal, setShowSupplementModal] = useState({ visible: false, type: 'VITA_AD' as 'VITA_AD' | 'VITA_D3' });
   const [settings, setSettings] = useState<UserSettings | null>(null);
-  // todayAdTaken, todayD3Taken, todayFeedCount 现在从 summary 获取
 
-  useEffect(() => {
-    const load = async () => {
-      if (!baby?.id) return;
-      try {
-        const data = await BabyService.getSummary(baby.id, 1);
-        setSummary(data);
-        setSummaryError(undefined);
-      } catch (err: any) {
-        setSummaryError(err?.message || '获取统计失败');
-      }
-    };
-    load();
+  const loadSummary = useCallback(async () => {
+    if (!baby?.id) return;
+    try {
+      const data = await BabyService.getSummary(baby.id, 1);
+      setSummary(data);
+      setSummaryError(undefined);
+    } catch (err: any) {
+      setSummaryError(err?.message || '获取统计失败');
+    }
   }, [baby?.id]);
 
-  // 加载用户设置
+  useEffect(() => {
+    loadSummary();
+  }, [loadSummary]);
+
   useEffect(() => {
     BabyService.getSettings().then(setSettings).catch(() => { });
   }, []);
 
-  // AD/D3 状态和喂奶次数现在从后端 summary API 获取，确保数据准确
+  const refreshAll = useCallback(async () => {
+    await Promise.all([refreshRecords(), loadSummary()]);
+  }, [refreshRecords, loadSummary]);
+
   const todayAdTaken = summary?.todayAdTaken ?? false;
   const todayD3Taken = summary?.todayD3Taken ?? false;
   const todayFeedCount = summary?.feedCount ?? 0;
-
-  // 查找最近一次喂奶记录
   const lastFeedRecord = records.find(r => r.type === 'FEED');
-
-  // 今日统计
   const todayMilk = summary?.milkMl ?? 0;
 
-  // 加载状态
+  const recentRecords = useMemo(() => records.slice(0, 3), [records]);
+
   if (babyLoading || recordsLoading) {
     return (
       <div className="bd-state">
@@ -178,7 +184,6 @@ export const MobileHome = () => {
     );
   }
 
-  // 错误状态
   if (babyError || recordsError || summaryError) {
     return (
       <div className="bd-state">
@@ -196,15 +201,13 @@ export const MobileHome = () => {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-    weekday: 'long'
+    weekday: 'long',
   });
 
-  // 计算出生天数
   const bornDays = baby?.birthday ? Math.floor((today.getTime() - new Date(baby.birthday).getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
   return (
     <>
-      {/* 页面标题 */}
       <header className="bd-minimal-header animate-slide-up" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         {baby?.avatarUrl ? (
           <div style={{ width: 48, height: 48, borderRadius: '50%', overflow: 'hidden', border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
@@ -229,11 +232,9 @@ export const MobileHome = () => {
         </div>
       </header>
 
-      {/* 上次喂奶提醒卡片 */}
       {lastFeedRecord ? (() => {
         const feedDetails = lastFeedRecord.details as FeedDetails;
-        // 优先使用服务器计算的时间差（Kindle兼容）
-        const elapsedTimeMs = (lastFeedRecord as any).elapsedMs ?? (new Date().getTime() - new Date(lastFeedRecord.time).getTime());
+        const elapsedTimeMs = (lastFeedRecord as any).elapsedMs ?? 0;
         return (
           <div
             className="bd-last-feed-card animate-slide-up delay-1"
@@ -241,10 +242,9 @@ export const MobileHome = () => {
               background: getCardBackground(elapsedTimeMs),
               position: 'relative',
               overflow: 'hidden',
-              border: '1px solid rgba(0,0,0,0.05)'
+              border: '1px solid rgba(0,0,0,0.05)',
             }}
           >
-            {/* 循环动画遮罩 (限制在进度条区域内) - Kindle模式下禁用 */}
             {!isKindleMode() && (
               <div style={{
                 position: 'absolute',
@@ -255,7 +255,7 @@ export const MobileHome = () => {
                 background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%)',
                 animation: 'shimmer 2s infinite',
                 pointerEvents: 'none',
-                zIndex: 1
+                zIndex: 1,
               }} />
             )}
             {!isKindleMode() && (
@@ -284,7 +284,6 @@ export const MobileHome = () => {
                 : getTimeAgo(new Date(lastFeedRecord.time), (lastFeedRecord as any).timeAgo)
               }
             </div>
-            {/* 进度提示文本 */}
             <div className="time-detail" style={{ marginTop: 8 }}>
               {formatTime(new Date(lastFeedRecord.time), (lastFeedRecord as any).formattedTime)} 喂奶 · {getRecordTypeName('FEED', feedDetails?.subtype)}
             </div>
@@ -300,28 +299,34 @@ export const MobileHome = () => {
         </div>
       )}
 
-      {/* 今日喂奶时间线 */}
+      <section className="bd-home-block animate-slide-up delay-2" aria-label="关键倒计时">
+        <h3 className="bd-section-title" style={{ marginBottom: 10 }}>护理倒计时</h3>
+        <div className="bd-countdown-grid">
+          <CountdownBar label="尿尿" time={summary?.lastPeeTime || summary?.lastDiaperTime} maxMs={24 * HOUR} color="#64b5f6" />
+          <CountdownBar label="便便" time={summary?.lastPooTime || summary?.lastDiaperTime} maxMs={7 * DAY} color="#ffb74d" />
+          <CountdownBar label="洗澡" time={summary?.lastBathTime} maxMs={5 * DAY} color="#4db6ac" />
+        </div>
+      </section>
+
       {baby?.id && (
         <section className="animate-slide-up delay-2" aria-label="喂奶时间线">
           <FeedTimelineChart babyId={baby.id} dayStartHour={settings?.dayStartHour || 0} />
         </section>
       )}
 
-      {/* 今日统计 */}
-      <section className="bd-today-stats animate-slide-up delay-2" aria-label="今日数据统计">
+      <section className="bd-today-stats bd-home-block animate-slide-up delay-2" aria-label="今日数据统计">
         <div className="bd-stat-card feed">
           <div className="icon">{isKindleMode() ? '奶' : '🍼'}</div>
           <div className="title">今日奶量</div>
           <div className="value">
             {todayMilk}<span className="unit"> ml</span>
-            {/* Kindle模式下显示次数 */}
             {isKindleMode() && todayFeedCount > 0 && (
               <span style={{ fontSize: 14, marginLeft: 8, color: '#8b7670' }}>({todayFeedCount}次)</span>
             )}
           </div>
         </div>
         <div className="bd-stat-card supplement">
-          <div className="icon">{isKindleMode() ? '💊' : '💊'}</div>
+          <div className="icon">💊</div>
           <div className="title">今日 AD/D3</div>
           <div className="value" style={{ fontSize: 18 }}>
             <span style={{ color: todayAdTaken ? '#4CAF50' : '#ccc' }}>AD {todayAdTaken ? '✓' : '—'}</span>
@@ -331,10 +336,7 @@ export const MobileHome = () => {
         </div>
       </section>
 
-
-
-      {/* 快捷操作按钮 */}
-      <div className="bd-actions animate-slide-up delay-3">
+      <div className="bd-actions bd-home-block animate-slide-up delay-3">
         <button className="bd-action-btn feed" onClick={() => setShowFeedModal(true)}>
           <span className="icon">{isKindleMode() ? '奶' : '🍼'}</span>
           <span className="text">记录喂奶</span>
@@ -344,6 +346,11 @@ export const MobileHome = () => {
           <span className="icon">{isKindleMode() ? '尿' : '🧷'}</span>
           <span className="text">记录尿布</span>
           <span className="sub-text">尿尿 / 便便</span>
+        </button>
+        <button className="bd-action-btn bath" onClick={() => setShowBathModal(true)}>
+          <span className="icon">{isKindleMode() ? '浴' : '🛁'}</span>
+          <span className="text">记录洗澡</span>
+          <span className="sub-text">时长 / 备注</span>
         </button>
         <button className="bd-action-btn supplement" onClick={() => setShowSupplementModal({ visible: true, type: 'VITA_AD' })}>
           <span className="icon">{isKindleMode() ? 'AD' : '💊'}</span>
@@ -357,8 +364,7 @@ export const MobileHome = () => {
         </button>
       </div>
 
-      {/* 最近记录列表 */}
-      <section className="bd-recent-list animate-slide-up delay-4" aria-label="最近活动记录">
+      <section className="bd-recent-list bd-home-block animate-slide-up delay-4" aria-label="最近活动记录">
         <div className="title">
           <h2 style={{ fontSize: 15, margin: 0 }}>最近记录</h2>
           <Link to="/records" style={{ fontSize: 12, color: 'var(--rose)' }}>查看全部 →</Link>
@@ -369,7 +375,7 @@ export const MobileHome = () => {
           </p>
         ) : (
           <ul className="records-container" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {records.slice(0, 3).map(record => {
+            {recentRecords.map(record => {
               const recordDetails = record.details as any;
               return (
                 <li key={record.id} className="bd-record-item">
@@ -388,7 +394,6 @@ export const MobileHome = () => {
         )}
       </section>
 
-      {/* 阅读器/文章模式专用内容块 - 对视觉用户隐藏，但结构对阅读器友好 */}
       <div id="reader-summary">
         <article>
           <h1>{baby?.name || '宝宝'}的日常总结</h1>
@@ -401,6 +406,9 @@ export const MobileHome = () => {
           <p>
             在喂养方面，今天总共摄入奶量 {todayMilk} 毫升。
             AD: {todayAdTaken ? '已服用' : '未服用'}，D3: {todayD3Taken ? '已服用' : '未服用'}。
+            距离上次尿尿 {getSimpleCountdown(summary?.lastPeeTime || summary?.lastDiaperTime)}，
+            距离上次便便 {getSimpleCountdown(summary?.lastPooTime || summary?.lastDiaperTime)}，
+            距离上次洗澡 {getSimpleCountdown(summary?.lastBathTime)}。
           </p>
 
           <h2>最近的活动记录</h2>
@@ -422,39 +430,47 @@ export const MobileHome = () => {
         </article>
       </div>
 
-      {/* 喂奶记录弹窗 */}
       {showFeedModal && (
         <FeedModal
           babyId={baby?.id || ''}
           onClose={() => setShowFeedModal(false)}
-          onSuccess={() => {
+          onSuccess={async () => {
             setShowFeedModal(false);
-            window.location.reload(); // 简单刷新
+            await refreshAll();
           }}
         />
       )}
 
-      {/* 尿布记录弹窗 */}
       {showDiaperModal && (
         <DiaperModal
           babyId={baby?.id || ''}
           onClose={() => setShowDiaperModal(false)}
-          onSuccess={() => {
+          onSuccess={async () => {
             setShowDiaperModal(false);
-            window.location.reload(); // 简单刷新
+            await refreshAll();
           }}
         />
       )}
 
-      {/* 补充剂记录弹窗 */}
+      {showBathModal && (
+        <BathModal
+          babyId={baby?.id || ''}
+          onClose={() => setShowBathModal(false)}
+          onSuccess={async () => {
+            setShowBathModal(false);
+            await refreshAll();
+          }}
+        />
+      )}
+
       {showSupplementModal.visible && (
         <SupplementModal
           babyId={baby?.id || ''}
           type={showSupplementModal.type}
           onClose={() => setShowSupplementModal({ ...showSupplementModal, visible: false })}
-          onSuccess={() => {
+          onSuccess={async () => {
             setShowSupplementModal({ ...showSupplementModal, visible: false });
-            window.location.reload();
+            await refreshAll();
           }}
         />
       )}
@@ -462,7 +478,6 @@ export const MobileHome = () => {
   );
 };
 
-// 喂奶记录弹窗组件
 const FeedModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: () => void; onSuccess: () => void }) => {
   const [feedType, setFeedType] = useState<'BOTTLE' | 'BREAST'>('BOTTLE');
   const [amount, setAmount] = useState(120);
@@ -474,11 +489,11 @@ const FeedModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: ()
     try {
       await BabyService.createRecord({
         type: 'FEED',
-        babyId: babyId,
+        babyId,
         time: new Date().toISOString(),
         details: feedType === 'BOTTLE'
           ? { subtype: 'BOTTLE', amount, unit: 'ml' }
-          : { subtype: 'BREAST', duration }
+          : { subtype: 'BREAST', duration },
       });
       onSuccess();
     } catch (err) {
@@ -514,7 +529,7 @@ const FeedModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: ()
               gap: '8px',
               maxHeight: '240px',
               overflowY: 'auto',
-              padding: '4px'
+              padding: '4px',
             }}>
               {Array.from({ length: 19 }, (_, i) => 30 + i * 10).map(volume => (
                 <button
@@ -530,7 +545,7 @@ const FeedModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: ()
                     background: amount === volume ? '#F3B6C2' : '#fff',
                     color: amount === volume ? '#fff' : '#6b524b',
                     cursor: 'pointer',
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s',
                   }}
                 >
                   {volume}
@@ -552,46 +567,15 @@ const FeedModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: ()
           </div>
         )}
 
-        <button
-          className="bd-submit-btn"
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          style={{
-            width: '100%',
-            padding: 16,
-            background: '#F3B6C2',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 16,
-            fontSize: 17,
-            fontWeight: 600,
-            cursor: 'pointer',
-            marginTop: 10
-          }}
-        >
+        <button className="bd-submit-btn" onClick={handleSubmit} disabled={isSubmitting} style={submitBtnStyle('#F3B6C2')}>
           {isSubmitting ? '保存中...' : '✓ 保存记录'}
         </button>
-        <button
-          onClick={onClose}
-          style={{
-            width: '100%',
-            padding: 14,
-            background: 'transparent',
-            color: '#8b7670',
-            border: 'none',
-            fontSize: 15,
-            cursor: 'pointer',
-            marginTop: 8
-          }}
-        >
-          取消
-        </button>
+        <button onClick={onClose} style={cancelBtnStyle}>取消</button>
       </div>
     </div>
   );
 };
 
-// 尿布记录弹窗组件
 const DiaperModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: () => void; onSuccess: () => void }) => {
   const [diaperType, setDiaperType] = useState<'PEE' | 'POO' | 'BOTH'>('PEE');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -601,9 +585,9 @@ const DiaperModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: 
     try {
       await BabyService.createRecord({
         type: 'DIAPER',
-        babyId: babyId,
+        babyId,
         time: new Date().toISOString(),
-        details: { type: diaperType }
+        details: { type: diaperType },
       });
       onSuccess();
     } catch (err) {
@@ -629,59 +613,85 @@ const DiaperModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: 
           </div>
         </div>
 
-        <button
-          className="bd-submit-btn"
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          style={{
-            width: '100%',
-            padding: 16,
-            background: '#FFB347',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 16,
-            fontSize: 17,
-            fontWeight: 600,
-            cursor: 'pointer',
-            marginTop: 10
-          }}
-        >
+        <button className="bd-submit-btn" onClick={handleSubmit} disabled={isSubmitting} style={submitBtnStyle('#FFB347')}>
           {isSubmitting ? '保存中...' : '✓ 保存记录'}
         </button>
-        <button
-          onClick={onClose}
-          style={{
-            width: '100%',
-            padding: 14,
-            background: 'transparent',
-            color: '#8b7670',
-            border: 'none',
-            fontSize: 15,
-            cursor: 'pointer',
-            marginTop: 8
-          }}
-        >
-          取消
-        </button>
+        <button onClick={onClose} style={cancelBtnStyle}>取消</button>
       </div>
     </div>
   );
 };
 
-// 补充剂记录弹窗
-const SupplementModal = ({ babyId, type, onClose, onSuccess }: { babyId: string; type: 'VITA_AD' | 'VITA_D3'; onClose: () => void; onSuccess: () => void }) => {
+const BathModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: () => void; onSuccess: () => void }) => {
+  const [duration, setDuration] = useState(10);
+  const [remark, setRemark] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // const [remark, setRemark] = useState(''); // Reserve for future remark support
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
       await BabyService.createRecord({
-        type: type,
-        babyId: babyId,
+        type: 'BATH',
+        babyId,
+        time: new Date().toISOString(),
+        details: { duration, unit: 'min' },
+        remark: remark || undefined,
+      });
+      onSuccess();
+    } catch (err) {
+      console.error(err);
+      alert('保存失败');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="bd-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="bd-modal-sheet">
+        <div className="bd-modal-handle" />
+        <h2 style={{ textAlign: 'center', marginBottom: 20 }}>🛁 记录洗澡</h2>
+
+        <div style={{ marginBottom: 18 }}>
+          <label style={{ display: 'block', fontSize: 13, color: '#8b7670', marginBottom: 8 }}>时长 (分钟)</label>
+          <div className="bd-quick-select">
+            {[5, 10, 15, 20, 30].map(v => (
+              <button key={v} className={duration === v ? 'active' : ''} onClick={() => setDuration(v)}>{v}</button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 18 }}>
+          <label style={{ display: 'block', fontSize: 13, color: '#8b7670', marginBottom: 8 }}>备注</label>
+          <textarea
+            value={remark}
+            onChange={(e) => setRemark(e.target.value)}
+            rows={3}
+            placeholder="可选，例如：洗头 + 抚触"
+            style={{ width: '100%', border: '1px solid #e5e5e5', borderRadius: 10, padding: 10, fontSize: 14 }}
+          />
+        </div>
+
+        <button className="bd-submit-btn" onClick={handleSubmit} disabled={isSubmitting} style={submitBtnStyle('#7DBBC3')}>
+          {isSubmitting ? '保存中...' : '✓ 保存记录'}
+        </button>
+        <button onClick={onClose} style={cancelBtnStyle}>取消</button>
+      </div>
+    </div>
+  );
+};
+
+const SupplementModal = ({ babyId, type, onClose, onSuccess }: { babyId: string; type: 'VITA_AD' | 'VITA_D3'; onClose: () => void; onSuccess: () => void }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      await BabyService.createRecord({
+        type,
+        babyId,
         time: new Date().toISOString(),
         details: { amount: 1, unit: '粒' },
-        // remark: remark || undefined
       });
       onSuccess();
     } catch (err) {
@@ -706,41 +716,35 @@ const SupplementModal = ({ babyId, type, onClose, onSuccess }: { babyId: string;
           <p style={{ color: '#8b7670' }}>今日打卡 1 粒</p>
         </div>
 
-        <button
-          className="bd-submit-btn"
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          style={{
-            width: '100%',
-            padding: 16,
-            background: color,
-            color: '#fff',
-            border: 'none',
-            borderRadius: 16,
-            fontSize: 17,
-            fontWeight: 600,
-            cursor: 'pointer',
-            marginTop: 10
-          }}
-        >
+        <button className="bd-submit-btn" onClick={handleSubmit} disabled={isSubmitting} style={submitBtnStyle(color)}>
           {isSubmitting ? '保存中...' : '✓ 确认打卡'}
         </button>
-        <button
-          onClick={onClose}
-          style={{
-            width: '100%',
-            padding: 14,
-            background: 'transparent',
-            color: '#8b7670',
-            border: 'none',
-            fontSize: 15,
-            cursor: 'pointer',
-            marginTop: 8
-          }}
-        >
-          取消
-        </button>
+        <button onClick={onClose} style={cancelBtnStyle}>取消</button>
       </div>
     </div>
   );
+};
+
+const submitBtnStyle = (background: string): CSSProperties => ({
+  width: '100%',
+  padding: 16,
+  background,
+  color: '#fff',
+  border: 'none',
+  borderRadius: 16,
+  fontSize: 17,
+  fontWeight: 600,
+  cursor: 'pointer',
+  marginTop: 10,
+});
+
+const cancelBtnStyle: CSSProperties = {
+  width: '100%',
+  padding: 14,
+  background: 'transparent',
+  color: '#8b7670',
+  border: 'none',
+  fontSize: 15,
+  cursor: 'pointer',
+  marginTop: 8,
 };

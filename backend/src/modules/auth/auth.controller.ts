@@ -5,24 +5,24 @@ import { ErrorCodes } from '../../common/enums/error-codes.enum';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
-    @Post('login/wechat')
-    async login(@Body() body: LoginWechatDto) {
-        return this.authService.loginWithWechat(body.code);
+  @Post('login/wechat')
+  async login(@Body() body: LoginWechatDto) {
+    return this.authService.loginWithWechat(body.code);
+  }
+
+  @Post('login/dev')
+  async loginDev() {
+    const isDev = process.env.NODE_ENV === 'development';
+    const isDevLoginEnabled = process.env.ENABLE_DEV_LOGIN === 'true';
+
+    if (!isDev && !isDevLoginEnabled) {
+      throw new ForbiddenException({
+        message: 'Dev login only available in development mode',
+        code: ErrorCodes.AUTH_FORBIDDEN,
+      });
     }
-
-    @Post('login/dev')
-    async loginDev() {
-        const isDev = process.env.NODE_ENV === 'development';
-        const isDevLoginEnabled = process.env.ENABLE_DEV_LOGIN === 'true';
-
-        if (!isDev && !isDevLoginEnabled) {
-            throw new ForbiddenException({
-                message: 'Dev login only available in development mode',
-                code: ErrorCodes.AUTH_FORBIDDEN,
-            });
-        }
-        return this.authService.loginDev();
-    }
+    return this.authService.loginDev();
+  }
 }

@@ -8,6 +8,10 @@ type Summary = {
   diaperSoiled: number;
   sleepMinutes: number;
   lastFeedTime?: string;
+  lastPeeTime?: string;
+  lastPooTime?: string;
+  lastDiaperTime?: string;
+  lastBathTime?: string;
   todayAdTaken: boolean;
   todayD3Taken: boolean;
 };
@@ -30,6 +34,10 @@ const emptySummary: Summary = {
   diaperSoiled: 0,
   sleepMinutes: 0,
   lastFeedTime: undefined,
+  lastPeeTime: undefined,
+  lastPooTime: undefined,
+  lastDiaperTime: undefined,
+  lastBathTime: undefined,
   todayAdTaken: false,
   todayD3Taken: false,
 };
@@ -48,8 +56,8 @@ export const useDashboardData = () => {
       await BabyService.ensureDevEnvironment();
       const babyId = BabyService.getCurrentBabyId() || 'u-sakura-001';
 
-      const records = await BabyService.getRecords(babyId, 50);
-      const [summaryResp, trendsResp] = await Promise.all([
+      const [records, summaryResp, trendsResp] = await Promise.all([
+        BabyService.getRecords(babyId, 50),
         BabyService.getSummary(babyId),
         BabyService.getTrends(babyId, 7),
       ]);
@@ -58,7 +66,7 @@ export const useDashboardData = () => {
         throw new Error('接口返回为空，无法展示仪表盘数据');
       }
 
-      const summary = mapSummary(summaryResp, records);
+      const summary = mapSummary(summaryResp);
       const trends = mapTrends(trendsResp);
       const activities = buildActivities(records);
 
@@ -155,39 +163,19 @@ const mapCategory = (type: BabyRecord['type']) => {
   }
 };
 
-const mapSummary = (res: any, records: BabyRecord[]): Summary => {
-  // 计算今日 AD/D3 状态（考虑日切时间 dayStartHour）
-  // 注意：这里我们没有 settings，只能使用默认值 0
-  // 更精确的做法是在调用时传入 dayStartHour
-  const dayStartHour = 0; // TODO: 从 settings 获取
-
-  const now = new Date();
-  const todayLogicalStart = new Date(now);
-  todayLogicalStart.setHours(dayStartHour, 0, 0, 0);
-
-  if (now.getHours() < dayStartHour) {
-    todayLogicalStart.setDate(todayLogicalStart.getDate() - 1);
-  }
-
-  const todayAdTaken = records.some(r => {
-    const recordDate = new Date(r.time);
-    return r.type === 'VITA_AD' && recordDate >= todayLogicalStart;
-  });
-  const todayD3Taken = records.some(r => {
-    const recordDate = new Date(r.time);
-    return r.type === 'VITA_D3' && recordDate >= todayLogicalStart;
-  });
-
-  return {
+const mapSummary = (res: any): Summary => ({
     milkMl: res.milkMl ?? 0,
     diaperWet: res.diaperWet ?? 0,
     diaperSoiled: res.diaperSoiled ?? 0,
     sleepMinutes: res.sleepMinutes ?? 0,
-    lastFeedTime: res.lastFeedTime ? new Date(res.lastFeedTime).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : undefined,
-    todayAdTaken,
-    todayD3Taken,
-  };
-};
+    lastFeedTime: res.lastFeedTime,
+    lastPeeTime: res.lastPeeTime,
+    lastPooTime: res.lastPooTime,
+    lastDiaperTime: res.lastDiaperTime,
+    lastBathTime: res.lastBathTime,
+    todayAdTaken: !!res.todayAdTaken,
+    todayD3Taken: !!res.todayD3Taken,
+});
 
 const mapTrends = (res: any[]): TrendPoint[] => {
   if (!Array.isArray(res) || !res.length) return [];
