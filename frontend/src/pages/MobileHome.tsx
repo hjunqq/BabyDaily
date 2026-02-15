@@ -331,22 +331,26 @@ export const MobileHome = () => {
 
       <section className="bd-today-stats bd-home-block animate-slide-up delay-2" aria-label="今日数据统计">
         <div className="bd-stat-card feed">
-          <div className="icon">{isKindleMode() ? '奶' : '🍼'}</div>
-          <div className="title">今日奶量</div>
-          <div className="value">
-            {todayMilk}<span className="unit"> ml</span>
-            {isKindleMode() && todayFeedCount > 0 && (
-              <span style={{ fontSize: 14, marginLeft: 8, color: '#8b7670' }}>({todayFeedCount}次)</span>
-            )}
+          <div className="bd-stat-icon">{isKindleMode() ? '奶' : '🍼'}</div>
+          <div className="bd-stat-info">
+            <div className="title">今日奶量</div>
+            <div className="value">
+              {todayMilk}<span className="unit"> ml</span>
+              {isKindleMode() && todayFeedCount > 0 && (
+                <span style={{ fontSize: 14, marginLeft: 8, color: '#8b7670' }}>({todayFeedCount}次)</span>
+              )}
+            </div>
           </div>
         </div>
         <div className="bd-stat-card supplement">
-          <div className="icon">💊</div>
-          <div className="title">今日 AD/D3</div>
-          <div className="value" style={{ fontSize: 18 }}>
-            <span style={{ color: todayAdTaken ? '#4CAF50' : '#ccc' }}>AD {todayAdTaken ? '✓' : '—'}</span>
-            <span style={{ margin: '0 8px' }}>|</span>
-            <span style={{ color: todayD3Taken ? '#FF9800' : '#ccc' }}>D3 {todayD3Taken ? '✓' : '—'}</span>
+          <div className="bd-stat-icon">{isKindleMode() ? '药' : '💊'}</div>
+          <div className="bd-stat-info">
+            <div className="title">今日 AD/D3</div>
+            <div className="value" style={{ fontSize: 18 }}>
+              <span style={{ color: todayAdTaken ? '#4CAF50' : '#ccc' }}>AD {todayAdTaken ? '✓' : '—'}</span>
+              <span style={{ margin: '0 8px' }}>|</span>
+              <span style={{ color: todayD3Taken ? '#FF9800' : '#ccc' }}>D3 {todayD3Taken ? '✓' : '—'}</span>
+            </div>
           </div>
         </div>
       </section>
@@ -354,28 +358,38 @@ export const MobileHome = () => {
       <div className="bd-actions bd-home-block animate-slide-up delay-3">
         <button className="bd-action-btn feed" onClick={() => setShowFeedModal(true)}>
           <span className="icon">{isKindleMode() ? '奶' : '🍼'}</span>
-          <span className="text">记录喂奶</span>
-          <span className="sub-text">瓶喂 / 亲喂</span>
+          <span className="bd-action-info">
+            <span className="text">记录喂奶</span>
+            <span className="sub-text">瓶喂 / 亲喂</span>
+          </span>
         </button>
         <button className="bd-action-btn diaper" onClick={() => setShowDiaperModal(true)}>
           <span className="icon">{isKindleMode() ? '尿' : '🧷'}</span>
-          <span className="text">记录尿布</span>
-          <span className="sub-text">尿尿 / 便便</span>
+          <span className="bd-action-info">
+            <span className="text">记录尿布</span>
+            <span className="sub-text">尿尿 / 便便</span>
+          </span>
         </button>
         <button className="bd-action-btn bath" onClick={() => setShowBathModal(true)}>
           <span className="icon">{isKindleMode() ? '浴' : '🛁'}</span>
-          <span className="text">记录洗澡</span>
-          <span className="sub-text">时长 / 备注</span>
+          <span className="bd-action-info">
+            <span className="text">记录洗澡</span>
+            <span className="sub-text">时长 / 备注</span>
+          </span>
         </button>
         <button className="bd-action-btn supplement" onClick={() => setShowSupplementModal({ visible: true, type: 'VITA_AD' })}>
           <span className="icon">{isKindleMode() ? 'AD' : '💊'}</span>
-          <span className="text">AD</span>
-          <span className="sub-text">每日一粒</span>
+          <span className="bd-action-info">
+            <span className="text">AD</span>
+            <span className="sub-text">每日一粒</span>
+          </span>
         </button>
         <button className="bd-action-btn supplement" onClick={() => setShowSupplementModal({ visible: true, type: 'VITA_D3' })}>
           <span className="icon">{isKindleMode() ? 'D3' : '☀️'}</span>
-          <span className="text">D3</span>
-          <span className="sub-text">每日一粒</span>
+          <span className="bd-action-info">
+            <span className="text">D3</span>
+            <span className="sub-text">每日一粒</span>
+          </span>
         </button>
       </div>
 

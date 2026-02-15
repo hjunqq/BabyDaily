@@ -538,7 +538,7 @@ main.bd-mobile-shell {
   margin-top: 4px;
 }
 
-/* 今日统计 - 两栏 */
+/* 今日统计 - 两栏横向布局 */
 .bd-today-stats {
   display: flex;
   gap: 12px;
@@ -549,9 +549,11 @@ main.bd-mobile-shell {
   flex: 1;
   background: #fff;
   border-radius: 16px;
-  padding: 16px;
+  padding: 14px 16px;
   box-shadow: var(--shadow-soft);
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .bd-stat-card.feed {
@@ -562,9 +564,25 @@ main.bd-mobile-shell {
   border-left: 4px solid var(--sage);
 }
 
-.bd-stat-card .icon {
-  font-size: 24px;
-  margin-bottom: 8px;
+.bd-stat-card.supplement {
+  border-left: 4px solid #A2D2FF;
+}
+
+.bd-stat-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--sand);
+}
+
+.bd-stat-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .bd-stat-card .title {
@@ -583,24 +601,24 @@ main.bd-mobile-shell {
   color: #8b7670;
 }
 
-/* 快捷操作按钮 */
+/* 快捷操作按钮 - 横向布局 */
 .bd-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 10px;
   margin-bottom: 24px;
 }
 
 .bd-action-btn {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
   background: #fff;
   border: none;
-  border-radius: 20px;
-  padding: 20px 16px;
-  min-height: 120px;
+  border-radius: 16px;
+  padding: 14px 16px;
+  gap: 12px;
+  min-height: auto;
   box-shadow: var(--shadow-soft);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -658,17 +676,30 @@ main.bd-mobile-shell {
 }
 
 .bd-action-btn .icon {
-  font-size: 32px;
-  margin-bottom: 8px;
+  font-size: 28px;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
   line-height: 1;
+  margin-bottom: 0;
+}
+
+.bd-action-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
 }
 
 .bd-action-btn .text {
   font-size: 15px;
   font-weight: 600;
   color: var(--cocoa);
-  line-height: 1.2;
-  margin-bottom: 2px;
+  line-height: 1.3;
 }
 
 .bd-action-btn .sub-text {
@@ -1044,7 +1075,7 @@ body.kindle-mode .bd-last-feed-card .time-ago {
   width: 100% !important;
 }
 
-/* 2. Stats - 统一样式 */
+/* 2. Stats - 横向布局适配 Kindle */
 body.kindle-mode .bd-today-stats {
   gap: 6px !important;
   margin-bottom: 6px !important;
@@ -1052,12 +1083,12 @@ body.kindle-mode .bd-today-stats {
 }
 
 body.kindle-mode .bd-stat-card {
-  padding: 8px !important;
-  min-height: 55px !important;
+  padding: 8px 10px !important;
+  min-height: auto !important;
   display: flex !important;
-  flex-direction: column !important;
+  flex-direction: row !important;
   align-items: center !important;
-  justify-content: center !important;
+  gap: 8px !important;
   background: var(--kindle-card) !important;
   border: 2px solid #BDBDBD !important;
   border-radius: 10px !important;
@@ -1073,28 +1104,36 @@ body.kindle-mode .bd-stat-card.supplement {
   border-left-width: 4px !important;
 }
 
-body.kindle-mode .bd-stat-card .icon {
-  font-size: 20px !important;
-  margin-bottom: 4px !important;
-  line-height: 1 !important;
+body.kindle-mode .bd-stat-icon {
+  font-size: 18px !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  border: 1px solid #999 !important;
+  background: transparent !important;
+}
+
+body.kindle-mode .bd-stat-info {
+  flex: 1 !important;
+  min-width: 0 !important;
 }
 
 body.kindle-mode .bd-stat-card .title {
-  font-size: 12px !important;
-  margin-bottom: 2px !important;
+  font-size: 11px !important;
+  margin-bottom: 1px !important;
   line-height: 1.2 !important;
   color: var(--kindle-text-secondary) !important;
 }
 
 body.kindle-mode .bd-stat-card .value {
-  font-size: 18px !important;
+  font-size: 16px !important;
   font-weight: 700 !important;
   line-height: 1.2 !important;
   color: var(--kindle-text) !important;
 }
 
 body.kindle-mode .bd-stat-card .unit {
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
 
 /* 2.5 护理倒计时 - 统一样式 */
@@ -1141,9 +1180,17 @@ body.kindle-mode .bd-countdown-time {
   color: var(--kindle-text) !important;
 }
 
-/* 隐藏Timeline图表节省空间 */
+/* 喂奶明细 - Kindle紧凑样式 */
 body.kindle-mode [aria-label="喂奶时间线"] {
-  display: none !important;
+  margin-top: 6px !important;
+  margin-bottom: 6px !important;
+}
+
+body.kindle-mode [aria-label="喂奶时间线"]>div {
+  padding: 8px 10px !important;
+  border-radius: 10px !important;
+  margin-top: 0 !important;
+  border: 2px solid var(--kindle-feed) !important;
 }
 
 /* 3. Actions - 3列紧凑布局 */
@@ -1177,14 +1224,14 @@ body.kindle-mode .bd-actions .bd-action-btn:nth-child(5) {
   grid-column: 4 / 6;
 }
 
-/* Action buttons - 统一紧凑样式 */
+/* Action buttons - 横向紧凑样式 */
 body.kindle-mode .bd-action-btn {
-  padding: 8px 4px !important;
-  min-height: 60px !important;
+  padding: 6px 10px !important;
+  min-height: auto !important;
   display: flex !important;
-  flex-direction: column !important;
+  flex-direction: row !important;
   align-items: center !important;
-  justify-content: center !important;
+  gap: 8px !important;
   background: var(--kindle-card) !important;
   border: 2px solid #BDBDBD !important;
   border-radius: 10px !important;
@@ -1212,22 +1259,32 @@ body.kindle-mode .bd-action-btn.supplement:last-child {
 }
 
 body.kindle-mode .bd-action-btn .icon {
-  font-size: 20px !important;
-  margin-bottom: 2px !important;
+  font-size: 16px !important;
+  width: 28px !important;
+  height: 28px !important;
+  margin-bottom: 0 !important;
   line-height: 1 !important;
+  border: 1px solid #999 !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+}
+
+body.kindle-mode .bd-action-info {
+  display: flex !important;
+  flex-direction: column !important;
+  text-align: left !important;
 }
 
 body.kindle-mode .bd-action-btn .text {
   font-size: 12px !important;
   line-height: 1.2 !important;
-  margin-bottom: 2px !important;
   font-weight: 600 !important;
 }
 
 body.kindle-mode .bd-action-btn .sub-text {
   font-size: 10px !important;
   line-height: 1.2 !important;
-  margin-top: 2px !important;
+  margin-top: 1px !important;
 }
 
 /* 4. Recent List */
