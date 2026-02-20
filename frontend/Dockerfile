@@ -10,8 +10,9 @@ WORKDIR /app
 # 1. 先只复制依赖清单文件（最大化利用缓存）
 COPY package*.json ./
 
-# 2. 安装依赖 - 使用 npm ci 更快更可靠
-RUN npm config set registry https://registry.npmmirror.com && \
+# 2. 安装依赖 - 使用 npm ci 更快更可靠，并添加 BuildKit 缓存加速
+RUN --mount=type=cache,target=/root/.npm \
+    npm config set registry https://registry.npmmirror.com && \
     npm ci --prefer-offline --no-audit --no-fund
 
 # 3. 复制源码文件（分开复制以利用缓存）

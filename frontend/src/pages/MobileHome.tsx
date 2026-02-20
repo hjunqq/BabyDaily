@@ -135,7 +135,6 @@ const CountdownBar = ({ label, time, maxMs, color }: { label: string; time?: str
         position: 'relative',
         overflow: 'hidden',
         border: '1px solid rgba(0,0,0,0.05)',
-        borderLeft: `3px solid ${color}`,
       }}
     >
       <div className="bd-countdown-content">
@@ -567,7 +566,7 @@ const FeedModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: ()
                   onClick={() => setAmount(volume)}
                   style={{
                     padding: '12px 8px',
-                    borderRadius: '8px',
+                    borderRadius: '16px',
                     fontSize: '14px',
                     fontWeight: 'bold',
                     border: amount === volume ? '2px solid #F3B6C2' : '2px solid #e5e5e5',
@@ -697,7 +696,7 @@ const BathModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: ()
             onChange={(e) => setRemark(e.target.value)}
             rows={3}
             placeholder="可选，例如：洗头 + 抚触"
-            style={{ width: '100%', border: '1px solid #e5e5e5', borderRadius: 10, padding: 10, fontSize: 14 }}
+            style={{ width: '100%', border: '1px solid #e5e5e5', borderRadius: 16, padding: 10, fontSize: 14 }}
           />
         </div>
 
@@ -760,7 +759,7 @@ const submitBtnStyle = (background: string): CSSProperties => ({
   background,
   color: '#fff',
   border: 'none',
-  borderRadius: 16,
+  borderRadius: 24,
   fontSize: 17,
   fontWeight: 600,
   cursor: 'pointer',

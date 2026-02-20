@@ -61,7 +61,7 @@ else {
 Write-Host "`n[2/4] Exporting images to file..." -ForegroundColor Yellow
 if (Test-Path $ImageFile) { Remove-Item $ImageFile -Force }
 
-docker save babydaily-backend babydaily-frontend postgres:16-alpine -o $ImageFile
+docker save babydaily-backend babydaily-frontend -o $ImageFile
 if ($LASTEXITCODE -ne 0) { throw "Image export failed" }
 
 $ImageSizeMB = [math]::Round((Get-Item $ImageFile).Length / 1MB, 2)

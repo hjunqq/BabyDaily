@@ -88,7 +88,7 @@ a {
 
 .bd-card {
   background: #fff;
-  border-radius: 18px;
+  border-radius: 20px;
   box-shadow: var(--shadow-soft);
   padding: 16px;
 }
@@ -121,6 +121,7 @@ a {
 
 .bd-home-block {
   margin-top: 0;
+  margin-bottom: 28px;
 }
 
 .bd-countdown-grid {
@@ -131,9 +132,9 @@ a {
 
 .bd-countdown-card {
   background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 20px;
   padding: 12px;
+  box-shadow: var(--shadow-soft);
 }
 
 .bd-countdown-head {
@@ -170,7 +171,7 @@ a {
   align-items: center;
   justify-content: space-between;
   background: #fff;
-  border-radius: 12px;
+  border-radius: 20px;
   padding: 12px 14px;
   box-shadow: var(--shadow-soft);
 }
@@ -198,7 +199,7 @@ a {
 .bd-countdown-grid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
 }
 
 .bd-section-title {
@@ -259,7 +260,7 @@ main.bd-mobile-shell {
 .bd-avatar {
   width: 64px;
   height: 64px;
-  border-radius: 18px;
+  border-radius: 24px;
   background: rgba(255, 255, 255, 0.65);
   border: 1px solid #f1e6e1;
   box-shadow: var(--shadow-soft);
@@ -275,7 +276,7 @@ main.bd-mobile-shell {
 
 .bd-summary-card {
   min-width: 120px;
-  border-radius: 18px;
+  border-radius: 20px;
   padding: 12px;
   background: var(--sand);
   box-shadow: var(--shadow-soft);
@@ -326,7 +327,7 @@ main.bd-mobile-shell {
   text-align: center;
   background: #fff;
   padding: 24px;
-  border-radius: 18px;
+  border-radius: 24px;
   box-shadow: var(--shadow-soft);
   max-width: 360px;
 }
@@ -492,7 +493,7 @@ main.bd-mobile-shell {
 /* 上次喂奶提醒卡片 */
 .bd-last-feed-card {
   background: linear-gradient(135deg, #fbe4e9 0%, #fff 100%);
-  border-radius: 20px;
+  border-radius: 24px;
   padding: 20px;
   margin-bottom: 24px;
   box-shadow: var(--shadow-soft);
@@ -523,7 +524,7 @@ main.bd-mobile-shell {
   background: var(--rose);
   color: #fff;
   padding: 4px 10px;
-  border-radius: 12px;
+  border-radius: 16px;
 }
 
 .bd-last-feed-card .time-ago {
@@ -548,7 +549,7 @@ main.bd-mobile-shell {
 .bd-stat-card {
   flex: 1;
   background: #fff;
-  border-radius: 16px;
+  border-radius: 24px;
   padding: 14px 16px;
   box-shadow: var(--shadow-soft);
   display: flex;
@@ -576,7 +577,7 @@ main.bd-mobile-shell {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 50%;
   background: var(--sand);
 }
 
@@ -615,7 +616,7 @@ main.bd-mobile-shell {
   align-items: center;
   background: #fff;
   border: none;
-  border-radius: 16px;
+  border-radius: 24px;
   padding: 14px 16px;
   gap: 12px;
   min-height: auto;
@@ -658,8 +659,9 @@ main.bd-mobile-shell {
 
 .bd-mini-count-card {
   background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 14px;
+  border: none;
+  box-shadow: var(--shadow-soft);
+  border-radius: 20px;
   padding: 10px 12px;
 }
 
@@ -678,13 +680,13 @@ main.bd-mobile-shell {
 .bd-action-btn .icon {
   font-size: 28px;
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
   line-height: 1;
   margin-bottom: 0;
 }
@@ -812,7 +814,7 @@ main.bd-mobile-shell {
 /* 最近记录列表优化 */
 .bd-recent-list {
   background: #fff;
-  border-radius: 18px;
+  border-radius: 24px;
   padding: 18px;
   box-shadow: var(--shadow-soft);
 }
@@ -845,9 +847,9 @@ main.bd-mobile-shell {
 }
 
 .bd-record-item .icon-wrap {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -963,30 +965,29 @@ main.bd-mobile-shell {
 }
 
 body.kindle-mode {
-  /* Kindle ColorSoft 专属配色变量 */
+  /* Kindle ColorSoft 专属配色变量 (更柔和、更友好的粉彩系) */
   --kindle-primary: #E91E63;
-  /* 品红 - 主色调 */
-  --kindle-feed: #F44336;
-  /* 红色 - 喂奶 */
-  --kindle-diaper-pee: #2196F3;
-  /* 蓝色 - 尿尿 */
-  --kindle-diaper-poo: #FF9800;
-  /* 橙色 - 便便 */
-  --kindle-bath: #009688;
-  /* 青色 - 洗澡 */
-  --kindle-sleep: #673AB7;
-  /* 紫色 - 睡眠 */
-  --kindle-vita-ad: #4CAF50;
-  /* 绿色 - AD */
-  --kindle-vita-d3: #FFC107;
-  /* 金色 - D3 */
-  --kindle-bg: #FAFAFA;
-  /* 浅灰背景 */
+  --kindle-feed: #FF8A80;
+  /* 柔和粉红 - 喂奶 */
+  --kindle-diaper-pee: #82B1FF;
+  /* 柔和天蓝 - 尿尿 */
+  --kindle-diaper-poo: #FFD180;
+  /* 柔和浅橙 - 便便 */
+  --kindle-bath: #84FFFF;
+  /* 柔和青色 - 洗澡 */
+  --kindle-sleep: #B388FF;
+  /* 柔和浅紫 - 睡眠 */
+  --kindle-vita-ad: #B9F6CA;
+  /* 柔和浅绿 - AD */
+  --kindle-vita-d3: #FFE57F;
+  /* 柔和浅黄 - D3 */
+  --kindle-bg: #FCFAFA;
+  /* 更温暖的纯白灰背景 */
   --kindle-card: #FFFFFF;
-  /* 卡片白色 */
-  --kindle-text: #212121;
-  /* 深色文字 */
-  --kindle-text-secondary: #757575;
+  --kindle-text: #3E2723;
+  /* 更温和的深棕色替代纯黑 */
+  --kindle-text-secondary: #8D6E63;
+  /* 柔和的次要文本色 */
 
   height: 100vh;
   overflow: hidden;
@@ -1029,7 +1030,7 @@ body.kindle-mode .bd-last-feed-card {
   align-items: flex-start !important;
   justify-content: center !important;
   border: 2px solid var(--kindle-feed) !important;
-  border-radius: 10px !important;
+  border-radius: 20px !important;
 }
 
 body.kindle-mode .bd-last-feed-card .label {
@@ -1067,10 +1068,8 @@ body.kindle-mode .bd-last-feed-card .type-tag {
 
 body.kindle-mode .bd-last-feed-card .time-ago {
   font-size: 18px !important;
-  /* Increased from 14px to make more prominent */
-  font-weight: 600 !important;
-  /* Increased from normal */
-  color: #333 !important;
+  font-weight: 700 !important;
+  color: var(--kindle-text) !important;
   margin-top: 4px !important;
   width: 100% !important;
 }
@@ -1090,8 +1089,8 @@ body.kindle-mode .bd-stat-card {
   align-items: center !important;
   gap: 8px !important;
   background: var(--kindle-card) !important;
-  border: 2px solid #BDBDBD !important;
-  border-radius: 10px !important;
+  border: 1px solid #E0E0E0 !important;
+  border-radius: 16px !important;
 }
 
 body.kindle-mode .bd-stat-card.feed {
@@ -1106,11 +1105,11 @@ body.kindle-mode .bd-stat-card.supplement {
 
 body.kindle-mode .bd-stat-icon {
   font-size: 18px !important;
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 8px !important;
-  border: 1px solid #999 !important;
-  background: transparent !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  border: 1px solid #E0E0E0 !important;
+  background: var(--kindle-bg) !important;
 }
 
 body.kindle-mode .bd-stat-info {
@@ -1156,10 +1155,10 @@ body.kindle-mode .bd-countdown-grid {
 
 body.kindle-mode .bd-countdown-card {
   flex: 1;
-  padding: 6px 8px !important;
-  border-radius: 10px !important;
+  padding: 8px 10px !important;
+  border-radius: 16px !important;
   box-shadow: none !important;
-  border: 2px solid #BDBDBD !important;
+  border: 1px solid #E0E0E0 !important;
 }
 
 body.kindle-mode .bd-countdown-content {
@@ -1188,9 +1187,9 @@ body.kindle-mode [aria-label="喂奶时间线"] {
 
 body.kindle-mode [aria-label="喂奶时间线"]>div {
   padding: 8px 10px !important;
-  border-radius: 10px !important;
+  border-radius: 16px !important;
   margin-top: 0 !important;
-  border: 2px solid var(--kindle-feed) !important;
+  border: 1px solid var(--kindle-feed) !important;
 }
 
 /* 3. Actions - 3列紧凑布局 */
@@ -1226,47 +1225,52 @@ body.kindle-mode .bd-actions .bd-action-btn:nth-child(5) {
 
 /* Action buttons - 横向紧凑样式 */
 body.kindle-mode .bd-action-btn {
-  padding: 6px 10px !important;
+  padding: 8px 12px !important;
   min-height: auto !important;
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
   gap: 8px !important;
   background: var(--kindle-card) !important;
-  border: 2px solid #BDBDBD !important;
-  border-radius: 10px !important;
+  border: 1px solid #E0E0E0 !important;
+  border-radius: 16px !important;
 }
 
 body.kindle-mode .bd-action-btn.feed {
   border-color: var(--kindle-feed) !important;
+  background: #FFF0F0 !important;
 }
 
 body.kindle-mode .bd-action-btn.diaper {
   border-color: var(--kindle-diaper-pee) !important;
+  background: #F0F8FF !important;
 }
 
 body.kindle-mode .bd-action-btn.bath {
   border-color: var(--kindle-bath) !important;
+  background: #F0FFFF !important;
 }
 
 body.kindle-mode .bd-action-btn.supplement {
   border-color: var(--kindle-vita-ad) !important;
+  background: #F1FBEC !important;
 }
 
 /* D3专用金色边框 */
 body.kindle-mode .bd-action-btn.supplement:last-child {
   border-color: var(--kindle-vita-d3) !important;
+  background: #FFFDF0 !important;
 }
 
 body.kindle-mode .bd-action-btn .icon {
   font-size: 16px !important;
-  width: 28px !important;
-  height: 28px !important;
+  width: 32px !important;
+  height: 32px !important;
   margin-bottom: 0 !important;
   line-height: 1 !important;
-  border: 1px solid #999 !important;
-  border-radius: 6px !important;
-  background: transparent !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border-radius: 50% !important;
+  background: #FFF !important;
 }
 
 body.kindle-mode .bd-action-info {
@@ -1373,15 +1377,16 @@ body.kindle-mode .kindle-icon {
 }
 
 body.kindle-mode .icon-wrap {
-  width: 24px !important;
-  height: 24px !important;
+  width: 30px !important;
+  height: 30px !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 10px;
+  margin-right: 12px;
   font-size: 16px !important;
-  border: 1px solid #000;
-  border-radius: 4px;
+  border: 1px solid #E0E0E0;
+  border-radius: 50%;
+  background: #FFF;
 }
 
 /* ==================== Kindle Volume Button Grid ==================== */
