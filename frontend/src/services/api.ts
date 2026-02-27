@@ -5,21 +5,24 @@ let CURRENT_BABY_ID: string | null = localStorage.getItem('current_baby_id');
 let CURRENT_USER: User | null = localStorage.getItem('current_user')
     ? JSON.parse(localStorage.getItem('current_user') as string)
     : null;
+const DEV_LOGIN_ENABLED = String((import.meta as any).env?.VITE_ENABLE_DEV_LOGIN || 'true').trim() === 'true';
 
 const getHeaders = () => ({
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${ACCESS_TOKEN}`
+    'Authorization': `Bearer ${ACCESS_TOKEN}`,
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache'
 });
 
 export const request = async (url: string, options: RequestInit = {}) => {
-    let res = await fetch(url, { ...options, headers: { ...getHeaders(), ...options.headers } });
+    let res = await fetch(url, { ...options, cache: 'no-store', headers: { ...getHeaders(), ...options.headers } });
 
-    // If unauthorized or bad request (likely stale state), try re-login once
+    // If unauthorized or bad request (likely stale state), try re-login once.
     if (res.status === 401 || res.status === 400) {
         console.warn(`Request to ${url} failed with ${res.status}, attempting re-login...`);
         try {
             await BabyService.loginDev();
-            res = await fetch(url, { ...options, headers: { ...getHeaders(), ...options.headers } });
+            res = await fetch(url, { ...options, cache: 'no-store', headers: { ...getHeaders(), ...options.headers } });
         } catch (loginError) {
             console.error('Re-login failed during request retry:', loginError);
             BabyService.logout();
@@ -46,6 +49,9 @@ export const request = async (url: string, options: RequestInit = {}) => {
 export const BabyService = {
     // Auth & Init
     loginDev: async () => {
+        if (!DEV_LOGIN_ENABLED) {
+            throw new Error('Dev login is disabled.');
+        }
         try {
             const res = await fetch(`${API_URL}/auth/login/dev`, { method: 'POST' });
             if (!res.ok) throw new Error('登录失败');

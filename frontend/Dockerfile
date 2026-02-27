@@ -23,7 +23,11 @@ COPY vite.config.ts ./
 COPY tsconfig*.json ./
 
 # 4. 构建 - 增加内存限制
+ARG VITE_ACCESS_PIN=""
+ARG VITE_ENABLE_DEV_LOGIN="true"
 ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV VITE_ACCESS_PIN=$VITE_ACCESS_PIN
+ENV VITE_ENABLE_DEV_LOGIN=$VITE_ENABLE_DEV_LOGIN
 RUN npm run build
 
 # ============================================

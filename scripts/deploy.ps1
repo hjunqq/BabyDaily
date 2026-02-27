@@ -18,6 +18,8 @@ param(
     [string]$DeployHost = "192.168.8.106",
     [string]$DeployUser = "root",
     [string]$DeployPath = "/opt/BabyDaily",
+    [string]$AccessPin = "",
+    [string]$EnableDevLogin = "",
     [switch]$SkipBuild,
     [switch]$NoBuildCache
 )
@@ -29,14 +31,81 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 $ErrorActionPreference = "Stop"
 $ProjectPath = (Get-Item "$PSScriptRoot\..").FullName
 $ImageFile = "$PSScriptRoot\babydaily-images.tar"
+$FrontendEnvFile = Join-Path $ProjectPath "frontend\.env"
+
+function Resolve-AccessPin {
+    param(
+        [string]$CliPin,
+        [string]$EnvFilePath
+    )
+
+    if ($CliPin -and $CliPin.Trim()) {
+        return $CliPin.Trim()
+    }
+
+    if (Test-Path $EnvFilePath) {
+        $line = Get-Content $EnvFilePath | Where-Object { $_ -match '^\s*VITE_ACCESS_PIN\s*=' } | Select-Object -First 1
+        if ($line) {
+            $value = ($line -replace '^\s*VITE_ACCESS_PIN\s*=\s*', '').Trim()
+            if ($value -match '^".*"$' -or $value -match "^'.*'$") {
+                $value = $value.Substring(1, $value.Length - 2)
+            }
+            return $value
+        }
+    }
+
+    return ""
+}
+
+function Resolve-FrontendEnvValue {
+    param(
+        [string]$CliValue,
+        [string]$EnvFilePath,
+        [string]$Key,
+        [string]$DefaultValue
+    )
+
+    if ($CliValue -and $CliValue.Trim()) {
+        return $CliValue.Trim()
+    }
+
+    if (Test-Path $EnvFilePath) {
+        $line = Get-Content $EnvFilePath | Where-Object { $_ -match "^\s*$Key\s*=" } | Select-Object -First 1
+        if ($line) {
+            $value = ($line -replace "^\s*$Key\s*=\s*", '').Trim()
+            if ($value -match '^".*"$' -or $value -match "^'.*'$") {
+                $value = $value.Substring(1, $value.Length - 2)
+            }
+            return $value
+        }
+    }
+
+    return $DefaultValue
+}
 
 Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host "  BabyDaily Deploy Script" -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
 
+$ResolvedPin = Resolve-AccessPin -CliPin $AccessPin -EnvFilePath $FrontendEnvFile
+$ResolvedDevLogin = Resolve-FrontendEnvValue -CliValue $EnableDevLogin -EnvFilePath $FrontendEnvFile -Key "VITE_ENABLE_DEV_LOGIN" -DefaultValue "true"
+if ($ResolvedPin) {
+    $env:VITE_ACCESS_PIN = $ResolvedPin
+    Write-Host "[env] VITE_ACCESS_PIN loaded for frontend build" -ForegroundColor Green
+}
+else {
+    Write-Host "[env] VITE_ACCESS_PIN is empty; PIN gate will be disabled in built frontend" -ForegroundColor Yellow
+}
+$env:VITE_ENABLE_DEV_LOGIN = $ResolvedDevLogin
+Write-Host "[env] VITE_ENABLE_DEV_LOGIN=$ResolvedDevLogin (frontend build)" -ForegroundColor Cyan
+
 # ===== 1. Build Images =====
 if ($SkipBuild) {
     Write-Host "[1/4] Skip build (using existing images)" -ForegroundColor Yellow
+    if ($ResolvedPin) {
+        Write-Host "      Note: -SkipBuild is set, so updated VITE_ACCESS_PIN will NOT be baked into images." -ForegroundColor Yellow
+    }
+    Write-Host "      Note: -SkipBuild is set, so updated VITE_ENABLE_DEV_LOGIN will NOT be baked into images." -ForegroundColor Yellow
 }
 else {
     Write-Host "[1/4] Building Docker images..." -ForegroundColor Yellow
