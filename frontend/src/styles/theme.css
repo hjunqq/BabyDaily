@@ -951,6 +951,120 @@ main.bd-mobile-shell {
   margin: 0 auto 20px;
 }
 
+/* Unified Kindle modal styling for quick-record sheets */
+body.kindle-mode .bd-modal-overlay {
+  background: rgba(0, 0, 0, 0.26) !important;
+}
+
+body.kindle-mode .bd-modal-sheet {
+  background: #FFFFFF !important;
+  border: 2px solid #000000 !important;
+  border-bottom: none !important;
+  border-radius: 18px 18px 0 0 !important;
+  box-shadow: none !important;
+}
+
+body.kindle-mode .bd-modal-sheet h2 {
+  color: #000000 !important;
+}
+
+body.kindle-mode .bd-modal-handle {
+  background: #BDBDBD !important;
+}
+
+body.kindle-mode .bd-modal-sheet-feed {
+  border-top-color: #FF0000 !important;
+}
+
+body.kindle-mode .bd-modal-sheet-diaper {
+  border-top-color: #0000FF !important;
+}
+
+body.kindle-mode .bd-modal-sheet-bath {
+  border-top-color: #00AA00 !important;
+}
+
+body.kindle-mode .bd-modal-sheet-vita-ad {
+  border-top-color: #00AA00 !important;
+}
+
+body.kindle-mode .bd-modal-sheet-vita-d3 {
+  border-top-color: #FFA500 !important;
+}
+
+body.kindle-mode .bd-modal-sheet label,
+body.kindle-mode .bd-modal-sheet p {
+  color: #4D4D4D !important;
+}
+
+body.kindle-mode .bd-quick-select button {
+  background: #FFFFFF !important;
+  border-color: #BDBDBD !important;
+  color: #000000 !important;
+}
+
+body.kindle-mode .bd-quick-select button:hover,
+body.kindle-mode .bd-quick-select button.active {
+  background: #FF0000 !important;
+  border-color: #FF0000 !important;
+  color: #FFFFFF !important;
+}
+
+body.kindle-mode .bd-volume-btn {
+  background: #FFFFFF !important;
+  color: #000000 !important;
+  border-color: #BDBDBD !important;
+}
+
+body.kindle-mode .bd-volume-btn.active {
+  background: #FF0000 !important;
+  color: #FFFFFF !important;
+  border-color: #FF0000 !important;
+}
+
+body.kindle-mode .bd-modal-textarea {
+  background: #FFFFFF !important;
+  border-color: #BDBDBD !important;
+  color: #000000 !important;
+}
+
+/* Unified Kindle styling for RecordModal.tsx */
+body.kindle-mode .bd-record-modal-overlay {
+  background: rgba(0, 0, 0, 0.26) !important;
+  backdrop-filter: none !important;
+}
+
+body.kindle-mode .bd-record-modal-sheet {
+  background: #FFFFFF !important;
+  border: 2px solid #000000 !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+
+body.kindle-mode .bd-record-modal-title {
+  color: #000000 !important;
+}
+
+body.kindle-mode .bd-record-modal-icon-btn {
+  color: #000000 !important;
+}
+
+body.kindle-mode .bd-record-type-btn {
+  background: #FFFFFF !important;
+  border: 1px solid #BDBDBD !important;
+}
+
+body.kindle-mode .bd-record-type-btn span {
+  color: #000000 !important;
+}
+
+body.kindle-mode .bd-record-modal-submit {
+  background: #FFFFFF !important;
+  color: #000000 !important;
+  border: 2px solid #FF0000 !important;
+  box-shadow: none !important;
+}
+
 /* ==================== Kindle / E-ink 极致紧凑布局 (632 x 840px @ 150ppi) ==================== */
 /* Kindle ColorSoft 配色方案 - 高饱和度色彩优化 */
 
@@ -966,33 +1080,35 @@ main.bd-mobile-shell {
 
 body.kindle-mode {
   /* Kindle ColorSoft 专属配色变量 (更柔和、更友好的粉彩系) */
-  --kindle-primary: #E91E63;
-  --kindle-feed: #FF8A80;
+  --kindle-primary: #FF0000;
+  --kindle-feed: #FF0000;
   /* 柔和粉红 - 喂奶 */
-  --kindle-diaper-pee: #82B1FF;
+  --kindle-diaper-pee: #0000FF;
   /* 柔和天蓝 - 尿尿 */
-  --kindle-diaper-poo: #FFD180;
+  --kindle-diaper-poo: #FFA500;
   /* 柔和浅橙 - 便便 */
-  --kindle-bath: #84FFFF;
+  --kindle-bath: #00AA00;
   /* 柔和青色 - 洗澡 */
-  --kindle-sleep: #B388FF;
+  --kindle-sleep: #8000FF;
   /* 柔和浅紫 - 睡眠 */
-  --kindle-vita-ad: #B9F6CA;
+  --kindle-vita-ad: #00AA00;
   /* 柔和浅绿 - AD */
-  --kindle-vita-d3: #FFE57F;
+  --kindle-vita-d3: #FFA500;
   /* 柔和浅黄 - D3 */
-  --kindle-bg: #FCFAFA;
+  --kindle-bg: #FFFFFF;
+  --kindle-bg-accent: #FFFFFF;
   /* 更温暖的纯白灰背景 */
   --kindle-card: #FFFFFF;
-  --kindle-text: #3E2723;
+  --kindle-text: #000000;
   /* 更温和的深棕色替代纯黑 */
-  --kindle-text-secondary: #8D6E63;
+  --kindle-text-secondary: #4D4D4D;
+  --kindle-border: #CFCFCF;
   /* 柔和的次要文本色 */
 
   height: 100vh;
   overflow: hidden;
   font-size: 16px;
-  background: var(--kindle-bg) !important;
+  background: #FFFFFF !important;
   color: var(--kindle-text) !important;
 }
 
@@ -1008,7 +1124,9 @@ body.kindle-mode .bd-mobile-shell {
   height: calc(100vh - 50px) !important;
   display: flex !important;
   flex-direction: column !important;
-  /* background: #fff !important; -> Allow default theme background */
+  background: #FFFFFF !important;
+  border: 1px solid var(--kindle-border) !important;
+  border-radius: 20px 20px 0 0 !important;
   box-sizing: border-box;
 }
 
@@ -1016,6 +1134,14 @@ body.kindle-mode .bd-mobile-shell {
 body.kindle-mode #reader-summary {
   margin-bottom: 10px !important;
   padding-bottom: 8px !important;
+}
+
+body.kindle-mode .bd-minimal-header h1 {
+  color: #000000 !important;
+}
+
+body.kindle-mode .bd-minimal-header .date {
+  color: #4D4D4D !important;
 }
 
 /* 1. Last Feed - 喂奶卡片统一样式 */
@@ -1031,6 +1157,7 @@ body.kindle-mode .bd-last-feed-card {
   justify-content: center !important;
   border: 2px solid var(--kindle-feed) !important;
   border-radius: 20px !important;
+  background-color: #FFFFFF !important;
 }
 
 body.kindle-mode .bd-last-feed-card .label {
@@ -1053,6 +1180,7 @@ body.kindle-mode .bd-last-feed-card .amount {
   /* Increased from 28px to make more prominent */
   line-height: 1 !important;
   font-weight: bold !important;
+  color: #000000 !important;
 }
 
 body.kindle-mode .bd-last-feed-card .type-tag {
@@ -1064,6 +1192,8 @@ body.kindle-mode .bd-last-feed-card .type-tag {
   /* background: transparent !important; -> Allow tag color */
   /* color: #000 !important; -> Allow text color */
   line-height: normal !important;
+  background: #FF0000 !important;
+  color: #FFFFFF !important;
 }
 
 body.kindle-mode .bd-last-feed-card .time-ago {
@@ -1088,19 +1218,21 @@ body.kindle-mode .bd-stat-card {
   flex-direction: row !important;
   align-items: center !important;
   gap: 8px !important;
-  background: var(--kindle-card) !important;
-  border: 1px solid #E0E0E0 !important;
+  background: #FFFFFF !important;
+  border: 1px solid var(--kindle-border) !important;
   border-radius: 16px !important;
 }
 
 body.kindle-mode .bd-stat-card.feed {
   border-color: var(--kindle-feed) !important;
   border-left-width: 4px !important;
+  background: #FFFFFF !important;
 }
 
 body.kindle-mode .bd-stat-card.supplement {
   border-color: var(--kindle-vita-ad) !important;
   border-left-width: 4px !important;
+  background: #FFFFFF !important;
 }
 
 body.kindle-mode .bd-stat-icon {
@@ -1108,8 +1240,8 @@ body.kindle-mode .bd-stat-icon {
   width: 36px !important;
   height: 36px !important;
   border-radius: 50% !important;
-  border: 1px solid #E0E0E0 !important;
-  background: var(--kindle-bg) !important;
+  border: 1px solid var(--kindle-border) !important;
+  background: #fffdf8 !important;
 }
 
 body.kindle-mode .bd-stat-info {
@@ -1128,7 +1260,7 @@ body.kindle-mode .bd-stat-card .value {
   font-size: 16px !important;
   font-weight: 700 !important;
   line-height: 1.2 !important;
-  color: var(--kindle-text) !important;
+  color: #000000 !important;
 }
 
 body.kindle-mode .bd-stat-card .unit {
@@ -1158,7 +1290,7 @@ body.kindle-mode .bd-countdown-card {
   padding: 8px 10px !important;
   border-radius: 16px !important;
   box-shadow: none !important;
-  border: 1px solid #E0E0E0 !important;
+  border: 1px solid var(--kindle-border) !important;
 }
 
 body.kindle-mode .bd-countdown-content {
@@ -1231,35 +1363,35 @@ body.kindle-mode .bd-action-btn {
   flex-direction: row !important;
   align-items: center !important;
   gap: 8px !important;
-  background: var(--kindle-card) !important;
-  border: 1px solid #E0E0E0 !important;
+  background: #FFFFFF !important;
+  border: 1px solid var(--kindle-border) !important;
   border-radius: 16px !important;
 }
 
 body.kindle-mode .bd-action-btn.feed {
   border-color: var(--kindle-feed) !important;
-  background: #FFF0F0 !important;
+  background: #FFFFFF !important;
 }
 
 body.kindle-mode .bd-action-btn.diaper {
   border-color: var(--kindle-diaper-pee) !important;
-  background: #F0F8FF !important;
+  background: #FFFFFF !important;
 }
 
 body.kindle-mode .bd-action-btn.bath {
   border-color: var(--kindle-bath) !important;
-  background: #F0FFFF !important;
+  background: #FFFFFF !important;
 }
 
 body.kindle-mode .bd-action-btn.supplement {
   border-color: var(--kindle-vita-ad) !important;
-  background: #F1FBEC !important;
+  background: #FFFFFF !important;
 }
 
 /* D3专用金色边框 */
 body.kindle-mode .bd-action-btn.supplement:last-child {
   border-color: var(--kindle-vita-d3) !important;
-  background: #FFFDF0 !important;
+  background: #FFFFFF !important;
 }
 
 body.kindle-mode .bd-action-btn .icon {
@@ -1268,9 +1400,9 @@ body.kindle-mode .bd-action-btn .icon {
   height: 32px !important;
   margin-bottom: 0 !important;
   line-height: 1 !important;
-  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid var(--kindle-border) !important;
   border-radius: 50% !important;
-  background: #FFF !important;
+  background: #fffdf8 !important;
 }
 
 body.kindle-mode .bd-action-info {
@@ -1283,18 +1415,22 @@ body.kindle-mode .bd-action-btn .text {
   font-size: 12px !important;
   line-height: 1.2 !important;
   font-weight: 600 !important;
+  color: #000000 !important;
 }
 
 body.kindle-mode .bd-action-btn .sub-text {
   font-size: 10px !important;
   line-height: 1.2 !important;
   margin-top: 1px !important;
+  color: #4D4D4D !important;
 }
 
 /* 4. Recent List */
 body.kindle-mode .bd-recent-list {
   padding: 10px !important;
   margin-bottom: 10px !important;
+  border: 1px solid var(--kindle-border) !important;
+  background: #FFFFFF !important;
 }
 
 body.kindle-mode .bd-recent-list h2 {
@@ -1317,9 +1453,8 @@ body.kindle-mode .bd-bottom-nav-new {
   left: 0 !important;
   right: 0 !important;
   height: 48px !important;
-  /* background: #fff !important; -> Allow default */
-  border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
-  /* Lighter border */
+  background: #FFFFFF !important;
+  border-top: 1px solid var(--kindle-border) !important;
   padding: 0 !important;
   z-index: 99 !important;
   justify-content: space-around !important;
@@ -1339,11 +1474,17 @@ body.kindle-mode .bd-bottom-nav-new .bd-nav-item {
   border: none;
   background: transparent;
   padding: 0;
-  color: var(--kindle-text-secondary) !important;
+  color: #000000 !important;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+body.kindle-mode .bd-bottom-nav-new .bd-nav-item:hover {
+  background: #FFFFFF !important;
 }
 
 body.kindle-mode .bd-bottom-nav-new .bd-nav-item.active {
-  color: var(--kindle-primary) !important;
+  color: #FF0000 !important;
+  background: #FFFFFF !important;
 }
 
 body.kindle-mode .bd-bottom-nav-new .icon {
@@ -1363,7 +1504,7 @@ body.kindle-mode .bd-mobile-shell {
   /* 留出底部导航空间 */
   display: flex !important;
   flex-direction: column !important;
-  background: #fff !important;
+  background: #FFFFFF !important;
   box-sizing: border-box;
 }
 
@@ -1384,9 +1525,9 @@ body.kindle-mode .icon-wrap {
   justify-content: center;
   margin-right: 12px;
   font-size: 16px !important;
-  border: 1px solid #E0E0E0;
+  border: 1px solid var(--kindle-border);
   border-radius: 50%;
-  background: #FFF;
+  background: #fffdf8;
 }
 
 /* ==================== Kindle Volume Button Grid ==================== */
@@ -1416,6 +1557,8 @@ body.kindle-mode .kindle-emoji {
   display: inline-block !important;
   font-size: 24px !important;
   line-height: 1 !important;
+  font-weight: 700 !important;
+  color: #000000 !important;
 }
 
 /* For non-Kindle mode, hide emoji and show SVG */
@@ -1444,8 +1587,8 @@ body.kindle-mode .kindle-icon-container {
   align-items: center;
   gap: 6px;
   padding: 4px 8px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid #ccc;
+  background: #FFFFFF;
+  border: 1px solid #BDBDBD;
   border-radius: 12px;
   font-size: 12px;
 }
@@ -1454,15 +1597,15 @@ body.kindle-mode .kindle-icon-container {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  border: 1px solid #333;
+  border: 1px solid rgba(76, 56, 48, 0.5);
 }
 
 .kindle-online-indicator .indicator-dot.online {
-  background: #4CAF50;
+  background: #00AA00;
 }
 
 .kindle-online-indicator .indicator-dot.offline {
-  background: #F44336;
+  background: #FF0000;
   animation: pulse-offline 2s infinite;
 }
 
@@ -1527,9 +1670,9 @@ body.kindle-mode .shadow-lg {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Simplify gradients in Kindle mode */
+/* Keep gradients on ColorSoft, but clamp contrast to reduce flashing */
 body.kindle-mode .bg-gradient-to-r,
 body.kindle-mode .bg-gradient-to-b,
 body.kindle-mode [class*="gradient"] {
-  background: #fff !important;
+  filter: none;
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Milk, Baby, Moon, X, Check, Droplets, Trash2 } from 'lucide-react';
 import { BabyService } from '../../services/api';
@@ -12,13 +12,14 @@ interface RecordModalProps {
 }
 
 const RECORD_TYPES: { type: RecordType; label: string; icon: any; emoji: string; color: string; bg: string }[] = [
-    { type: 'FEED', label: 'Feed', icon: Milk, emoji: '🍼', color: 'text-blue-500', bg: 'bg-blue-100' },
-    { type: 'DIAPER', label: 'Diaper', icon: Baby, emoji: '🧷', color: 'text-orange-500', bg: 'bg-orange-100' },
-    { type: 'SLEEP', label: 'Sleep', icon: Moon, emoji: '😴', color: 'text-purple-500', bg: 'bg-purple-100' },
+    { type: 'FEED', label: 'Feed', icon: Milk, emoji: '奶', color: 'text-blue-500', bg: 'bg-blue-100' },
+    { type: 'DIAPER', label: 'Diaper', icon: Baby, emoji: '尿', color: 'text-orange-500', bg: 'bg-orange-100' },
+    { type: 'SLEEP', label: 'Sleep', icon: Moon, emoji: '睡', color: 'text-purple-500', bg: 'bg-purple-100' },
 ];
 
 export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: RecordModalProps) => {
     const { theme } = useTheme();
+    const isKindle = typeof document !== 'undefined' && document.body.classList.contains('kindle-mode');
     const [step, setStep] = useState<'TYPE' | 'DETAILS'>('TYPE');
     const [selectedType, setSelectedType] = useState<RecordType | null>(null);
     const [details, setDetails] = useState<any>({});
@@ -132,7 +133,7 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
                         {details.subtype !== 'BREAST' && (
                             <div>
                                 <label className="block text-sm font-bold text-gray-500 mb-2">
-                                    奶量 (ml) - 按钮版本 ✓
+                                    奶量 (ml) - 按钮版本
                                 </label>
                                 <div className="grid grid-cols-4 gap-2 max-h-[240px] overflow-y-auto p-1">
                                     {Array.from({ length: 19 }, (_, i) => 30 + i * 10).map(volume => (
@@ -196,15 +197,15 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-4 bg-black/20 backdrop-blur-sm animate-fade-in">
-            <div className={`w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl relative overflow-hidden transition-all ${theme === 'A' ? 'border border-white/40' : ''}`}>
+        <div className={`fixed inset-0 z-50 flex items-end justify-center sm:items-center p-4 bg-black/20 backdrop-blur-sm animate-fade-in bd-record-modal-overlay ${isKindle ? 'bd-record-modal-overlay-kindle' : ''}`}>
+            <div className={`w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl relative overflow-hidden transition-all bd-record-modal-sheet ${theme === 'A' ? 'border border-white/40' : ''}`}>
 
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
-                    <button onClick={step === 'DETAILS' && !initialData ? () => setStep('TYPE') : onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <button onClick={step === 'DETAILS' && !initialData ? () => setStep('TYPE') : onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors bd-record-modal-icon-btn">
                         {step === 'DETAILS' && !initialData ? '←' : <X size={20} />}
                     </button>
-                    <h3 className="font-display font-bold text-lg text-sakura-text">
+                    <h3 className="font-display font-bold text-lg text-sakura-text bd-record-modal-title">
                         {step === 'TYPE' ? '新建记录' : (initialData ? '编辑记录' : selectedType)}
                     </h3>
                     <div className="w-8">
@@ -212,7 +213,7 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
                         {step === 'DETAILS' && initialData && (
                             <button
                                 onClick={handleDelete}
-                                className={`p-2 -mr-2 rounded-full transition-colors ${showDeleteConfirm
+                                className={`p-2 -mr-2 rounded-full transition-colors bd-record-modal-delete ${showDeleteConfirm
                                     ? 'bg-red-500 text-white animate-pulse'
                                     : 'text-red-400 hover:text-red-500 hover:bg-red-50'
                                     }`}
@@ -236,7 +237,7 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
                                 <button
                                     key={t.type}
                                     onClick={() => handleTypeSelect(t.type)}
-                                    className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-gray-50 hover:bg-sakura-pink/10 transition-colors group"
+                                    className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-gray-50 hover:bg-sakura-pink/10 transition-colors group bd-record-type-btn"
                                 >
                                     <div className={`w-14 h-14 rounded-full flex items-center justify-center ${t.bg} ${t.color} group-hover:scale-110 transition-transform kindle-icon-container`}>
                                         <span className="kindle-emoji text-2xl">{t.emoji}</span>
@@ -253,7 +254,7 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
                             <button
                                 onClick={handleSubmit}
                                 disabled={isSubmitting}
-                                className="w-full mt-8 py-4 bg-sakura-pink text-white rounded-xl font-bold text-lg shadow-lg shadow-sakura-pink/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                className="w-full mt-8 py-4 bg-sakura-pink text-white rounded-xl font-bold text-lg shadow-lg shadow-sakura-pink/30 active:scale-95 transition-all flex items-center justify-center gap-2 bd-record-modal-submit"
                             >
                                 {isSubmitting ? '保存中...' : <><Check /> 保存记录</>}
                             </button>
@@ -264,3 +265,4 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
         </div>
     );
 };
+
