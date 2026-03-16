@@ -4,6 +4,7 @@ import type { BabyRecord, FeedDetails } from '../types';
 
 type Summary = {
   milkMl: number;
+  feedCount: number;
   diaperWet: number;
   diaperSoiled: number;
   sleepMinutes: number;
@@ -30,6 +31,7 @@ type State = {
 
 const emptySummary: Summary = {
   milkMl: 0,
+  feedCount: 0,
   diaperWet: 0,
   diaperSoiled: 0,
   sleepMinutes: 0,
@@ -165,6 +167,7 @@ const mapCategory = (type: BabyRecord['type']) => {
 
 const mapSummary = (res: any): Summary => ({
     milkMl: res.milkMl ?? 0,
+    feedCount: res.feedCount ?? 0,
     diaperWet: res.diaperWet ?? 0,
     diaperSoiled: res.diaperSoiled ?? 0,
     sleepMinutes: res.sleepMinutes ?? 0,

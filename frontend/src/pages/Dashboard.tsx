@@ -5,6 +5,7 @@ import { Button } from 'devextreme-react/button';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useCurrentBaby } from '../hooks/useCurrentBaby';
 import { API_URL } from '../config/env';
+import { BabyService } from '../services/api';
 import { BabyEditModal } from '../components/desktop/BabyEditModal';
 import { useMemo, useState } from 'react';
 import { Edit2 } from 'lucide-react';
@@ -44,6 +45,31 @@ const CountdownBar = ({ label, elapsedMs, maxMs, color }: { label: string; elaps
       <div className="bd-countdown-foot">{pct >= 100 ? '已超过建议周期' : `进度 ${Math.round(pct)}%`}</div>
     </div>
   );
+};
+
+const QuickActionBtn = ({ label, color, onClick }: { label: string; color: string; onClick: () => void }) => (
+  <button
+    onClick={onClick}
+    style={{
+      padding: '10px 18px', borderRadius: 12, border: `2px solid ${color}`,
+      background: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600,
+      color: '#4A342E', display: 'flex', alignItems: 'center', gap: 6,
+    }}
+    onMouseOver={e => (e.currentTarget.style.background = color + '20')}
+    onMouseOut={e => (e.currentTarget.style.background = '#fff')}
+  >
+    {label}
+  </button>
+);
+
+const getTypeIcon = (category: string): string => {
+  if (category === '瓶喂' || category === '亲喂') return '🍼';
+  if (category === '尿布') return '🧷';
+  if (category === '洗澡') return '🛁';
+  if (category === '维生素AD') return '💊';
+  if (category === '维生素D3') return '☀️';
+  if (category === '睡眠') return '💤';
+  return '📝';
 };
 
 export const Dashboard = () => {
@@ -127,7 +153,7 @@ export const Dashboard = () => {
         <div className="bd-card">
           <div className="bd-kpi-title">今日奶量</div>
           <div className="bd-kpi-value">{summary.milkMl} <span style={{ fontSize: 16, color: '#8b7670' }}>ml</span></div>
-          <div className="bd-kpi-sub">上次喂奶：{formatElapsed(elapsed.feed)}</div>
+          <div className="bd-kpi-sub">{summary.feedCount ?? 0} 次 · 上次 {formatElapsed(elapsed.feed)}</div>
         </div>
         <div className="bd-card">
           <div className="bd-kpi-title">尿布统计</div>
@@ -143,6 +169,42 @@ export const Dashboard = () => {
           <div className="bd-kpi-title">连续记录</div>
           <div className="bd-kpi-value">{trends.length}<span style={{ fontSize: 16, color: '#8b7670' }}> 天</span></div>
           <div className="bd-kpi-sub">最近 7 天趋势</div>
+        </div>
+      </section>
+
+      <section className="bd-home-block" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <QuickActionBtn label="🍼 记录喂奶" color="#F3B6C2" onClick={async () => {
+            const amount = prompt('输入奶量 (ml)', '150');
+            if (!amount || !baby?.id) return;
+            await BabyService.createRecord({ type: 'FEED', babyId: baby.id, time: new Date().toISOString(), details: { subtype: 'BOTTLE', amount: parseInt(amount), unit: 'ml' } });
+            refresh();
+          }} />
+          <QuickActionBtn label="🧷 尿尿" color="#64b5f6" onClick={async () => {
+            if (!baby?.id) return;
+            await BabyService.createRecord({ type: 'DIAPER', babyId: baby.id, time: new Date().toISOString(), details: { type: 'PEE' } });
+            refresh();
+          }} />
+          <QuickActionBtn label="💩 便便" color="#ffb74d" onClick={async () => {
+            if (!baby?.id) return;
+            await BabyService.createRecord({ type: 'DIAPER', babyId: baby.id, time: new Date().toISOString(), details: { type: 'POO' } });
+            refresh();
+          }} />
+          <QuickActionBtn label="🛁 洗澡" color="#4db6ac" onClick={async () => {
+            if (!baby?.id) return;
+            await BabyService.createRecord({ type: 'BATH', babyId: baby.id, time: new Date().toISOString(), details: { duration: 10, unit: 'min' } });
+            refresh();
+          }} />
+          <QuickActionBtn label="💊 AD" color="#66bb6a" onClick={async () => {
+            if (!baby?.id) return;
+            await BabyService.createRecord({ type: 'VITA_AD', babyId: baby.id, time: new Date().toISOString(), details: { amount: 1, unit: '粒' } });
+            refresh();
+          }} />
+          <QuickActionBtn label="☀️ D3" color="#ffa726" onClick={async () => {
+            if (!baby?.id) return;
+            await BabyService.createRecord({ type: 'VITA_D3', babyId: baby.id, time: new Date().toISOString(), details: { amount: 1, unit: '粒' } });
+            refresh();
+          }} />
         </div>
       </section>
 
@@ -183,11 +245,13 @@ export const Dashboard = () => {
         {activities.length === 0 ? (
           <div style={{ color: '#6b524b' }}>暂无记录</div>
         ) : (
-          <DataGrid dataSource={activities} showBorders={false} columnAutoWidth>
-            <Column dataField="time" caption="时间" />
-            <Column dataField="category" caption="类型" />
+          <DataGrid dataSource={activities} showBorders={false} columnAutoWidth rowAlternationEnabled>
+            <Column dataField="time" caption="时间" width={90} />
+            <Column dataField="category" caption="类型" cellRender={(cellData: any) => (
+              <span>{getTypeIcon(cellData.value)} {cellData.value}</span>
+            )} />
             <Column dataField="detail" caption="详情" />
-            <Column dataField="duration" caption="时长" />
+            <Column dataField="duration" caption="时长" width={80} />
           </DataGrid>
         )}
       </section>

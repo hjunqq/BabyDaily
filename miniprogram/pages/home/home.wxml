@@ -1,0 +1,97 @@
+<view class="container">
+  <!-- Header -->
+  <view class="header">
+    <view class="greeting">
+      <text class="title">{{greeting}}{{babyName ? '，' + babyName + '的家长' : ''}}</text>
+      <text class="subtitle">宝宝日记</text>
+    </view>
+  </view>
+
+  <!-- Loading -->
+  <view wx:if="{{loading}}" class="loading-box">
+    <text>加载中...</text>
+  </view>
+
+  <!-- Error -->
+  <view wx:elif="{{error}}" class="error-box">
+    <text>{{error}}</text>
+    <button class="retry-btn" size="mini" bindtap="loadData">重试</button>
+  </view>
+
+  <block wx:else>
+    <!-- Today Stats -->
+    <view class="stats-section">
+      <view class="section-title">今日概览</view>
+      <view class="stats-row">
+        <view class="stat-card feed">
+          <text class="stat-icon">🍼</text>
+          <text class="stat-value">{{summary.milkMl}}ml</text>
+          <text class="stat-label">奶量 ({{summary.feedCount}}次)</text>
+        </view>
+        <view class="stat-card diaper">
+          <text class="stat-icon">🧷</text>
+          <text class="stat-value">{{summary.diaperWet + summary.diaperSoiled}}</text>
+          <text class="stat-label">尿布</text>
+        </view>
+        <view class="stat-card supplement">
+          <text class="stat-icon">💊</text>
+          <text class="stat-value {{summary.todayAdTaken ? 'taken' : 'not-taken'}}">AD {{summary.todayAdTaken ? '✓' : '—'}}</text>
+          <text class="stat-value {{summary.todayD3Taken ? 'taken' : 'not-taken'}}">D3 {{summary.todayD3Taken ? '✓' : '—'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Quick Actions -->
+    <view class="actions-section">
+      <view class="section-title">快捷操作</view>
+      <view class="actions-grid">
+        <view class="action-btn feed" bindtap="quickFeed">
+          <text class="action-icon">🍼</text>
+          <text class="action-text">喂奶</text>
+        </view>
+        <view class="action-btn diaper" bindtap="quickDiaper" data-type="PEE">
+          <text class="action-icon">💧</text>
+          <text class="action-text">尿尿</text>
+        </view>
+        <view class="action-btn diaper" bindtap="quickDiaper" data-type="POO">
+          <text class="action-icon">💩</text>
+          <text class="action-text">便便</text>
+        </view>
+        <view class="action-btn supplement" bindtap="quickSupplement" data-type="VITA_AD">
+          <text class="action-icon">💊</text>
+          <text class="action-text">AD</text>
+        </view>
+        <view class="action-btn supplement" bindtap="quickSupplement" data-type="VITA_D3">
+          <text class="action-icon">☀️</text>
+          <text class="action-text">D3</text>
+        </view>
+        <view class="action-btn" bindtap="goToRecord">
+          <text class="action-icon">📝</text>
+          <text class="action-text">更多</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Recent Records -->
+    <view class="list-section">
+      <view class="section-header">
+        <text class="section-title">最近记录</text>
+      </view>
+      <view class="activity-list" wx:if="{{recentRecords.length > 0}}">
+        <block wx:for="{{recentRecords}}" wx:key="id">
+          <view class="activity-item">
+            <text class="activity-icon">{{item.icon}}</text>
+            <view class="activity-info">
+              <text class="activity-type">{{item.type}}</text>
+              <text class="activity-time">{{item.time}}</text>
+            </view>
+            <text class="activity-value">{{item.value}}</text>
+          </view>
+        </block>
+      </view>
+      <view wx:else class="empty-text">
+        <text>暂无记录，点击上方按钮开始记录</text>
+      </view>
+    </view>
+  </block>
+</view>
