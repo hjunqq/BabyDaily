@@ -1,0 +1,14 @@
+{
+    "pages": [
+        "pages/home/home",
+        "pages/record/record"
+    ],
+    "window": {
+        "backgroundTextStyle": "dark",
+        "navigationBarBackgroundColor": "#F3B6C2",
+        "navigationBarTitleText": "宝宝日记",
+        "navigationBarTextStyle": "white"
+    },
+    "style": "v2",
+    "sitemapLocation": "sitemap.json"
+}

@@ -180,6 +180,14 @@ export const MobileHome = () => {
   const [showBathModal, setShowBathModal] = useState(false);
   const [showSupplementModal, setShowSupplementModal] = useState({ visible: false, type: 'VITA_AD' as 'VITA_AD' | 'VITA_D3' });
   const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [_tick, setTick] = useState(0);
+
+  // Auto-refresh time-ago strings every 60s (skip in Kindle mode)
+  useEffect(() => {
+    if (isKindleMode()) return;
+    const timer = setInterval(() => setTick(t => t + 1), 60_000);
+    return () => clearInterval(timer);
+  }, []);
 
   const loadSummary = useCallback(async () => {
     if (!baby?.id) return;
@@ -347,7 +355,7 @@ export const MobileHome = () => {
         </div>
       </section>
 
-      {baby?.id && (
+      {baby?.id && !isKindleMode() && (
         <section className="animate-slide-up delay-2" aria-label="喂奶时间线">
           <FeedTimelineChart babyId={baby.id} dayStartHour={settings?.dayStartHour || 0} />
         </section>
@@ -417,7 +425,7 @@ export const MobileHome = () => {
         </button>
       </div>
 
-      <section className="bd-recent-list bd-home-block animate-slide-up delay-4" aria-label="最近活动记录">
+      <section className="bd-recent-list bd-home-block animate-slide-up delay-4" aria-label="最近活动记录" style={isKindleMode() ? { display: 'none' } : undefined}>
         <div className="title">
           <h2 style={{ fontSize: 15, margin: 0 }}>最近记录</h2>
           <Link to="/records" style={{ fontSize: 12, color: 'var(--rose)' }}>查看全部 →</Link>
@@ -520,6 +528,7 @@ export const MobileHome = () => {
         <SupplementModal
           babyId={baby?.id || ''}
           type={showSupplementModal.type}
+          alreadyTaken={showSupplementModal.type === 'VITA_AD' ? todayAdTaken : todayD3Taken}
           onClose={() => setShowSupplementModal({ ...showSupplementModal, visible: false })}
           onSuccess={async () => {
             setShowSupplementModal({ ...showSupplementModal, visible: false });
@@ -531,9 +540,11 @@ export const MobileHome = () => {
   );
 };
 
+const FEED_PRESETS = [60, 80, 100, 120, 140, 160, 180, 200];
+
 const FeedModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: () => void; onSuccess: () => void }) => {
   const [feedType, setFeedType] = useState<'BOTTLE' | 'BREAST'>('BOTTLE');
-  const [amount, setAmount] = useState(120);
+  const [amount, setAmount] = useState(150);
   const [duration, setDuration] = useState(15);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const kindle = isKindleMode();
@@ -581,20 +592,18 @@ const FeedModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: ()
               display: 'grid',
               gridTemplateColumns: 'repeat(4, 1fr)',
               gap: '8px',
-              maxHeight: '240px',
-              overflowY: 'auto',
               padding: '4px',
             }}>
-              {Array.from({ length: 19 }, (_, i) => 30 + i * 10).map(volume => (
+              {FEED_PRESETS.map(volume => (
                 <button
                   key={volume}
                   type="button"
                   onClick={() => setAmount(volume)}
                   className={amount === volume ? 'bd-volume-btn active' : 'bd-volume-btn'}
                   style={{
-                    padding: '12px 8px',
+                    padding: '14px 8px',
                     borderRadius: '16px',
-                    fontSize: '14px',
+                    fontSize: '15px',
                     fontWeight: 'bold',
                     border: amount === volume
                       ? `2px solid ${kindle ? '#FF0000' : '#F3B6C2'}`
@@ -604,15 +613,33 @@ const FeedModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: ()
                       : '#fff',
                     color: amount === volume ? '#fff' : (kindle ? '#000' : '#6b524b'),
                     cursor: 'pointer',
-                    transition: 'all 0.2s',
+                    minHeight: 48,
                   }}
                 >
                   {volume}
                 </button>
               ))}
             </div>
-            <div style={{ marginTop: 12, textAlign: 'center', fontSize: 13, color: kindle ? '#4D4D4D' : '#8b7670' }}>
-              Selected: <span style={{ fontWeight: 'bold', color: kindle ? '#000000' : '#4A342E', fontSize: 16 }}>{amount} ml</span>
+            <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+              <button
+                type="button"
+                onClick={() => setAmount(Math.max(10, amount - 10))}
+                style={{
+                  width: 44, height: 44, borderRadius: '50%', border: `2px solid ${kindle ? '#BDBDBD' : '#e5e5e5'}`,
+                  background: '#fff', fontSize: 20, fontWeight: 'bold', cursor: 'pointer', color: kindle ? '#000' : '#6b524b',
+                }}
+              >−</button>
+              <span style={{ fontWeight: 'bold', color: kindle ? '#000000' : '#4A342E', fontSize: 22, minWidth: 80, textAlign: 'center' }}>
+                {amount} ml
+              </span>
+              <button
+                type="button"
+                onClick={() => setAmount(amount + 10)}
+                style={{
+                  width: 44, height: 44, borderRadius: '50%', border: `2px solid ${kindle ? '#BDBDBD' : '#e5e5e5'}`,
+                  background: '#fff', fontSize: 20, fontWeight: 'bold', cursor: 'pointer', color: kindle ? '#000' : '#6b524b',
+                }}
+              >+</button>
             </div>
           </div>
         ) : (
@@ -636,11 +663,11 @@ const FeedModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: ()
 };
 
 const DiaperModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: () => void; onSuccess: () => void }) => {
-  const [diaperType, setDiaperType] = useState<'PEE' | 'POO' | 'BOTH'>('PEE');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const kindle = isKindleMode();
 
-  const handleSubmit = async () => {
+  const handleQuickSave = async (diaperType: 'PEE' | 'POO' | 'BOTH') => {
+    if (isSubmitting) return;
     setIsSubmitting(true);
     try {
       await BabyService.createRecord({
@@ -665,17 +692,38 @@ const DiaperModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: 
         <h2 style={{ textAlign: 'center', marginBottom: 20 }}>{kindle ? '尿 记录尿布' : '🧷 记录尿布'}</h2>
 
         <div style={{ marginBottom: 18 }}>
-          <label style={{ display: 'block', fontSize: 13, color: '#8b7670', marginBottom: 8 }}>尿布类型</label>
-          <div className="bd-quick-select">
-            <button className={diaperType === 'PEE' ? 'active' : ''} onClick={() => setDiaperType('PEE')}>{kindle ? '尿尿' : '💧 尿尿'}</button>
-            <button className={diaperType === 'POO' ? 'active' : ''} onClick={() => setDiaperType('POO')}>{kindle ? '便便' : '💩 便便'}</button>
-            <button className={diaperType === 'BOTH' ? 'active' : ''} onClick={() => setDiaperType('BOTH')}>{kindle ? '都有' : '💧💩 都有'}</button>
+          <label style={{ display: 'block', fontSize: 13, color: '#8b7670', marginBottom: 12, textAlign: 'center' }}>点击即可保存</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button
+              onClick={() => handleQuickSave('PEE')}
+              disabled={isSubmitting}
+              style={{
+                padding: '16px', borderRadius: 16, fontSize: 16, fontWeight: 600, cursor: 'pointer',
+                border: kindle ? '2px solid #0000FF' : '2px solid #64b5f6',
+                background: kindle ? '#fff' : '#e3f2fd', color: kindle ? '#000' : '#1565c0',
+              }}
+            >{kindle ? '尿尿' : '💧 尿尿'}</button>
+            <button
+              onClick={() => handleQuickSave('POO')}
+              disabled={isSubmitting}
+              style={{
+                padding: '16px', borderRadius: 16, fontSize: 16, fontWeight: 600, cursor: 'pointer',
+                border: kindle ? '2px solid #FFA500' : '2px solid #ffb74d',
+                background: kindle ? '#fff' : '#fff3e0', color: kindle ? '#000' : '#e65100',
+              }}
+            >{kindle ? '便便' : '💩 便便'}</button>
+            <button
+              onClick={() => handleQuickSave('BOTH')}
+              disabled={isSubmitting}
+              style={{
+                padding: '16px', borderRadius: 16, fontSize: 16, fontWeight: 600, cursor: 'pointer',
+                border: kindle ? '2px solid #000' : '2px solid #ce93d8',
+                background: kindle ? '#fff' : '#f3e5f5', color: kindle ? '#000' : '#6a1b9a',
+              }}
+            >{kindle ? '都有' : '💧💩 都有'}</button>
           </div>
         </div>
 
-        <button className="bd-submit-btn" onClick={handleSubmit} disabled={isSubmitting} style={submitBtnStyle('#FFB347', kindle)}>
-          {isSubmitting ? '保存中...' : '✓ 保存记录'}
-        </button>
         <button onClick={onClose} style={cancelBtnStyle(kindle)}>取消</button>
       </div>
     </div>
@@ -751,11 +799,12 @@ const BathModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: ()
   );
 };
 
-const SupplementModal = ({ babyId, type, onClose, onSuccess }: { babyId: string; type: 'VITA_AD' | 'VITA_D3'; onClose: () => void; onSuccess: () => void }) => {
+const SupplementModal = ({ babyId, type, alreadyTaken, onClose, onSuccess }: { babyId: string; type: 'VITA_AD' | 'VITA_D3'; alreadyTaken: boolean; onClose: () => void; onSuccess: () => void }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const kindle = isKindleMode();
 
   const handleSubmit = async () => {
+    if (alreadyTaken) return;
     setIsSubmitting(true);
     try {
       await BabyService.createRecord({
@@ -784,11 +833,24 @@ const SupplementModal = ({ babyId, type, onClose, onSuccess }: { babyId: string;
 
         <div style={{ marginBottom: 18, textAlign: 'center' }}>
           <div style={{ fontSize: 48, marginBottom: 8 }}>{kindle ? (type === 'VITA_AD' ? 'AD' : 'D3') : (type === 'VITA_AD' ? '💊' : '☀️')}</div>
-          <p style={{ color: kindle ? '#4D4D4D' : '#8b7670' }}>今日打卡 1 粒</p>
+          {alreadyTaken ? (
+            <p style={{ color: '#4CAF50', fontWeight: 600, fontSize: 16 }}>✓ 今日已服用</p>
+          ) : (
+            <p style={{ color: kindle ? '#4D4D4D' : '#8b7670' }}>今日打卡 1 粒</p>
+          )}
         </div>
 
-        <button className="bd-submit-btn" onClick={handleSubmit} disabled={isSubmitting} style={submitBtnStyle(color, kindle)}>
-          {isSubmitting ? '保存中...' : '✓ 确认打卡'}
+        <button
+          className="bd-submit-btn"
+          onClick={handleSubmit}
+          disabled={isSubmitting || alreadyTaken}
+          style={{
+            ...submitBtnStyle(color, kindle),
+            opacity: alreadyTaken ? 0.5 : 1,
+            cursor: alreadyTaken ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {alreadyTaken ? '今日已服用' : isSubmitting ? '保存中...' : '✓ 确认打卡'}
         </button>
         <button onClick={onClose} style={cancelBtnStyle(kindle)}>取消</button>
       </div>

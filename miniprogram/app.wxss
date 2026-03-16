@@ -1,0 +1,13 @@
+/** app.wxss */
+page {
+  --sakura-pink: #FFB7C5;
+  --sakura-text: #5A3A2E;
+  --sakura-bg: #FFF7F9;
+  --sakura-accent: #E0FFFF;
+  
+  background-color: var(--sakura-bg);
+  color: var(--sakura-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica,
+    Segoe UI, Arial, Roboto, 'PingFang SC', 'miui', 'Hiragino Sans GB', 'Microsoft Yahei',
+    sans-serif;
+}

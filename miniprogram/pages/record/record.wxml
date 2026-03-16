@@ -1,0 +1,69 @@
+<view class="container">
+  <!-- Type Tabs -->
+  <view class="type-tabs">
+    <block wx:for="{{types}}" wx:key="key">
+      <view class="tab {{selectedType === item.key ? 'active' : ''}}" bindtap="selectType" data-type="{{item.key}}">
+        <text class="tab-icon">{{item.icon}}</text>
+        <text class="tab-label">{{item.label}}</text>
+      </view>
+    </block>
+  </view>
+
+  <!-- Feed Input -->
+  <view wx:if="{{selectedType === 'FEED'}}" class="input-section">
+    <view class="feed-type-row">
+      <view class="feed-type-btn {{feedSubtype === 'BOTTLE' ? 'active' : ''}}" bindtap="setFeedSubtype" data-subtype="BOTTLE">瓶喂</view>
+      <view class="feed-type-btn {{feedSubtype === 'BREAST' ? 'active' : ''}}" bindtap="setFeedSubtype" data-subtype="BREAST">亲喂</view>
+    </view>
+
+    <view wx:if="{{feedSubtype === 'BOTTLE'}}" class="presets-grid">
+      <block wx:for="{{feedPresets}}" wx:key="*this">
+        <view class="preset-btn {{amount === item ? 'active' : ''}}" bindtap="setAmount" data-amount="{{item}}">
+          {{item}}ml
+        </view>
+      </block>
+    </view>
+
+    <view wx:if="{{feedSubtype === 'BOTTLE'}}" class="stepper-row">
+      <view class="stepper-btn" bindtap="adjustAmount" data-delta="-10">-</view>
+      <text class="stepper-value">{{amount}} ml</text>
+      <view class="stepper-btn" bindtap="adjustAmount" data-delta="10">+</view>
+    </view>
+
+    <view wx:if="{{feedSubtype === 'BREAST'}}" class="presets-grid">
+      <block wx:for="{{breastPresets}}" wx:key="*this">
+        <view class="preset-btn {{duration === item ? 'active' : ''}}" bindtap="setDuration" data-duration="{{item}}">
+          {{item}}分钟
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- Diaper Input -->
+  <view wx:if="{{selectedType === 'DIAPER'}}" class="input-section">
+    <text class="input-hint">点击即可保存</text>
+    <view class="diaper-grid">
+      <view class="diaper-btn pee" bindtap="quickSaveDiaper" data-type="PEE">💧 尿尿</view>
+      <view class="diaper-btn poo" bindtap="quickSaveDiaper" data-type="POO">💩 便便</view>
+      <view class="diaper-btn both" bindtap="quickSaveDiaper" data-type="BOTH">💧💩 都有</view>
+    </view>
+  </view>
+
+  <!-- Bath Input -->
+  <view wx:if="{{selectedType === 'BATH'}}" class="input-section">
+    <view class="presets-grid">
+      <block wx:for="{{bathPresets}}" wx:key="*this">
+        <view class="preset-btn {{bathDuration === item ? 'active' : ''}}" bindtap="setBathDuration" data-duration="{{item}}">
+          {{item}}分钟
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- Submit -->
+  <view wx:if="{{selectedType !== 'DIAPER'}}" class="submit-section">
+    <button class="submit-btn" bindtap="submit" disabled="{{submitting}}">
+      {{submitting ? '保存中...' : '✓ 保存记录'}}
+    </button>
+  </view>
+</view>
