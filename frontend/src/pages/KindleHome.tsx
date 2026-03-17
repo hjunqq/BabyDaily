@@ -2,13 +2,37 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { BabyService } from '../services/api';
 import { createRecordOfflineAware, flushQueue, getQueueLength } from '../services/kindleOfflineQueue';
 
+// ── Color palette (matches app theme) ───────────────────────────────────
+const C = {
+  cream: '#FFF6F2',
+  cocoa: '#4A342E',
+  sand: '#F7EFEB',
+  line: '#E8DCD6',
+  rose: '#F3B6C2',
+  roseDark: '#D9748A',
+  mist: '#CFE9F2',
+  mistDark: '#6AAEC8',
+  sage: '#BFD9C6',
+  sageDark: '#5A9E72',
+  amber: '#F9E4B7',
+  amberDark: '#C88A2A',
+  peach: '#FDDCB5',
+  peachDark: '#C87030',
+  lavender: '#E8D5F5',
+  lavenderDark: '#8A5CC0',
+  green: '#C8EDD5',
+  greenDark: '#3A8A5A',
+  text: '#4A342E',
+  textMuted: '#8b7670',
+};
+
 // ── Inline styles (no external CSS dependency) ──────────────────────────
 
 const S = {
   page: {
-    fontFamily: 'Georgia, "Noto Serif SC", serif',
-    background: '#fff',
-    color: '#000',
+    fontFamily: '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+    background: C.cream,
+    color: C.text,
     padding: '10px 14px',
     height: '100vh',
     overflow: 'hidden',
@@ -20,34 +44,36 @@ const S = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'baseline',
-    marginBottom: '2px',
+    marginBottom: '4px',
     fontSize: '14px',
-    color: '#666',
+    color: C.textMuted,
   },
   summary: {
     fontSize: '18px',
     fontWeight: 'bold' as const,
     margin: '0 0 10px 0',
-    borderBottom: '1px solid #000',
+    borderBottom: `2px solid ${C.line}`,
     paddingBottom: '6px',
+    color: C.cocoa,
   },
   giantBtn: {
     width: '100%',
     padding: '16px 14px',
-    border: '3px solid #000',
-    borderRadius: '6px',
-    background: '#fff',
+    border: `2px solid ${C.roseDark}`,
+    borderRadius: '10px',
+    background: C.rose,
     fontSize: '22px',
     fontWeight: 'bold' as const,
-    fontFamily: 'Georgia, "Noto Serif SC", serif',
+    fontFamily: '"PingFang SC", "Hiragino Sans GB", sans-serif',
     cursor: 'pointer',
     textAlign: 'left' as const,
     marginBottom: '10px',
     position: 'relative' as const,
+    color: C.cocoa,
   },
   giantSub: {
     fontSize: '13px',
-    color: '#666',
+    color: C.textMuted,
     fontWeight: 'normal' as const,
     marginTop: '2px',
   },
@@ -59,18 +85,19 @@ const S = {
   actionBtn: {
     flex: 1,
     padding: '14px 6px',
-    border: '2px solid #000',
-    borderRadius: '6px',
-    background: '#fff',
+    border: `2px solid ${C.line}`,
+    borderRadius: '8px',
+    background: C.sand,
     fontSize: '16px',
     fontWeight: 'bold' as const,
-    fontFamily: 'Georgia, "Noto Serif SC", serif',
+    fontFamily: '"PingFang SC", "Hiragino Sans GB", sans-serif',
     cursor: 'pointer',
     textAlign: 'center' as const,
     minHeight: '48px',
+    color: C.text,
   },
   disabledBtn: {
-    opacity: 0.4,
+    opacity: 0.45,
     borderStyle: 'dashed' as const,
   },
   adjusterRow: {
@@ -82,61 +109,63 @@ const S = {
     fontSize: '16px',
   },
   adjusterBtn: {
-    padding: '8px 16px',
-    border: '2px solid #000',
-    borderRadius: '6px',
-    background: '#fff',
+    padding: '8px 18px',
+    border: `2px solid ${C.mistDark}`,
+    borderRadius: '8px',
+    background: C.mist,
     fontSize: '16px',
     fontWeight: 'bold' as const,
-    fontFamily: 'Georgia, "Noto Serif SC", serif',
+    fontFamily: '"PingFang SC", "Hiragino Sans GB", sans-serif',
     cursor: 'pointer',
     minWidth: '60px',
     textAlign: 'center' as const,
+    color: C.cocoa,
   },
   recentSection: {
     flex: 1,
-    borderTop: '1px solid #000',
+    borderTop: `1px solid ${C.line}`,
     paddingTop: '6px',
     fontSize: '14px',
-    lineHeight: '1.6',
+    lineHeight: '1.7',
     overflow: 'hidden',
   },
   recentTitle: {
     fontSize: '13px',
-    color: '#666',
+    color: C.textMuted,
     marginBottom: '2px',
   },
   footer: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTop: '1px solid #ccc',
+    borderTop: `1px solid ${C.line}`,
     paddingTop: '6px',
     fontSize: '13px',
-    color: '#666',
+    color: C.textMuted,
   },
   refreshBtn: {
     padding: '6px 16px',
-    border: '1px solid #000',
-    borderRadius: '4px',
-    background: '#fff',
+    border: `1px solid ${C.line}`,
+    borderRadius: '6px',
+    background: C.sand,
     fontSize: '14px',
-    fontFamily: 'Georgia, "Noto Serif SC", serif',
+    fontFamily: '"PingFang SC", "Hiragino Sans GB", sans-serif',
     cursor: 'pointer',
+    color: C.text,
   },
   undoBtn: {
     marginLeft: '8px',
     padding: '2px 8px',
-    border: '1px solid #000',
+    border: `1px solid ${C.greenDark}`,
     borderRadius: '4px',
-    background: '#fff',
+    background: C.green,
     fontSize: '13px',
-    fontFamily: 'Georgia, "Noto Serif SC", serif',
+    fontFamily: '"PingFang SC", "Hiragino Sans GB", sans-serif',
     cursor: 'pointer',
-    textDecoration: 'underline' as const,
+    color: C.greenDark,
   },
   confirmText: {
-    color: '#000',
+    color: C.greenDark,
     fontWeight: 'bold' as const,
   },
   loading: {
@@ -145,13 +174,25 @@ const S = {
     alignItems: 'center',
     height: '100vh',
     fontSize: '18px',
-    fontFamily: 'Georgia, "Noto Serif SC", serif',
+    color: C.textMuted,
+    background: C.cream,
   },
   error: {
     padding: '20px',
     fontSize: '16px',
-    fontFamily: 'Georgia, "Noto Serif SC", serif',
+    background: C.cream,
+    color: C.text,
   },
+};
+
+// 各按钮颜色配置
+const BTN_COLORS: Record<string, { bg: string; border: string }> = {
+  pee:  { bg: C.amber,    border: C.amberDark },
+  poo:  { bg: C.peach,    border: C.peachDark },
+  both: { bg: '#FDE8D0',  border: '#C86020' },
+  bath: { bg: C.mist,     border: C.mistDark },
+  ad:   { bg: C.lavender, border: C.lavenderDark },
+  d3:   { bg: '#FEFBD0',  border: '#A89020' },
 };
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -339,22 +380,25 @@ export const KindleHome: React.FC = () => {
     disabled = false
   ) => {
     const action = actions[actionId];
+    const colorStyle = BTN_COLORS[actionId]
+      ? { background: BTN_COLORS[actionId].bg, borderColor: BTN_COLORS[actionId].border }
+      : {};
     if (action?.confirmed) {
       return (
         <button
           key={actionId}
-          style={{ ...S.actionBtn, borderColor: '#060' }}
+          style={{ ...S.actionBtn, background: C.green, borderColor: C.greenDark }}
           onClick={() => handleUndo(actionId)}
         >
-          <span style={S.confirmText}>{action.text}</span>
-          <span style={S.undoBtn}>撤销</span>
+          <div style={S.confirmText}>{action.text}</div>
+          <div style={{ fontSize: '12px', color: C.greenDark, marginTop: '2px' }}>点击撤销</div>
         </button>
       );
     }
     return (
       <button
         key={actionId}
-        style={{ ...S.actionBtn, ...(disabled ? S.disabledBtn : {}) }}
+        style={{ ...S.actionBtn, ...colorStyle, ...(disabled ? S.disabledBtn : {}) }}
         onClick={disabled ? undefined : onClick}
         disabled={disabled}
       >
@@ -402,9 +446,9 @@ export const KindleHome: React.FC = () => {
 
       {/* Giant feed button */}
       {feedAction?.confirmed ? (
-        <button style={{ ...S.giantBtn, borderColor: '#060' }} onClick={() => handleUndo('feed')}>
-          <span style={S.confirmText}>{feedAction.text}</span>
-          <span style={S.undoBtn}>撤销</span>
+        <button style={{ ...S.giantBtn, background: C.green, borderColor: C.greenDark }} onClick={() => handleUndo('feed')}>
+          <div style={S.confirmText}>{feedAction.text}</div>
+          <div style={{ fontSize: '13px', color: C.greenDark, fontWeight: 'normal', marginTop: '2px' }}>点击撤销</div>
         </button>
       ) : (
         <button style={S.giantBtn} onClick={handleFeed}>
