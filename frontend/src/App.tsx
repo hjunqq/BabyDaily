@@ -11,6 +11,7 @@ import { LoadIndicator } from 'devextreme-react/load-indicator';
 import { Landing } from './pages/Landing';
 import { Dashboard } from './pages/Dashboard';
 import { MobileHome } from './pages/MobileHome';
+import { KindleHome } from './pages/KindleHome';
 
 import { OotdDesktop } from './pages/desktop/OotdDesktop';
 import { OotdMobile } from './pages/mobile/OotdMobile';
@@ -331,6 +332,16 @@ const KindleModeWrapper = () => {
     </RequireAuth>
   );
 
+  const isKindle = typeof document !== 'undefined' && document.body.classList.contains('kindle-mode');
+
+  const renderHomePage = () => {
+    if (isKindle) {
+      // KindleHome renders its own minimal shell — no MobileLayout wrapper
+      return <RequireAuth><KindleHome /></RequireAuth>;
+    }
+    return renderResponsivePage(<Layout><Dashboard /></Layout>, <MobileLayout><MobileHome /></MobileLayout>);
+  };
+
   return (
     <ThemeProvider>
       <PinGate>
@@ -345,8 +356,8 @@ const KindleModeWrapper = () => {
           <Route path="/states/skeleton" element={<SkeletonStatePage />} />
           <Route path="/states/500" element={<ServerErrorPage />} />
 
-          <Route path="/" element={renderResponsivePage(<Layout><Dashboard /></Layout>, <MobileLayout><MobileHome /></MobileLayout>)} />
-          <Route path="/dashboard" element={renderResponsivePage(<Layout><Dashboard /></Layout>, <MobileLayout><MobileHome /></MobileLayout>)} />
+          <Route path="/" element={renderHomePage()} />
+          <Route path="/dashboard" element={renderHomePage()} />
 
           <Route path="/records" element={renderResponsivePage(<Layout><RecordsDesktop /></Layout>, <MobileLayout><RecordsMobile /></MobileLayout>)} />
           <Route path="/record" element={renderResponsivePage(<Layout><RecordDesktop /></Layout>, <MobileLayout><RecordMobile /></MobileLayout>)} />

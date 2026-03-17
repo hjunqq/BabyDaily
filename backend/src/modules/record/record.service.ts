@@ -10,6 +10,8 @@ import {
   mapToCamelCase,
   mapDetailsToSnakeCase,
   enrichWithTimeFields,
+  getTimeAgo,
+  formatTime,
 } from './record.mapper';
 import { SettingsService } from '../settings/settings.service';
 
@@ -258,6 +260,78 @@ export class RecordService {
       });
     }
     return result;
+  }
+
+  async kindleSummary(babyId: string, userId: string) {
+    let dayStartHour = 0;
+    if (userId) {
+      const settings = await this.settingsService.getOrCreate(userId);
+      dayStartHour = settings.dayStartHour || 0;
+    }
+
+    const { from } = this.getDayRange(dayStartHour);
+    const [aggResult, latestTimes, recentRecords] = await Promise.all([
+      this.recordRepo.aggregateSummary(babyId, from),
+      this.recordRepo.getLatestEventTimes(babyId),
+      this.recordRepo.findByBabyId(babyId, 5, 0),
+    ]);
+
+    const milkMl = parseInt(aggResult?.milk_ml ?? '0') || 0;
+    const feedCount = parseInt(aggResult?.feed_count ?? '0') || 0;
+    const todayAdTaken = (parseInt(aggResult?.ad_taken ?? '0') || 0) > 0;
+    const todayD3Taken = (parseInt(aggResult?.d3_taken ?? '0') || 0) > 0;
+
+    const lastFeedRecord = recentRecords.find(
+      (r) => r.type === RecordType.FEED,
+    );
+    const lastFeedAmount = lastFeedRecord?.details?.amount || 150;
+    const lastFeedTime = lastFeedRecord
+      ? formatTime(lastFeedRecord.time)
+      : undefined;
+    const lastFeedTimeAgo = lastFeedRecord
+      ? getTimeAgo(lastFeedRecord.time)
+      : undefined;
+    const lastFeedSubtype = lastFeedRecord?.details?.subtype || 'BOTTLE';
+
+    const typeNames: { [key: string]: string } = {
+      FEED: '喂奶', DIAPER: '换尿布', BATH: '洗澡', SLEEP: '睡觉',
+      VITA_AD: 'AD', VITA_D3: 'D3', HEALTH: '健康', GROWTH: '成长',
+      MILESTONE: '里程碑',
+    };
+
+    const recentLines = recentRecords.slice(0, 5).map((r) => {
+      const time = formatTime(r.time);
+      const name = typeNames[r.type] || r.type;
+      let detail = '';
+      if (r.type === RecordType.FEED && r.details?.amount) {
+        detail = ` ${r.details.amount}ml`;
+      } else if (r.type === RecordType.DIAPER && r.details?.type) {
+        const m: { [key: string]: string } = { PEE: '(尿)', POO: '(便)', BOTH: '(混合)' };
+        detail = m[r.details.type] || '';
+      }
+      return `${time} ${name}${detail}`;
+    });
+
+    const fmtTimeAgo = (d: Date | null | undefined) => {
+      if (!d) return '暂无记录';
+      return getTimeAgo(new Date(d));
+    };
+
+    return {
+      summaryLine: `今日: ${milkMl}ml / ${feedCount}次喂奶`,
+      lastFeedAmount,
+      lastFeedTime,
+      lastFeedTimeAgo,
+      lastFeedSubtype,
+      milkMl,
+      feedCount,
+      todayAdTaken,
+      todayD3Taken,
+      recentLines,
+      lastPeeTimeAgo: fmtTimeAgo(latestTimes?.last_pee_time),
+      lastPooTimeAgo: fmtTimeAgo(latestTimes?.last_poo_time),
+      lastBathTimeAgo: fmtTimeAgo(latestTimes?.last_bath_time),
+    };
   }
 
   async exportCsv(babyId: string, limit = 200) {
