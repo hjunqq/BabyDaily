@@ -298,6 +298,11 @@ export const BabyService = {
     getFeedTimeline: async (babyId: string, dayStartHour = 0): Promise<FeedTimelineData> => {
         const targetId = babyId === 'u-sakura-001' ? (CURRENT_BABY_ID || (await BabyService.ensureDevEnvironment()).id) : babyId;
         return request(`${API_URL}/records/baby/${targetId}/feed-timeline?dayStartHour=${dayStartHour}`);
+    },
+
+    getKindleSummary: async (babyId?: string) => {
+        const targetId = babyId || CURRENT_BABY_ID || (await BabyService.ensureDevEnvironment()).id;
+        return request(`${API_URL}/records/baby/${targetId}/kindle-summary`);
     }
 };
 

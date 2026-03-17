@@ -43,6 +43,12 @@ export class RecordController {
     return this.recordService.summary(babyId, req.user.userId);
   }
 
+  @Get('baby/:babyId/kindle-summary')
+  @UseGuards(FamilyGuard)
+  kindleSummary(@Param('babyId') babyId: string, @Request() req: any) {
+    return this.recordService.kindleSummary(babyId, req.user.userId);
+  }
+
   @Get('baby/:babyId/trend')
   @UseGuards(FamilyGuard)
   trend(
