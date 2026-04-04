@@ -75,10 +75,7 @@ const RequireAuth = ({ children }: { children: React.ReactElement }) => {
           sessionStorage.setItem(KINDLE_BOOTSTRAP_KEY, '1');
         }
 
-        if (!BabyService.isAuthenticated()) {
-          await BabyService.loginDev();
-        }
-        await BabyService.ensureDevEnvironment();
+        await BabyService.bootstrap();
         if (!cancelled) {
           setReady(true);
           setError(null);

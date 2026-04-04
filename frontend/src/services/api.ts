@@ -17,14 +17,14 @@ const getHeaders = () => ({
 export const request = async (url: string, options: RequestInit = {}) => {
     let res = await fetch(url, { ...options, cache: 'no-store', headers: { ...getHeaders(), ...options.headers } });
 
-    // If unauthorized or bad request (likely stale state), try re-login once.
+    // If unauthorized or bad request (likely stale state), try re-bootstrap once.
     if (res.status === 401 || res.status === 400) {
-        console.warn(`Request to ${url} failed with ${res.status}, attempting re-login...`);
+        console.warn(`Request to ${url} failed with ${res.status}, attempting re-bootstrap...`);
         try {
-            await BabyService.loginDev();
+            await BabyService.bootstrap();
             res = await fetch(url, { ...options, cache: 'no-store', headers: { ...getHeaders(), ...options.headers } });
         } catch (loginError) {
-            console.error('Re-login failed during request retry:', loginError);
+            console.error('Re-bootstrap failed during request retry:', loginError);
             BabyService.logout();
             throw loginError;
         }
@@ -47,87 +47,50 @@ export const request = async (url: string, options: RequestInit = {}) => {
 };
 
 export const BabyService = {
-    // Auth & Init
-    loginDev: async () => {
-        if (!DEV_LOGIN_ENABLED) {
-            throw new Error('Dev login is disabled.');
-        }
+    // Auth & Init — single bootstrap call handles login + family + baby
+    bootstrap: async (): Promise<Baby> => {
         try {
-            const res = await fetch(`${API_URL}/auth/login/dev`, { method: 'POST' });
-            if (!res.ok) throw new Error('登录失败');
+            const res = await fetch(`${API_URL}/auth/bootstrap`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ method: 'dev' }),
+            });
+            if (!res.ok) throw new Error('Bootstrap failed');
             const data = await res.json();
+
             ACCESS_TOKEN = data.access_token;
             if (ACCESS_TOKEN) localStorage.setItem('access_token', ACCESS_TOKEN);
+
             if (data.user) {
                 CURRENT_USER = data.user;
                 localStorage.setItem('current_user', JSON.stringify(data.user));
             }
-            return data.user as User;
+
+            CURRENT_BABY_ID = data.baby.id;
+            localStorage.setItem('current_baby_id', data.baby.id);
+
+            if (!data.baby.avatar_url) {
+                data.baby.avatar_url = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sakura&backgroundColor=ffb7c5';
+            }
+
+            return mapBabyResponse(data.baby);
         } catch (error) {
-            console.error('Dev login failed:', error);
-            throw error;
-        }
-    },
-
-    ensureDevEnvironment: async (): Promise<Baby> => {
-        try {
-            if (!ACCESS_TOKEN) await BabyService.loginDev();
-
-            // 1. Get Families
-            let families;
-            try {
-                families = await request(`${API_URL}/families/my`);
-            } catch (err) {
-                // If it fails even after retry in request(), we have a critical issue
-                BabyService.logout();
-                throw err;
-            }
-
-            let familyId;
-            if (!Array.isArray(families) || families.length === 0) {
-                const family = await request(`${API_URL}/families`, {
-                    method: 'POST',
-                    body: JSON.stringify({ name: '樱花的家' })
-                });
-                familyId = family.id;
-            } else {
-                familyId = families[0].id;
-            }
-
-            // 2. Get Babies
-            const babies = await request(`${API_URL}/babies/family/${familyId}`);
-
-            let baby;
-            if (!Array.isArray(babies) || babies.length === 0) {
-                baby = await request(`${API_URL}/babies`, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        family_id: familyId,
-                        name: '樱花',
-                        gender: 'FEMALE',
-                        birthday: new Date().toISOString()
-                    })
-                });
-            } else {
-                baby = babies[0];
-            }
-
-            CURRENT_BABY_ID = baby.id;
-            localStorage.setItem('current_baby_id', baby.id);
-
-            // Default avatar if none
-            if (!baby.avatar_url) {
-                baby.avatar_url = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sakura&backgroundColor=ffb7c5';
-            }
-
-            return mapBabyResponse(baby);
-        } catch (error) {
-            console.error('Environment setup failed:', error);
+            console.error('Bootstrap failed:', error);
             localStorage.removeItem('access_token');
             localStorage.removeItem('current_user');
             localStorage.removeItem('current_baby_id');
             throw error;
         }
+    },
+
+    // Keep loginDev for backward compatibility (used by request retry)
+    loginDev: async () => {
+        return BabyService.bootstrap();
+    },
+
+    // Alias for backward compatibility
+    ensureDevEnvironment: async (): Promise<Baby> => {
+        return BabyService.bootstrap();
     },
 
     getCurrentBabyId: () => CURRENT_BABY_ID,

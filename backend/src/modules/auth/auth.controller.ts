@@ -1,6 +1,7 @@
 import { Controller, Post, Body, ForbiddenException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginWechatDto } from './dto/login-wechat.dto';
+import { BootstrapDto } from './dto/bootstrap.dto';
 import { ErrorCodes } from '../../common/enums/error-codes.enum';
 
 @Controller('auth')
@@ -24,5 +25,10 @@ export class AuthController {
       });
     }
     return this.authService.loginDev();
+  }
+
+  @Post('bootstrap')
+  async bootstrap(@Body() body: BootstrapDto) {
+    return this.authService.bootstrap(body);
   }
 }

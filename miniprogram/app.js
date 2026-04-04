@@ -10,8 +10,12 @@ App({
                 this.globalData.babyProfile = baby;
             })
             .catch((err) => {
-                console.error('Login failed', err);
-                wx.showToast({ title: '登录失败，请稍后重试', icon: 'none' });
+                console.error('[App] Login failed:', err.message || err);
+                wx.showModal({
+                    title: '登录失败',
+                    content: err.message || '无法连接服务器，请检查网络后重试',
+                    showCancel: false,
+                });
                 throw err;
             });
     },
