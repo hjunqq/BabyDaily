@@ -18,6 +18,8 @@
       - JWT_SECRET=super-secret-key
       - TZ=Asia/Shanghai
       - ENABLE_DEV_LOGIN=true
+      - WECHAT_APPID=${WECHAT_APPID:-your_appid_here}
+      - WECHAT_SECRET=${WECHAT_SECRET:-your_secret_here}
     volumes:
       - ./uploads:/app/uploads
     depends_on:

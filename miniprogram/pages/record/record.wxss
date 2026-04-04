@@ -59,17 +59,17 @@
 /* Feed Type Row */
 .feed-type-row {
   display: flex;
-  gap: 16rpx;
+  gap: 12rpx;
   margin-bottom: 24rpx;
 }
 
 .feed-type-btn {
   flex: 1;
-  padding: 20rpx;
+  padding: 18rpx;
   text-align: center;
   border-radius: 16rpx;
   border: 2rpx solid #e5e5e5;
-  font-size: 28rpx;
+  font-size: 26rpx;
   font-weight: 600;
   color: #4A342E;
 }
@@ -88,12 +88,16 @@
   margin-bottom: 24rpx;
 }
 
+.presets-grid.sleep-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
 .preset-btn {
   padding: 24rpx 0;
   text-align: center;
   border-radius: 20rpx;
   border: 2rpx solid #e5e5e5;
-  font-size: 28rpx;
+  font-size: 26rpx;
   font-weight: 600;
   color: #4A342E;
 }
@@ -102,6 +106,11 @@
   border-color: #F3B6C2;
   background: #F3B6C2;
   color: #fff;
+}
+
+.preset-btn.sleep-active {
+  border-color: #B39DDB;
+  background: #B39DDB;
 }
 
 /* Stepper */
@@ -127,7 +136,7 @@
 }
 
 .stepper-value {
-  font-size: 40rpx;
+  font-size: 44rpx;
   font-weight: 700;
   color: #4A342E;
   min-width: 160rpx;
@@ -137,16 +146,24 @@
 /* Diaper Grid */
 .diaper-grid {
   display: flex;
-  flex-direction: column;
   gap: 16rpx;
 }
 
 .diaper-btn {
-  padding: 28rpx;
+  flex: 1;
+  padding: 32rpx 16rpx;
   text-align: center;
   border-radius: 20rpx;
-  font-size: 30rpx;
+  font-size: 28rpx;
   font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.diaper-icon {
+  font-size: 40rpx;
 }
 
 .diaper-btn.pee {
@@ -165,6 +182,25 @@
   border: 2rpx solid #ce93d8;
   background: #f3e5f5;
   color: #6a1b9a;
+}
+
+/* Sleep Display */
+.sleep-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  padding: 16rpx 0;
+}
+
+.sleep-icon {
+  font-size: 48rpx;
+}
+
+.sleep-value {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #4A342E;
 }
 
 /* Submit */

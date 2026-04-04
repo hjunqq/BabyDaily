@@ -12,24 +12,28 @@
   <!-- Feed Input -->
   <view wx:if="{{selectedType === 'FEED'}}" class="input-section">
     <view class="feed-type-row">
-      <view class="feed-type-btn {{feedSubtype === 'BOTTLE' ? 'active' : ''}}" bindtap="setFeedSubtype" data-subtype="BOTTLE">瓶喂</view>
-      <view class="feed-type-btn {{feedSubtype === 'BREAST' ? 'active' : ''}}" bindtap="setFeedSubtype" data-subtype="BREAST">亲喂</view>
+      <view class="feed-type-btn {{feedSubtype === 'BOTTLE' ? 'active' : ''}}" bindtap="setFeedSubtype" data-subtype="BOTTLE">🍼 瓶喂</view>
+      <view class="feed-type-btn {{feedSubtype === 'BREAST' ? 'active' : ''}}" bindtap="setFeedSubtype" data-subtype="BREAST">🤱 亲喂</view>
+      <view class="feed-type-btn {{feedSubtype === 'SOLID' ? 'active' : ''}}" bindtap="setFeedSubtype" data-subtype="SOLID">🥣 辅食</view>
     </view>
 
-    <view wx:if="{{feedSubtype === 'BOTTLE'}}" class="presets-grid">
-      <block wx:for="{{feedPresets}}" wx:key="*this">
-        <view class="preset-btn {{amount === item ? 'active' : ''}}" bindtap="setAmount" data-amount="{{item}}">
-          {{item}}ml
-        </view>
-      </block>
-    </view>
+    <!-- Bottle / Solid: amount presets + stepper -->
+    <block wx:if="{{feedSubtype === 'BOTTLE' || feedSubtype === 'SOLID'}}">
+      <view class="presets-grid">
+        <block wx:for="{{feedSubtype === 'SOLID' ? solidPresets : feedPresets}}" wx:key="*this">
+          <view class="preset-btn {{amount === item ? 'active' : ''}}" bindtap="setAmount" data-amount="{{item}}">
+            {{item}}ml
+          </view>
+        </block>
+      </view>
+      <view class="stepper-row">
+        <view class="stepper-btn" bindtap="adjustAmount" data-delta="-10">−</view>
+        <text class="stepper-value">{{amount}} ml</text>
+        <view class="stepper-btn" bindtap="adjustAmount" data-delta="10">+</view>
+      </view>
+    </block>
 
-    <view wx:if="{{feedSubtype === 'BOTTLE'}}" class="stepper-row">
-      <view class="stepper-btn" bindtap="adjustAmount" data-delta="-10">-</view>
-      <text class="stepper-value">{{amount}} ml</text>
-      <view class="stepper-btn" bindtap="adjustAmount" data-delta="10">+</view>
-    </view>
-
+    <!-- Breast: duration presets -->
     <view wx:if="{{feedSubtype === 'BREAST'}}" class="presets-grid">
       <block wx:for="{{breastPresets}}" wx:key="*this">
         <view class="preset-btn {{duration === item ? 'active' : ''}}" bindtap="setDuration" data-duration="{{item}}">
@@ -43,9 +47,33 @@
   <view wx:if="{{selectedType === 'DIAPER'}}" class="input-section">
     <text class="input-hint">点击即可保存</text>
     <view class="diaper-grid">
-      <view class="diaper-btn pee" bindtap="quickSaveDiaper" data-type="PEE">💧 尿尿</view>
-      <view class="diaper-btn poo" bindtap="quickSaveDiaper" data-type="POO">💩 便便</view>
-      <view class="diaper-btn both" bindtap="quickSaveDiaper" data-type="BOTH">💧💩 都有</view>
+      <view class="diaper-btn pee" bindtap="quickSaveDiaper" data-type="PEE">
+        <text class="diaper-icon">💧</text>
+        <text>尿尿</text>
+      </view>
+      <view class="diaper-btn poo" bindtap="quickSaveDiaper" data-type="POO">
+        <text class="diaper-icon">💩</text>
+        <text>便便</text>
+      </view>
+      <view class="diaper-btn both" bindtap="quickSaveDiaper" data-type="BOTH">
+        <text class="diaper-icon">💧💩</text>
+        <text>都有</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- Sleep Input -->
+  <view wx:if="{{selectedType === 'SLEEP'}}" class="input-section">
+    <view class="presets-grid sleep-grid">
+      <block wx:for="{{sleepPresets}}" wx:key="*this">
+        <view class="preset-btn {{sleepDuration === item ? 'active sleep-active' : ''}}" bindtap="setSleepDuration" data-duration="{{item}}">
+          {{item >= 60 ? (item % 60 > 0 ? (item / 60 | 0) + 'h' + item % 60 + 'm' : (item / 60) + '小时') : item + '分钟'}}
+        </view>
+      </block>
+    </view>
+    <view class="sleep-display">
+      <text class="sleep-icon">💤</text>
+      <text class="sleep-value">{{sleepDuration}} 分钟</text>
     </view>
   </view>
 

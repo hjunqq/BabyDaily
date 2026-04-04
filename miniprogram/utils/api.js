@@ -1,10 +1,11 @@
-const API_URL = 'http://localhost:3000';
+const API_URL = 'https://baby.hydrosim.cn/api';
 
 const request = ({ url, method = 'GET', data, token }) => new Promise((resolve, reject) => {
     wx.request({
         url: API_URL + url,
         method,
         data,
+        timeout: 15000,
         header: {
             'Content-Type': 'application/json',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -32,10 +33,22 @@ const wxLogin = () => new Promise((resolve, reject) => {
 
 const loginWithWechat = async () => {
     const loginRes = await wxLogin();
-    return request({
-        url: '/auth/login/wechat',
-        method: 'POST',
-        data: { code: loginRes.code },
+    return new Promise((resolve, reject) => {
+        wx.request({
+            url: API_URL + '/auth/login/wechat',
+            method: 'POST',
+            data: { code: loginRes.code },
+            timeout: 5000,
+            header: { 'Content-Type': 'application/json' },
+            success: (res) => {
+                if (res.statusCode >= 200 && res.statusCode < 300) {
+                    resolve(res.data);
+                } else {
+                    reject(new Error(`WeChat login failed: ${res.statusCode}`));
+                }
+            },
+            fail: (err) => reject(err),
+        });
     });
 };
 
