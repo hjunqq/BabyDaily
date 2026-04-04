@@ -329,8 +329,6 @@ const KindleModeWrapper = () => {
     </RequireAuth>
   );
 
-  const isKindle = typeof document !== 'undefined' && document.body.classList.contains('kindle-mode');
-
   const renderHomePage = () => {
     return renderResponsivePage(<Layout><Dashboard /></Layout>, <MobileLayout><MobileHome /></MobileLayout>);
   };

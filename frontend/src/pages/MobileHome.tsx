@@ -355,7 +355,7 @@ export const MobileHome = () => {
         </div>
       </section>
 
-      {baby?.id && !isKindleMode() && (
+      {baby?.id && (
         <section className="animate-slide-up delay-2" aria-label="喂奶时间线">
           <FeedTimelineChart babyId={baby.id} dayStartHour={settings?.dayStartHour || 0} />
         </section>
@@ -425,7 +425,7 @@ export const MobileHome = () => {
         </button>
       </div>
 
-      <section className="bd-recent-list bd-home-block animate-slide-up delay-4" aria-label="最近活动记录" style={isKindleMode() ? { display: 'none' } : undefined}>
+      <section className="bd-recent-list bd-home-block animate-slide-up delay-4" aria-label="最近活动记录">
         <div className="title">
           <h2 style={{ fontSize: 15, margin: 0 }}>最近记录</h2>
           <Link to="/records" style={{ fontSize: 12, color: 'var(--rose)' }}>查看全部 →</Link>
