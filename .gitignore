@@ -31,3 +31,5 @@ pnpm-debug.log*
 Thumbs.db
 scripts/.pids/
 docs/dx-license.dat
+.claude/
+miniprogram/project.private.config.json
