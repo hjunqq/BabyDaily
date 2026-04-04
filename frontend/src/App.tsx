@@ -11,7 +11,7 @@ import { LoadIndicator } from 'devextreme-react/load-indicator';
 import { Landing } from './pages/Landing';
 import { Dashboard } from './pages/Dashboard';
 import { MobileHome } from './pages/MobileHome';
-import { KindleHome } from './pages/KindleHome';
+
 
 import { OotdDesktop } from './pages/desktop/OotdDesktop';
 import { OotdMobile } from './pages/mobile/OotdMobile';
@@ -335,10 +335,6 @@ const KindleModeWrapper = () => {
   const isKindle = typeof document !== 'undefined' && document.body.classList.contains('kindle-mode');
 
   const renderHomePage = () => {
-    if (isKindle) {
-      // KindleHome renders its own minimal shell — no MobileLayout wrapper
-      return <RequireAuth><KindleHome /></RequireAuth>;
-    }
     return renderResponsivePage(<Layout><Dashboard /></Layout>, <MobileLayout><MobileHome /></MobileLayout>);
   };
 

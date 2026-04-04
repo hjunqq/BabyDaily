@@ -4,7 +4,7 @@
   "description": "Sakura Baby Tracker Miniprogram",
   "appid": "wx5f1cf987b19be72c",
   "setting": {
-    "urlCheck": false,
+    "urlCheck": true,
     "es6": true,
     "enhance": true,
     "postcss": true,

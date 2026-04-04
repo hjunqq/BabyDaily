@@ -1,139 +1,164 @@
 <view class="container">
-  <!-- Header -->
-  <view class="header">
-    <view class="header-left">
-      <text class="title">{{greeting}}</text>
-      <text class="subtitle" wx:if="{{babyName}}">{{babyName}} · {{babyAge}}</text>
-    </view>
-    <view class="header-avatar">🌸</view>
-  </view>
-
   <!-- Loading -->
-  <view wx:if="{{loading}}" class="loading-box">
-    <text>加载中...</text>
+  <view wx:if="{{loading}}" class="state-box">
+    <text class="state-text">加载中...</text>
   </view>
 
   <!-- Error -->
-  <view wx:elif="{{error}}" class="error-box">
-    <text>{{error}}</text>
+  <view wx:elif="{{error}}" class="state-box">
+    <text class="state-text">{{error}}</text>
     <button class="retry-btn" size="mini" bindtap="loadData">重试</button>
   </view>
 
   <block wx:else>
-    <!-- Timers -->
-    <view class="timers-section">
-      <view class="timer-card feed-timer">
-        <text class="timer-icon">🍼</text>
-        <text class="timer-label">上次喂奶</text>
-        <text class="timer-value">{{lastFeedText}}</text>
+    <!-- Header -->
+    <view class="header">
+      <view class="avatar">👶</view>
+      <view class="header-info">
+        <text class="header-name">{{babyName || '宝宝'}} 的今日概览</text>
+        <text class="header-date">{{dateStr}}  {{babyAge ? '出生 ' + babyAge : ''}}</text>
       </view>
-      <view class="timer-card pee-timer">
-        <text class="timer-icon">💧</text>
-        <text class="timer-label">上次尿尿</text>
-        <text class="timer-value">{{lastPeeText}}</text>
+    </view>
+
+    <!-- Last Feed Card -->
+    <view class="feed-card" style="background: {{feedCardBg}}">
+      <block wx:if="{{lastFeed.time}}">
+        <text class="feed-label">距离上次喂奶</text>
+        <view class="feed-main">
+          <text class="feed-amount">{{lastFeed.amount}}</text>
+          <view class="feed-tag">{{lastFeed.subtype}}</view>
+        </view>
+        <text class="feed-elapsed">{{lastFeed.elapsed}}</text>
+        <text class="feed-detail">{{lastFeed.timeStr}} 喂奶 · {{lastFeed.subtype}}</text>
+      </block>
+      <block wx:else>
+        <text class="feed-label">暂无喂奶记录</text>
+        <view class="feed-main">
+          <text class="feed-amount">— ml</text>
+        </view>
+        <text class="feed-detail">点击下方按钮开始记录</text>
+      </block>
+    </view>
+
+    <!-- Countdown Bars -->
+    <view class="countdown-section">
+      <text class="section-title">护理倒计时</text>
+      <view class="countdown-bar pee-bar" style="background: linear-gradient(90deg, #ebf6ff 0%, #6fa6ff {{peeProgress}}%, #fff {{peeProgress}}%)">
+        <text class="bar-label">尿尿</text>
+        <text class="bar-value">{{lastPeeText}}</text>
       </view>
-      <view class="timer-card poo-timer">
-        <text class="timer-icon">💩</text>
-        <text class="timer-label">上次便便</text>
-        <text class="timer-value">{{lastPooText}}</text>
+      <view class="countdown-bar poo-bar" style="background: linear-gradient(90deg, #fff4e8 0%, #ffc17e {{pooProgress}}%, #fff {{pooProgress}}%)">
+        <text class="bar-label">便便</text>
+        <text class="bar-value">{{lastPooText}}</text>
       </view>
-      <view class="timer-card bath-timer">
-        <text class="timer-icon">🛁</text>
-        <text class="timer-label">上次洗澡</text>
-        <text class="timer-value">{{lastBathText}}</text>
+      <view class="countdown-bar bath-bar" style="background: linear-gradient(90deg, #e9fbf9 0%, #72d8c8 {{bathProgress}}%, #fff {{bathProgress}}%)">
+        <text class="bar-label">洗澡</text>
+        <text class="bar-value">{{lastBathText}}</text>
       </view>
     </view>
 
     <!-- Today Stats -->
     <view class="stats-section">
-      <view class="section-title">今日概览</view>
-      <view class="stats-row">
-        <view class="stat-card">
-          <text class="stat-icon">🍼</text>
-          <text class="stat-value">{{summary.milkMl}}<text class="stat-unit">ml</text></text>
-          <text class="stat-label">奶量 · {{summary.feedCount}}次</text>
-        </view>
-        <view class="stat-card">
-          <text class="stat-icon">🧷</text>
-          <text class="stat-value">{{summary.diaperWet + summary.diaperSoiled}}<text class="stat-unit">次</text></text>
-          <text class="stat-label">尿布</text>
-        </view>
-        <view class="stat-card">
-          <view class="supplement-pills">
-            <view class="pill {{summary.todayAdTaken ? 'taken' : 'not-taken'}}">
-              <text>AD {{summary.todayAdTaken ? '✓' : '○'}}</text>
-            </view>
-            <view class="pill {{summary.todayD3Taken ? 'taken' : 'not-taken'}}">
-              <text>D3 {{summary.todayD3Taken ? '✓' : '○'}}</text>
-            </view>
+      <view class="stat-card milk-stat">
+        <text class="stat-icon">🍼</text>
+        <view class="stat-info">
+          <text class="stat-title">今日奶量</text>
+          <view class="stat-value-row">
+            <text class="stat-value">{{summary.milkMl}}</text>
+            <text class="stat-unit"> ml</text>
+            <text class="stat-count" wx:if="{{summary.feedCount > 0}}"> ({{summary.feedCount}}次)</text>
           </view>
-          <text class="stat-label">营养补充</text>
+        </view>
+      </view>
+      <view class="stat-card supplement-stat">
+        <text class="stat-icon">💊</text>
+        <view class="stat-info">
+          <text class="stat-title">今日 AD/D3</text>
+          <view class="stat-value-row">
+            <text class="pill {{summary.todayAdTaken ? 'taken' : 'not-taken'}}">AD {{summary.todayAdTaken ? '✓' : '—'}}</text>
+            <text class="pill-sep">|</text>
+            <text class="pill {{summary.todayD3Taken ? 'taken' : 'not-taken'}}">D3 {{summary.todayD3Taken ? '✓' : '—'}}</text>
+          </view>
         </view>
       </view>
     </view>
 
-    <!-- Quick Actions -->
+    <!-- Today Feed Detail -->
+    <view class="feed-detail-section" wx:if="{{todayFeeds.length > 0}}">
+      <view class="feed-detail-header">
+        <text class="section-title">📊 今日喂奶明细</text>
+        <text class="feed-detail-summary">共{{summary.feedCount}}次 · {{summary.milkMl}}ml</text>
+      </view>
+      <view class="feed-detail-list">
+        <block wx:for="{{todayFeeds}}" wx:key="id">
+          <view class="feed-detail-item">
+            <text class="feed-detail-time">{{item.time}}</text>
+            <text class="feed-detail-value">{{item.value}}</text>
+          </view>
+        </block>
+      </view>
+    </view>
+
+    <!-- Action Buttons -->
     <view class="actions-section">
-      <view class="section-title">快捷操作</view>
-      <view class="actions-grid">
-        <view class="action-btn feed-action" bindtap="quickFeed">
-          <text class="action-icon">🍼</text>
-          <text class="action-text">喂奶</text>
+      <view class="action-btn feed-action" bindtap="quickFeed">
+        <text class="action-icon">🍼</text>
+        <view class="action-info">
+          <text class="action-text">记录喂奶</text>
+          <text class="action-sub">瓶喂 / 亲喂</text>
         </view>
-        <view class="action-btn diaper-action" bindtap="quickDiaper" data-type="PEE">
-          <text class="action-icon">💧</text>
-          <text class="action-text">尿尿</text>
+      </view>
+      <view class="action-btn diaper-action" bindtap="goToDiaper">
+        <text class="action-icon">🧷</text>
+        <view class="action-info">
+          <text class="action-text">记录尿布</text>
+          <text class="action-sub">尿尿 / 便便</text>
         </view>
-        <view class="action-btn diaper-action" bindtap="quickDiaper" data-type="POO">
-          <text class="action-icon">💩</text>
-          <text class="action-text">便便</text>
+      </view>
+      <view class="action-btn bath-action" bindtap="goToBath">
+        <text class="action-icon">🛁</text>
+        <view class="action-info">
+          <text class="action-text">记录洗澡</text>
+          <text class="action-sub">时长</text>
         </view>
-        <view class="action-btn sleep-action" bindtap="quickSleep">
-          <text class="action-icon">💤</text>
-          <text class="action-text">睡眠</text>
-        </view>
-        <view class="action-btn supplement-action" bindtap="quickSupplement" data-type="VITA_AD">
-          <view class="action-icon-wrap {{summary.todayAdTaken ? 'done' : ''}}">
-            <text class="action-icon">💊</text>
-          </view>
+      </view>
+      <view class="action-btn ad-action {{summary.todayAdTaken ? 'done' : ''}}" bindtap="quickSupplement" data-type="VITA_AD">
+        <text class="action-icon">💊</text>
+        <view class="action-info">
           <text class="action-text">AD{{summary.todayAdTaken ? ' ✓' : ''}}</text>
+          <text class="action-sub">每日一粒</text>
         </view>
-        <view class="action-btn supplement-action" bindtap="quickSupplement" data-type="VITA_D3">
-          <view class="action-icon-wrap {{summary.todayD3Taken ? 'done' : ''}}">
-            <text class="action-icon">☀️</text>
-          </view>
+      </view>
+      <view class="action-btn d3-action {{summary.todayD3Taken ? 'done' : ''}}" bindtap="quickSupplement" data-type="VITA_D3">
+        <text class="action-icon">☀️</text>
+        <view class="action-info">
           <text class="action-text">D3{{summary.todayD3Taken ? ' ✓' : ''}}</text>
-        </view>
-        <view class="action-btn bath-action" bindtap="goToRecord">
-          <text class="action-icon">🛁</text>
-          <text class="action-text">洗澡</text>
-        </view>
-        <view class="action-btn more-action" bindtap="goToRecord">
-          <text class="action-icon">📝</text>
-          <text class="action-text">更多</text>
+          <text class="action-sub">每日一粒</text>
         </view>
       </view>
     </view>
 
     <!-- Recent Records -->
-    <view class="list-section">
-      <view class="section-header">
+    <view class="records-section">
+      <view class="records-header">
         <text class="section-title">最近记录</text>
       </view>
-      <view class="activity-list" wx:if="{{recentRecords.length > 0}}">
+      <view wx:if="{{recentRecords.length > 0}}">
         <block wx:for="{{recentRecords}}" wx:key="id">
-          <view class="activity-item">
-            <text class="activity-icon">{{item.icon}}</text>
-            <view class="activity-info">
-              <text class="activity-type">{{item.type}}</text>
-              <text class="activity-time">{{item.time}}</text>
+          <view class="record-item">
+            <view class="record-icon-wrap {{item.iconClass}}">
+              <text>{{item.icon}}</text>
             </view>
-            <text class="activity-value">{{item.value}}</text>
+            <view class="record-info">
+              <text class="record-type">{{item.type}}</text>
+              <text class="record-time">记录于 {{item.time}}</text>
+            </view>
+            <text class="record-value">{{item.value}}</text>
           </view>
         </block>
       </view>
       <view wx:else class="empty-text">
-        <text>暂无记录，点击上方按钮开始记录</text>
+        <text>暂无记录</text>
       </view>
     </view>
   </block>
