@@ -237,13 +237,12 @@
 
 /* Action Buttons */
 .actions-section {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 16rpx;
   margin-bottom: 24rpx;
 }
 .action-btn {
-  flex: 0 0 calc(50% - 8rpx);
   background: #fff;
   border-radius: 20rpx;
   padding: 24rpx 20rpx;
@@ -258,6 +257,7 @@
 .action-btn.bath-action { border-left-color: #81c784; }
 .action-btn.ad-action { border-left-color: #CE93D8; }
 .action-btn.d3-action { border-left-color: #FFD54F; }
+.action-btn.sleep-action { border-left-color: #B39DDB; }
 .action-btn.done { opacity: 0.5; }
 .action-icon {
   font-size: 36rpx;

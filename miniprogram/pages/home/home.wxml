@@ -136,6 +136,13 @@
           <text class="action-sub">每日一粒</text>
         </view>
       </view>
+      <view class="action-btn sleep-action" bindtap="quickSleep">
+        <text class="action-icon">💤</text>
+        <view class="action-info">
+          <text class="action-text">记录睡眠</text>
+          <text class="action-sub">时长</text>
+        </view>
+      </view>
     </view>
 
     <!-- Recent Records -->
