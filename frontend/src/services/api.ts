@@ -5,7 +5,6 @@ let CURRENT_BABY_ID: string | null = localStorage.getItem('current_baby_id');
 let CURRENT_USER: User | null = localStorage.getItem('current_user')
     ? JSON.parse(localStorage.getItem('current_user') as string)
     : null;
-const DEV_LOGIN_ENABLED = String((import.meta as any).env?.VITE_ENABLE_DEV_LOGIN || 'true').trim() === 'true';
 
 const getHeaders = () => ({
     'Content-Type': 'application/json',
