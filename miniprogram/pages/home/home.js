@@ -48,6 +48,8 @@ Page({
             })
             .catch((err) => {
                 console.error('App init failed', err);
+                const detail = err.message || err.errMsg || JSON.stringify(err);
+                wx.showModal({ title: '登录失败', content: detail, showCancel: false });
                 this.setData({ error: '登录失败，请稍后重试', loading: false });
             });
     },
@@ -196,8 +198,10 @@ Page({
             }));
             this.setData({ recentRecords: mapped, loading: false });
         } catch (err) {
-            console.error('Load home data failed', err);
-            this.setData({ error: '加载数据失败', loading: false });
+            console.error('[Home] Load data failed:', err.message || err);
+            const detail = err.message || err.errMsg || JSON.stringify(err);
+            wx.showModal({ title: '数据加载失败', content: detail, showCancel: false });
+            this.setData({ error: '加载数据失败，请下拉刷新重试', loading: false });
         }
     },
 

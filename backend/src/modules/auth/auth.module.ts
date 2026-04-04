@@ -6,6 +6,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
+import { FamilyModule } from '../family/family.module';
+import { BabyModule } from '../baby/baby.module';
 import { JwtStrategy } from './jwt.strategy';
 
 function getRequiredJwtSecret(configService: ConfigService): string {
@@ -19,6 +21,8 @@ function getRequiredJwtSecret(configService: ConfigService): string {
 @Module({
   imports: [
     UsersModule,
+    FamilyModule,
+    BabyModule,
     PassportModule,
     HttpModule,
     JwtModule.registerAsync({

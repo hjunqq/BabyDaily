@@ -20,39 +20,16 @@ const request = ({ url, method = 'GET', data, token }) => new Promise((resolve, 
             error.statusCode = statusCode;
             reject(error);
         },
-        fail: (err) => reject(err),
+        fail: (err) => {
+            console.error(`[API] ${method} ${url} failed:`, err.errMsg || err);
+            reject(err);
+        },
     });
 });
 
 const wxLogin = () => new Promise((resolve, reject) => {
-    wx.login({
-        success: resolve,
-        fail: reject,
-    });
+    wx.login({ success: resolve, fail: reject });
 });
-
-const loginWithWechat = async () => {
-    const loginRes = await wxLogin();
-    return new Promise((resolve, reject) => {
-        wx.request({
-            url: API_URL + '/auth/login/wechat',
-            method: 'POST',
-            data: { code: loginRes.code },
-            timeout: 5000,
-            header: { 'Content-Type': 'application/json' },
-            success: (res) => {
-                if (res.statusCode >= 200 && res.statusCode < 300) {
-                    resolve(res.data);
-                } else {
-                    reject(new Error(`WeChat login failed: ${res.statusCode}`));
-                }
-            },
-            fail: (err) => reject(err),
-        });
-    });
-};
-
-const loginDev = () => request({ url: '/auth/login/dev', method: 'POST' });
 
 const saveSession = ({ token, user, babyId, baby }) => {
     if (token) wx.setStorageSync('access_token', token);
@@ -71,91 +48,70 @@ const clearSession = () => {
 const getStoredToken = () => wx.getStorageSync('access_token') || '';
 const getCurrentBabyId = () => wx.getStorageSync('current_baby_id') || '';
 
-const ensureAuth = async () => {
-    let token = getStoredToken();
-    let user = wx.getStorageSync('current_user') || null;
-
-    if (token) {
-        return { token, user };
-    }
-
-    try {
-        const res = await loginWithWechat();
-        token = res.access_token;
-        user = res.user;
-    } catch (err) {
-        console.warn('WeChat login failed, fallback to dev login', err);
-        const res = await loginDev();
-        token = res.access_token;
-        user = res.user;
-    }
-
-    saveSession({ token, user });
-    return { token, user };
-};
-
-const ensureDefaultBaby = async (token) => {
-    let families = await request({ url: '/families/my', token });
-    if (!Array.isArray(families) || families.length === 0) {
-        const family = await request({
-            url: '/families',
+// 一次调用完成：登录 + 获取家庭 + 获取宝宝
+const bootstrap = async (method, code) => {
+    const data = { method };
+    if (code) data.code = code;
+    return new Promise((resolve, reject) => {
+        wx.request({
+            url: API_URL + '/auth/bootstrap',
             method: 'POST',
-            data: { name: 'Sakura Family' },
-            token,
-        });
-        families = [family];
-    }
-    const familyId = families[0].id;
-
-    let babies = await request({ url: `/babies/family/${familyId}`, token });
-    let baby;
-    if (!Array.isArray(babies) || babies.length === 0) {
-        baby = await request({
-            url: '/babies',
-            method: 'POST',
-            data: {
-                family_id: familyId,
-                name: 'Sakura',
-                gender: 'FEMALE',
-                birthday: new Date().toISOString(),
+            data,
+            timeout: 15000,
+            header: { 'Content-Type': 'application/json' },
+            success: (res) => {
+                if (res.statusCode >= 200 && res.statusCode < 300) {
+                    resolve(res.data);
+                } else {
+                    const msg = res.data?.message || `status ${res.statusCode}`;
+                    reject(new Error(`Bootstrap failed: ${msg}`));
+                }
             },
-            token,
+            fail: (err) => reject(err),
         });
-    } else {
-        baby = babies[0];
-    }
-
-    const babyId = baby.id;
-    saveSession({ babyId, baby });
-    return { babyId, baby };
+    });
 };
 
 const initSession = async () => {
-    const { token, user } = await ensureAuth();
-    const { babyId, baby } = await ensureDefaultBaby(token);
-    saveSession({ token, user, babyId, baby });
-    return { token, user, babyId, baby };
+    // 如果已有 token，直接返回缓存
+    const cached = getStoredToken();
+    if (cached) {
+        const user = wx.getStorageSync('current_user') || null;
+        const babyId = getCurrentBabyId();
+        const baby = wx.getStorageSync('current_baby') || null;
+        if (babyId) return { token: cached, user, babyId, baby };
+    }
+
+    // 优先 dev 登录；未来配好微信凭证后可改为 wechat
+    let res;
+    try {
+        res = await bootstrap('dev');
+    } catch (devErr) {
+        console.warn('[Auth] Dev bootstrap failed:', devErr.message);
+        try {
+            const loginRes = await wxLogin();
+            res = await bootstrap('wechat', loginRes.code);
+        } catch (wxErr) {
+            throw new Error('登录失败：请检查网络连接');
+        }
+    }
+
+    const { access_token, user, baby } = res;
+    const session = { token: access_token, user, babyId: baby.id, baby };
+    saveSession(session);
+    console.log('[Init] babyId:', baby.id, 'baby:', baby.name);
+    return session;
 };
 
 const authedRequest = async (url, options = {}) => {
     const token = options.token || getStoredToken();
     try {
-        return await request({
-            url,
-            method: options.method,
-            data: options.data,
-            token,
-        });
+        return await request({ url, method: options.method, data: options.data, token });
     } catch (err) {
         if (err.statusCode === 401) {
             clearSession();
             const { token: newToken } = await initSession();
-            return request({
-                url,
-                method: options.method,
-                data: options.data,
-                token: newToken,
-            });
+            return request({ url, method: options.method, data: options.data, token: newToken });
         }
         throw err;
     }
