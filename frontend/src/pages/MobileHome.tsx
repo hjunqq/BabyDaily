@@ -540,7 +540,7 @@ export const MobileHome = () => {
   );
 };
 
-const FEED_PRESETS = [60, 80, 100, 120, 140, 160, 180, 200];
+const FEED_PRESETS = [30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230];
 
 const FeedModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: () => void; onSuccess: () => void }) => {
   const [feedType, setFeedType] = useState<'BOTTLE' | 'BREAST'>('BOTTLE');
@@ -619,27 +619,6 @@ const FeedModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: ()
                   {volume}
                 </button>
               ))}
-            </div>
-            <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-              <button
-                type="button"
-                onClick={() => setAmount(Math.max(10, amount - 10))}
-                style={{
-                  width: 44, height: 44, borderRadius: '50%', border: `2px solid ${kindle ? '#BDBDBD' : '#e5e5e5'}`,
-                  background: '#fff', fontSize: 20, fontWeight: 'bold', cursor: 'pointer', color: kindle ? '#000' : '#6b524b',
-                }}
-              >−</button>
-              <span style={{ fontWeight: 'bold', color: kindle ? '#000000' : '#4A342E', fontSize: 22, minWidth: 80, textAlign: 'center' }}>
-                {amount} ml
-              </span>
-              <button
-                type="button"
-                onClick={() => setAmount(amount + 10)}
-                style={{
-                  width: 44, height: 44, borderRadius: '50%', border: `2px solid ${kindle ? '#BDBDBD' : '#e5e5e5'}`,
-                  background: '#fff', fontSize: 20, fontWeight: 'bold', cursor: 'pointer', color: kindle ? '#000' : '#6b524b',
-                }}
-              >+</button>
             </div>
           </div>
         ) : (
