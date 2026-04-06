@@ -40,7 +40,7 @@ export class AuthController {
   }
 
   @Post('bootstrap')
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   async bootstrap(@Body() body: BootstrapDto) {
     return this.authService.bootstrap(body);
   }
