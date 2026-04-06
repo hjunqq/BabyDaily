@@ -10,9 +10,23 @@ import { Family } from './family.entity';
 import { User } from '../../users/entities/user.entity';
 
 export enum FamilyRole {
-  ADMIN = 'ADMIN',
+  OWNER = 'OWNER',
+  GUARDIAN = 'GUARDIAN',
   MEMBER = 'MEMBER',
   VIEWER = 'VIEWER',
+}
+
+/** Role hierarchy: OWNER > GUARDIAN > MEMBER > VIEWER */
+export const ROLE_HIERARCHY: Record<FamilyRole, number> = {
+  [FamilyRole.OWNER]: 40,
+  [FamilyRole.GUARDIAN]: 30,
+  [FamilyRole.MEMBER]: 20,
+  [FamilyRole.VIEWER]: 10,
+};
+
+export enum MemberStatus {
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
 }
 
 @Entity('family_members')
@@ -32,6 +46,13 @@ export class FamilyMember {
     default: FamilyRole.MEMBER,
   })
   role: FamilyRole;
+
+  @Column({
+    type: 'enum',
+    enum: MemberStatus,
+    default: MemberStatus.ACTIVE,
+  })
+  status: MemberStatus;
 
   @Column({ nullable: true })
   relation: string;

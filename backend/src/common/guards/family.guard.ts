@@ -3,8 +3,10 @@ import {
   ExecutionContext,
   Injectable,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { isUUID } from 'class-validator';
 import { FamilyService } from '../../modules/family/family.service';
 import { ErrorCodes } from '../enums/error-codes.enum';
 
@@ -28,7 +30,14 @@ export class FamilyGuard implements CanActivate {
       });
     }
 
-    const belongs = await this.familyService.isBabyBelongToUserFamily(
+    if (!isUUID(String(babyId), '4')) {
+      throw new BadRequestException({
+        message: 'Invalid babyId format',
+        code: ErrorCodes.VALIDATION_FAILED,
+      });
+    }
+
+    const belongs = await this.familyService.isActiveMemberOfBabyFamily(
       babyId,
       user.userId,
     );

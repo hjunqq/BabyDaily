@@ -13,21 +13,27 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { OotdService } from './ootd.service';
 import { CreateOotdDto } from './dto/create-ootd.dto';
 import { FamilyGuard } from '../../common/guards/family.guard';
+import { RoleGuard } from '../../common/guards/role.guard';
+import { RequireRole } from '../../common/decorators/require-role.decorator';
+import { FamilyRole } from '../family/entities/family-member.entity';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { ErrorCodes } from '../../common/enums/error-codes.enum';
 
 @Controller('ootd')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), RoleGuard)
 export class OotdController {
   constructor(private readonly ootdService: OotdService) {}
 
   @Post()
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @UseGuards(FamilyGuard)
+  @RequireRole(FamilyRole.MEMBER)
   create(@Request() req: any, @Body() createOotdDto: CreateOotdDto) {
     return this.ootdService.create(req.user.userId, {
       ...createOotdDto,
@@ -36,7 +42,9 @@ export class OotdController {
   }
 
   @Post('upload')
+  @Throttle({ default: { limit: 10, ttl: 600_000 } })
   @UseGuards(FamilyGuard)
+  @RequireRole(FamilyRole.MEMBER)
   @UseInterceptors(
     FilesInterceptor('files', 3, {
       storage: diskStorage({
@@ -88,6 +96,7 @@ export class OotdController {
 
   @Get('baby/:babyId')
   @UseGuards(FamilyGuard)
+  @RequireRole(FamilyRole.VIEWER)
   findAllByBaby(
     @Param('babyId') babyId: string,
     @Query('page') page: string,
@@ -105,6 +114,7 @@ export class OotdController {
 
   @Get('calendar/:babyId/:year/:month')
   @UseGuards(FamilyGuard)
+  @RequireRole(FamilyRole.VIEWER)
   findByMonth(
     @Param('babyId') babyId: string,
     @Param('year') year: string,
@@ -124,11 +134,13 @@ export class OotdController {
   }
 
   @Post(':id/like')
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   like(@Param('id') id: string) {
     return this.ootdService.like(id);
   }
 
   @Delete(':id')
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   remove(@Param('id') id: string, @Request() req: any) {
     return this.ootdService.removeWithOwnerCheck(id, req.user.userId);
   }

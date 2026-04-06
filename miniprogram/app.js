@@ -3,11 +3,14 @@ const { initSession } = require('./utils/api');
 App({
     onLaunch() {
         this.readyPromise = initSession()
-            .then(({ token, user, babyId, baby }) => {
-                this.globalData.token = token;
-                this.globalData.userInfo = user;
-                this.globalData.babyId = babyId;
-                this.globalData.babyProfile = baby;
+            .then((session) => {
+                this.applySession(session);
+                if (session.onboardingRequired) {
+                    setTimeout(() => {
+                        wx.reLaunch({ url: '/pages/onboarding/onboarding' });
+                    }, 0);
+                }
+                return session;
             })
             .catch((err) => {
                 console.error('[App] Login failed:', err.message || err);
@@ -19,11 +22,35 @@ App({
                 throw err;
             });
     },
+
+    applySession(session) {
+        this.globalData.token = session.token || '';
+        this.globalData.userInfo = session.user || null;
+        this.globalData.family = session.family || null;
+        this.globalData.babyId = session.babyId || '';
+        this.globalData.babyProfile = session.baby || null;
+        this.globalData.onboardingRequired = !!session.onboardingRequired;
+        this.globalData.membershipPending = !!session.membershipPending;
+        this.globalData.role = session.role || null;
+    },
+
+    ensureBabyContext() {
+        if (this.globalData.onboardingRequired || !this.globalData.babyId) {
+            wx.reLaunch({ url: '/pages/onboarding/onboarding' });
+            return false;
+        }
+        return true;
+    },
+
     globalData: {
         userInfo: null,
         token: '',
+        family: null,
         babyId: '',
         babyProfile: null,
-        theme: 'A' // 'A' | 'B'
-    }
+        onboardingRequired: false,
+        membershipPending: false,
+        role: null,
+        theme: 'A',
+    },
 });

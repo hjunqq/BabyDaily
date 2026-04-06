@@ -1,0 +1,111 @@
+.page {
+    min-height: 100vh;
+    background: #fff8f5;
+    padding: 32rpx;
+    box-sizing: border-box;
+}
+
+.card {
+    background: #ffffff;
+    border-radius: 24rpx;
+    padding: 40rpx 32rpx;
+    box-shadow: 0 12rpx 36rpx rgba(0, 0, 0, 0.06);
+}
+
+.emoji {
+    text-align: center;
+    font-size: 64rpx;
+    margin-bottom: 16rpx;
+}
+
+.title {
+    text-align: center;
+    font-size: 40rpx;
+    font-weight: 600;
+    color: #5c4035;
+    margin-bottom: 12rpx;
+}
+
+.subtitle {
+    text-align: center;
+    color: #7a625a;
+    font-size: 26rpx;
+    line-height: 1.6;
+    margin-bottom: 32rpx;
+}
+
+.label {
+    color: #6b524b;
+    font-size: 24rpx;
+    margin-bottom: 12rpx;
+    margin-top: 20rpx;
+}
+
+.input {
+    height: 84rpx;
+    border-radius: 16rpx;
+    border: 1rpx solid #e8d8d0;
+    background: #fff;
+    padding: 0 24rpx;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    color: #4b342d;
+}
+
+.invite-input {
+    font-size: 36rpx;
+    letter-spacing: 8rpx;
+    text-align: center;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.error {
+    margin-top: 24rpx;
+    padding: 20rpx 24rpx;
+    border-radius: 16rpx;
+    background: #fff1f2;
+    color: #b42318;
+    font-size: 24rpx;
+}
+
+.submit {
+    margin-top: 32rpx;
+    border-radius: 999rpx;
+    background: #f3b6c2;
+    color: #fff;
+}
+
+.submit-secondary {
+    background: #e8d8d0;
+    color: #5c4035;
+}
+
+.hint {
+    margin-top: 24rpx;
+    text-align: center;
+    color: #a08880;
+    font-size: 22rpx;
+    line-height: 1.6;
+}
+
+.pending-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40rpx 0;
+    margin: 20rpx 0;
+    background: #fff5f0;
+    border-radius: 16rpx;
+}
+
+.pending-icon {
+    font-size: 48rpx;
+    margin-bottom: 16rpx;
+}
+
+.pending-text {
+    color: #7a625a;
+    font-size: 26rpx;
+}

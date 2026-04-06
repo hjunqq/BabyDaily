@@ -1,12 +1,25 @@
-import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
+import { firstValueFrom } from 'rxjs';
 import { UsersService } from '../users/users.service';
 import { FamilyService } from '../family/family.service';
 import { BabyService } from '../baby/baby.service';
-import { firstValueFrom } from 'rxjs';
+import { User } from '../users/entities/user.entity';
 import { BootstrapDto } from './dto/bootstrap.dto';
+
+type SessionContext = {
+  family: { id: string; name: string } | null;
+  baby: any | null;
+  onboardingRequired: boolean;
+  membershipPending?: boolean;
+  role?: string;
+};
 
 @Injectable()
 export class AuthService {
@@ -27,7 +40,6 @@ export class AuthService {
       throw new Error('WeChat AppID or Secret not configured');
     }
 
-    // Call WeChat API to get openid
     const url = `https://api.weixin.qq.com/sns/jscode2session?appid=${appId}&secret=${appSecret}&js_code=${code}&grant_type=authorization_code`;
 
     try {
@@ -39,13 +51,11 @@ export class AuthService {
 
       const { openid } = data;
 
-      // Find or create user
       let user = await this.usersService.findOneByOpenid(openid);
       if (!user) {
         user = await this.usersService.create(openid);
       }
 
-      // Generate JWT
       const payload = { sub: user.id, openid: user.openid };
       return {
         access_token: this.jwtService.sign(payload),
@@ -57,7 +67,6 @@ export class AuthService {
   }
 
   async loginDev() {
-    // Mock user creation for dev
     const mockOpenId = 'dev-openid-001';
     let user = await this.usersService.findOneByOpenid(mockOpenId);
     if (!user) {
@@ -71,62 +80,112 @@ export class AuthService {
     };
   }
 
+  async loginWithPin(pin: string) {
+    const expectedPin =
+      this.configService.get<string>('WEB_ACCESS_PIN') ||
+      this.configService.get<string>('ACCESS_PIN') ||
+      this.configService.get<string>('VITE_ACCESS_PIN');
+
+    if (!expectedPin) {
+      throw new ForbiddenException('Web PIN login is not configured');
+    }
+
+    if (!pin || pin !== expectedPin) {
+      throw new UnauthorizedException('Invalid access PIN');
+    }
+
+    return this.loginDev();
+  }
+
   async bootstrap(dto: BootstrapDto) {
-    // 1. Authenticate
-    let authResult: { access_token: string; user: any };
+    let authResult: { access_token: string; user: User };
     if (dto.method === 'wechat') {
       authResult = await this.loginWithWechat(dto.code!);
+    } else if (dto.method === 'pin') {
+      authResult = await this.loginWithPin(dto.pin!);
     } else {
       const isDev = process.env.NODE_ENV === 'development';
       const isDevLoginEnabled = process.env.ENABLE_DEV_LOGIN === 'true';
       if (!isDev && !isDevLoginEnabled) {
-        throw new ForbiddenException('Dev login only available in development mode');
+        throw new ForbiddenException(
+          'Dev login only available in development mode',
+        );
       }
       authResult = await this.loginDev();
     }
 
     const { access_token, user } = authResult;
 
-    // 2. Ensure family exists
-    let families = await this.familyService.findMyFamilies(user.id);
-    let family;
-    let createdFamily = false;
-    if (families.length === 0) {
-      family = await this.familyService.create(user.id, '宝宝的家');
-      createdFamily = true;
-    } else {
-      family = families[0];
-    }
-
-    // 3. Ensure baby exists — search all families
-    let baby = null;
-    const allFamilies = createdFamily ? [family] : families;
-    for (const f of allFamilies) {
-      const babies = await this.babyService.findByFamily(f.id);
-      if (babies.length > 0) {
-        baby = babies[0];
-        family = f;
-        break;
-      }
-    }
-
-    let createdBaby = false;
-    if (!baby) {
-      baby = await this.babyService.create({
-        family_id: family.id,
-        name: '宝宝',
-        gender: 'FEMALE' as any,
-        birthday: new Date(),
-      });
-      createdBaby = true;
-    }
-
     return {
       access_token,
       user,
-      family: { id: family.id, name: family.name },
-      baby,
-      created: { family: createdFamily, baby: createdBaby },
+      ...(await this.buildSessionContext(user)),
+    };
+  }
+
+  async getSession(userId: string) {
+    const user = await this.usersService.findOne(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return {
+      user,
+      ...(await this.buildSessionContext(user)),
+    };
+  }
+
+  private async buildSessionContext(user: User): Promise<SessionContext> {
+    // Check for pending memberships first
+    const pendingMember = await this.familyService.findPendingMembership(
+      user.id,
+    );
+    if (pendingMember) {
+      return {
+        family: pendingMember.family
+          ? { id: pendingMember.family.id, name: pendingMember.family.name }
+          : null,
+        baby: null,
+        onboardingRequired: true,
+        membershipPending: true,
+      };
+    }
+
+    // Active families
+    const families = await this.familyService.findMyFamilies(user.id);
+    if (families.length === 0) {
+      return {
+        family: null,
+        baby: null,
+        onboardingRequired: true,
+      };
+    }
+
+    for (const family of families) {
+      const babies = await this.babyService.findByFamily(family.id);
+      const member = await this.familyService.getUserRoleInFamily(
+        family.id,
+        user.id,
+      );
+      if (babies.length > 0) {
+        return {
+          family: { id: family.id, name: family.name },
+          baby: babies[0],
+          onboardingRequired: false,
+          role: member?.role,
+        };
+      }
+    }
+
+    const member = await this.familyService.getUserRoleInFamily(
+      families[0].id,
+      user.id,
+    );
+    return {
+      family: { id: families[0].id, name: families[0].name },
+      baby: null,
+      onboardingRequired: true,
+      role: member?.role,
     };
   }
 }

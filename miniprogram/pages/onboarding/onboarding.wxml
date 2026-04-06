@@ -1,0 +1,56 @@
+<view class="page">
+    <view class="card">
+        <!-- Step 1: Enter invite code -->
+        <block wx:if="{{step === 'invite'}}">
+            <view class="emoji">🔑</view>
+            <view class="title">加入家庭</view>
+            <view class="subtitle">请输入家长分享的邀请码，申请加入家庭后即可查看宝宝记录。</view>
+
+            <view class="label">邀请码</view>
+            <input
+                class="input invite-input"
+                placeholder="请输入 8 位邀请码"
+                value="{{inviteCode}}"
+                bindinput="onInviteInput"
+                maxlength="8"
+            />
+
+            <view wx:if="{{error}}" class="error">{{error}}</view>
+
+            <button
+                class="submit"
+                loading="{{loading}}"
+                disabled="{{loading}}"
+                bindtap="submitInvite"
+            >
+                {{loading ? '提交中...' : '申请加入'}}
+            </button>
+
+            <view class="hint">
+                没有邀请码？请联系家长在「家庭管理」中生成邀请码。
+            </view>
+        </block>
+
+        <!-- Step 2: Pending approval -->
+        <block wx:if="{{step === 'pending'}}">
+            <view class="emoji">⏳</view>
+            <view class="title">等待审批</view>
+            <view class="subtitle">
+                您已申请加入「{{familyName || '家庭'}}」，请等待家长审批通过。
+            </view>
+
+            <view class="pending-box">
+                <view class="pending-icon">📋</view>
+                <view class="pending-text">审批通过后将自动跳转</view>
+            </view>
+
+            <button
+                class="submit submit-secondary"
+                loading="{{loading}}"
+                bindtap="manualRefresh"
+            >
+                {{loading ? '检查中...' : '手动刷新状态'}}
+            </button>
+        </block>
+    </view>
+</view>
