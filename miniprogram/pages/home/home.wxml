@@ -152,7 +152,7 @@
       </view>
       <view wx:if="{{recentRecords.length > 0}}">
         <block wx:for="{{recentRecords}}" wx:key="id">
-          <view class="record-item">
+          <view class="record-item" bindtap="goToRecordDetail" data-id="{{item.id}}">
             <view class="record-icon-wrap {{item.iconClass}}">
               <text>{{item.icon}}</text>
             </view>
@@ -161,6 +161,7 @@
               <text class="record-time">记录于 {{item.time}}</text>
             </view>
             <text class="record-value">{{item.value}}</text>
+            <text class="record-arrow">›</text>
           </view>
         </block>
       </view>

@@ -1,0 +1,68 @@
+<view class="container">
+  <!-- Loading -->
+  <view wx:if="{{loading}}" class="state-box">
+    <text class="state-text">加载中...</text>
+  </view>
+
+  <!-- Error -->
+  <view wx:elif="{{error}}" class="state-box">
+    <text class="state-text">{{error}}</text>
+    <button class="retry-btn" size="mini" bindtap="loadData">重试</button>
+  </view>
+
+  <block wx:else>
+    <!-- Search Bar -->
+    <view class="search-bar">
+      <view class="search-inner">
+        <text class="search-icon">🔍</text>
+        <input
+          class="search-input"
+          placeholder="搜索记录"
+          value="{{query}}"
+          bindinput="onSearchInput"
+        />
+        <text wx:if="{{query}}" class="search-clear" bindtap="onSearchClear">✕</text>
+      </view>
+    </view>
+
+    <!-- Empty -->
+    <view wx:if="{{groups.length === 0}}" class="empty-box">
+      <text class="empty-icon">📋</text>
+      <text class="empty-text">暂无记录</text>
+    </view>
+
+    <!-- Grouped Records -->
+    <block wx:for="{{groups}}" wx:key="key">
+      <view class="group">
+        <view class="group-header">
+          <text class="group-title">{{item.key}}</text>
+        </view>
+        <view class="group-items">
+          <block wx:for="{{item.items}}" wx:for-item="record" wx:key="id">
+            <view class="record-item" bindtap="goToDetail" data-id="{{record.id}}">
+              <view class="record-icon-wrap {{record.iconClass}}">
+                <text>{{record.icon}}</text>
+              </view>
+              <view class="record-info">
+                <text class="record-type">{{record.typeLabel}}</text>
+                <text class="record-time">{{record.timeStr}}</text>
+              </view>
+              <text class="record-value">{{record.value}}</text>
+              <text class="record-arrow">›</text>
+            </view>
+          </block>
+        </view>
+      </view>
+    </block>
+
+    <!-- Load More -->
+    <view wx:if="{{hasMore}}" class="load-more">
+      <button class="load-more-btn" bindtap="loadMore" disabled="{{loadingMore}}">
+        {{loadingMore ? '加载中...' : '加载更多'}}
+      </button>
+    </view>
+    <view wx:elif="{{groups.length > 0}}" class="load-more">
+      <text class="no-more-text">— 没有更多了 —</text>
+    </view>
+  </block>
+</view>

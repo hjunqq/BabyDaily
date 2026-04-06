@@ -13,9 +13,8 @@ export const Login = () => {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      await BabyService.loginDev();
-      await BabyService.ensureDevEnvironment();
-      navigate('/');
+      const session = await BabyService.bootstrap();
+      navigate(session.onboardingRequired ? '/onboarding' : '/');
     } catch (err: any) {
       console.error(err);
       alert('登录失败: ' + (err.message || '网络错误'));
@@ -90,4 +89,3 @@ export const Login = () => {
     </div>
   );
 };
-

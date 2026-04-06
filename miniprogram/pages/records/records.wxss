@@ -1,0 +1,93 @@
+.container {
+  padding: 0 0 80rpx 0;
+  background: #fdf6f4;
+  min-height: 100vh;
+}
+
+.state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 40rpx;
+}
+.state-text { font-size: 28rpx; color: #888; margin-bottom: 24rpx; }
+.retry-btn { background: #F3B6C2; color: #fff; border-radius: 40rpx; font-size: 26rpx; }
+
+.search-bar {
+  padding: 20rpx 24rpx 12rpx;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.search-inner {
+  display: flex;
+  align-items: center;
+  background: #f5f0ee;
+  border-radius: 40rpx;
+  padding: 12rpx 24rpx;
+}
+.search-icon { font-size: 28rpx; margin-right: 12rpx; color: #aaa; }
+.search-input { flex: 1; font-size: 28rpx; color: #333; background: transparent; }
+.search-clear { font-size: 28rpx; color: #aaa; padding-left: 12rpx; }
+
+.empty-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 40rpx;
+}
+.empty-icon { font-size: 80rpx; margin-bottom: 20rpx; }
+.empty-text { font-size: 28rpx; color: #aaa; }
+
+.group { margin-bottom: 4rpx; }
+.group-header {
+  padding: 16rpx 24rpx 8rpx;
+  background: #fdf6f4;
+}
+.group-title { font-size: 24rpx; color: #aaa; font-weight: 600; }
+
+.group-items { background: #fff; }
+.record-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 24rpx;
+  border-bottom: 1rpx solid #f5f0ee;
+}
+.record-item:last-child { border-bottom: none; }
+
+.record-icon-wrap {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  flex-shrink: 0;
+  margin-right: 20rpx;
+}
+.record-icon-wrap.feed { background: #fff0f2; }
+.record-icon-wrap.diaper { background: #f0fff8; }
+.record-icon-wrap.bath { background: #e8f8ff; }
+.record-icon-wrap.sleep { background: #f0f0ff; }
+.record-icon-wrap.supplement { background: #fff8e8; }
+
+.record-info { flex: 1; }
+.record-type { font-size: 28rpx; font-weight: 600; color: #333; display: block; }
+.record-time { font-size: 24rpx; color: #aaa; display: block; margin-top: 4rpx; }
+
+.record-value { font-size: 28rpx; font-weight: 600; color: #F3B6C2; margin-right: 8rpx; }
+.record-arrow { font-size: 36rpx; color: #ccc; }
+
+.load-more { padding: 32rpx 24rpx; text-align: center; }
+.load-more-btn {
+  background: #fff;
+  border: 1rpx solid #eee;
+  border-radius: 40rpx;
+  font-size: 26rpx;
+  color: #888;
+  padding: 16rpx 60rpx;
+}
+.no-more-text { font-size: 24rpx; color: #ccc; }

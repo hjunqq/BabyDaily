@@ -1,0 +1,65 @@
+<view class="container">
+  <view wx:if="{{loading}}" class="state-box">
+    <text class="state-text">加载中...</text>
+  </view>
+
+  <view wx:elif="{{error}}" class="state-box">
+    <text class="state-icon">⚠️</text>
+    <text class="state-text">{{error}}</text>
+    <button class="retry-btn" size="mini" bindtap="loadData">重试</button>
+  </view>
+
+  <block wx:else>
+    <!-- Days Toggle -->
+    <view class="day-tabs">
+      <view class="day-tab {{days === 7 ? 'active' : ''}}" bindtap="setDays" data-days="7">7天</view>
+      <view class="day-tab {{days === 14 ? 'active' : ''}}" bindtap="setDays" data-days="14">14天</view>
+      <view class="day-tab {{days === 30 ? 'active' : ''}}" bindtap="setDays" data-days="30">30天</view>
+      <view class="day-tab {{days === 60 ? 'active' : ''}}" bindtap="setDays" data-days="60">60天</view>
+    </view>
+
+    <!-- KPI Row -->
+    <view class="kpi-row">
+      <view class="kpi-card">
+        <text class="kpi-value">{{summary.avgMilk}}</text>
+        <text class="kpi-label">日均(ml)</text>
+      </view>
+      <view class="kpi-card">
+        <text class="kpi-value peak">{{summary.maxMilk}}</text>
+        <text class="kpi-label">最高(ml)</text>
+      </view>
+      <view class="kpi-card">
+        <text class="kpi-value low">{{summary.minMilk}}</text>
+        <text class="kpi-label">最低(ml)</text>
+      </view>
+      <view class="kpi-card">
+        <text class="kpi-value days">{{summary.activeDays}}</text>
+        <text class="kpi-label">有效天数</text>
+      </view>
+    </view>
+
+    <!-- Milk Chart -->
+    <view class="chart-card">
+      <view class="chart-header">
+        <text class="chart-title">🍼 奶量趋势</text>
+        <text class="chart-unit">单位: ml</text>
+      </view>
+      <view wx:if="{{milkEmpty}}" class="chart-empty">
+        <text>暂无奶量数据</text>
+      </view>
+      <canvas wx:else canvas-id="milkCanvas" style="width: {{canvasW}}px; height: {{canvasH}}px;" />
+    </view>
+
+    <!-- Solid Chart -->
+    <view class="chart-card">
+      <view class="chart-header">
+        <text class="chart-title">🥣 辅食趋势</text>
+        <text class="chart-unit">单位: g</text>
+      </view>
+      <view wx:if="{{solidEmpty}}" class="chart-empty">
+        <text>暂无辅食数据</text>
+      </view>
+      <canvas wx:else canvas-id="solidCanvas" style="width: {{canvasW}}px; height: {{canvasH}}px;" />
+    </view>
+  </block>
+</view>

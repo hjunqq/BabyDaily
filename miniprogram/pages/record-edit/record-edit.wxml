@@ -1,0 +1,128 @@
+<view class="container">
+  <view wx:if="{{loading}}" class="state-box">
+    <text class="state-text">加载中...</text>
+  </view>
+
+  <view wx:elif="{{error}}" class="state-box">
+    <text class="state-icon">⚠️</text>
+    <text class="state-text">{{error}}</text>
+    <button class="retry-btn" size="mini" bindtap="loadData">重试</button>
+  </view>
+
+  <block wx:else>
+    <!-- Time (display only, could add picker) -->
+    <view class="section-card">
+      <view class="field-row">
+        <text class="field-label">时间</text>
+        <text class="field-value">{{timeStr}}</text>
+      </view>
+    </view>
+
+    <!-- Feed Input -->
+    <view wx:if="{{type === 'FEED'}}" class="section-card">
+      <text class="section-title">喂养方式</text>
+      <view class="feed-type-row">
+        <view class="feed-type-btn {{feedSubtype === 'BOTTLE' ? 'active' : ''}}" bindtap="setFeedSubtype" data-subtype="BOTTLE">🍼 瓶喂</view>
+        <view class="feed-type-btn {{feedSubtype === 'BREAST' ? 'active' : ''}}" bindtap="setFeedSubtype" data-subtype="BREAST">🤱 亲喂</view>
+        <view class="feed-type-btn {{feedSubtype === 'SOLID' ? 'active' : ''}}" bindtap="setFeedSubtype" data-subtype="SOLID">🥣 辅食</view>
+      </view>
+
+      <block wx:if="{{feedSubtype === 'BOTTLE' || feedSubtype === 'SOLID'}}">
+        <text class="section-title" style="margin-top: 24rpx;">奶量 / 辅食量</text>
+        <view class="presets-grid">
+          <block wx:for="{{feedSubtype === 'SOLID' ? solidPresets : feedPresets}}" wx:key="*this">
+            <view class="preset-btn {{amount === item ? 'active' : ''}}" bindtap="setAmount" data-amount="{{item}}">
+              {{item}}
+            </view>
+          </block>
+        </view>
+        <view class="stepper-row">
+          <view class="stepper-btn" bindtap="adjustAmount" data-delta="-10">−</view>
+          <text class="stepper-value">{{amount}} ml</text>
+          <view class="stepper-btn" bindtap="adjustAmount" data-delta="10">+</view>
+        </view>
+      </block>
+
+      <block wx:if="{{feedSubtype === 'BREAST'}}">
+        <text class="section-title" style="margin-top: 24rpx;">亲喂时长</text>
+        <view class="presets-grid">
+          <block wx:for="{{breastPresets}}" wx:key="*this">
+            <view class="preset-btn {{duration === item ? 'active' : ''}}" bindtap="setDuration" data-duration="{{item}}">
+              {{item}}分
+            </view>
+          </block>
+        </view>
+        <view class="stepper-row">
+          <view class="stepper-btn" bindtap="adjustDuration" data-delta="-5">−</view>
+          <text class="stepper-value">{{duration}} 分钟</text>
+          <view class="stepper-btn" bindtap="adjustDuration" data-delta="5">+</view>
+        </view>
+      </block>
+    </view>
+
+    <!-- Diaper Input -->
+    <view wx:if="{{type === 'DIAPER'}}" class="section-card">
+      <text class="section-title">类型</text>
+      <view class="diaper-grid">
+        <view class="diaper-btn pee {{diaperType === 'PEE' ? 'active' : ''}}" bindtap="setDiaperType" data-type="PEE">
+          <text class="diaper-icon">💧</text>
+          <text>尿尿</text>
+        </view>
+        <view class="diaper-btn poo {{diaperType === 'POO' ? 'active' : ''}}" bindtap="setDiaperType" data-type="POO">
+          <text class="diaper-icon">💩</text>
+          <text>便便</text>
+        </view>
+        <view class="diaper-btn both {{diaperType === 'BOTH' ? 'active' : ''}}" bindtap="setDiaperType" data-type="BOTH">
+          <text class="diaper-icon">💧💩</text>
+          <text>都有</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Sleep Input -->
+    <view wx:if="{{type === 'SLEEP'}}" class="section-card">
+      <text class="section-title">睡眠时长</text>
+      <view class="presets-grid sleep-grid">
+        <block wx:for="{{sleepPresets}}" wx:key="*this">
+          <view class="preset-btn {{sleepDuration === item ? 'active sleep-active' : ''}}" bindtap="setSleepDuration" data-duration="{{item}}">
+            {{item >= 60 ? (item % 60 > 0 ? (item / 60 | 0) + 'h' + item % 60 + 'm' : (item / 60) + 'h') : item + 'm'}}
+          </view>
+        </block>
+      </view>
+      <view class="stepper-row">
+        <text class="stepper-value" style="color: #97c1a9;">{{sleepDuration}} 分钟</text>
+      </view>
+    </view>
+
+    <!-- Bath Input -->
+    <view wx:if="{{type === 'BATH'}}" class="section-card">
+      <text class="section-title">洗澡时长</text>
+      <view class="presets-grid">
+        <block wx:for="{{bathPresets}}" wx:key="*this">
+          <view class="preset-btn {{bathDuration === item ? 'active' : ''}}" bindtap="setBathDuration" data-duration="{{item}}">
+            {{item}}分
+          </view>
+        </block>
+      </view>
+    </view>
+
+    <!-- Remark -->
+    <view class="section-card">
+      <text class="section-title">备注</text>
+      <textarea
+        class="remark-input"
+        placeholder="写点什么..."
+        value="{{remark}}"
+        bindinput="onRemarkInput"
+        maxlength="200"
+      />
+    </view>
+
+    <!-- Submit -->
+    <view class="submit-section">
+      <button class="submit-btn" bindtap="submit" disabled="{{saving}}">
+        {{saving ? '保存中...' : '✓ 保存修改'}}
+      </button>
+    </view>
+  </block>
+</view>

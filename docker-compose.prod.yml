@@ -5,21 +5,23 @@
     container_name: babydaily-backend
     restart: always
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
+      - NODE_ENV=production
       - HOST=0.0.0.0
       - PORT=3000
       - DB_TYPE=postgres
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_USERNAME=postgres
-      - DB_PASSWORD=postgres
-      - DB_DATABASE=babydaily
-      - JWT_SECRET=super-secret-key
+      - DB_USERNAME=${DB_USERNAME:?DB_USERNAME is required}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
+      - DB_DATABASE=${DB_DATABASE:-babydaily}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
       - TZ=Asia/Shanghai
-      - ENABLE_DEV_LOGIN=true
-      - WECHAT_APPID=${WECHAT_APPID:-your_appid_here}
-      - WECHAT_SECRET=${WECHAT_SECRET:-your_secret_here}
+      - ENABLE_DEV_LOGIN=false
+      - WEB_ACCESS_PIN=${WEB_ACCESS_PIN:-}
+      - WECHAT_APPID=${WECHAT_APPID:-}
+      - WECHAT_SECRET=${WECHAT_SECRET:-}
     volumes:
       - ./uploads:/app/uploads
     depends_on:
@@ -30,9 +32,9 @@
     container_name: babydaily-postgres
     restart: always
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=babydaily
+      - POSTGRES_USER=${DB_USERNAME:?DB_USERNAME is required}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
+      - POSTGRES_DB=${DB_DATABASE:-babydaily}
       - TZ=Asia/Shanghai
     volumes:
       - ./database/postgres:/var/lib/postgresql/data
@@ -42,6 +44,6 @@
     container_name: babydaily-frontend
     restart: always
     ports:
-      - "8080:80"
+      - "127.0.0.1:8080:80"
     depends_on:
       - backend

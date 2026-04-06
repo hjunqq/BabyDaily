@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { Layout } from './components/Layout';
 import { MobileLayout } from './layouts/MobileLayout';
@@ -9,6 +9,7 @@ import { API_URL } from './config/env';
 import { LoadIndicator } from 'devextreme-react/load-indicator';
 
 import { Landing } from './pages/Landing';
+import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { MobileHome } from './pages/MobileHome';
 
@@ -57,10 +58,12 @@ const ResponsivePage = ({ desktop, mobile }: { desktop: React.ReactElement; mobi
   return isMobile ? mobile : desktop;
 };
 
-const RequireAuth = ({ children }: { children: React.ReactElement }) => {
+const RequireAuth = ({ children, allowOnboarding = false }: { children: React.ReactElement; allowOnboarding?: boolean }) => {
+  const location = useLocation();
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retrySeed, setRetrySeed] = useState(0);
+  const [onboardingRequired, setOnboardingRequired] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,10 +78,11 @@ const RequireAuth = ({ children }: { children: React.ReactElement }) => {
           sessionStorage.setItem(KINDLE_BOOTSTRAP_KEY, '1');
         }
 
-        await BabyService.bootstrap();
+        const session = await BabyService.bootstrap();
         if (!cancelled) {
           setReady(true);
           setError(null);
+          setOnboardingRequired(!!session.onboardingRequired);
         }
       } catch (err: any) {
         if (!cancelled) {
@@ -94,6 +98,16 @@ const RequireAuth = ({ children }: { children: React.ReactElement }) => {
       cancelled = true;
     };
   }, [retrySeed]);
+
+  if (ready) {
+    if (onboardingRequired && !allowOnboarding) {
+      return <Navigate to="/onboarding" replace state={{ from: location.pathname }} />;
+    }
+
+    if (!onboardingRequired && allowOnboarding) {
+      return <Navigate to="/" replace />;
+    }
+  }
 
   if (error) {
     return (
@@ -338,7 +352,8 @@ const KindleModeWrapper = () => {
       <PinGate>
         <DebugPanel />
         <Routes>
-          <Route path="/login" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/onboarding" element={<RequireAuth allowOnboarding><OnboardingMobile /></RequireAuth>} />
           <Route path="/landing" element={<Landing />} />
 
           <Route path="/states/empty" element={<EmptyStatePage />} />
@@ -393,7 +408,7 @@ const KindleModeWrapper = () => {
           <Route path="/mobile/notifications" element={renderMobilePage(<NotificationsMobile />)} />
           <Route path="/mobile/api-test" element={renderMobilePage(<ApiTestMobile />)} />
           <Route path="/mobile/test" element={renderMobilePage(<ApiTestMobile />)} />
-          <Route path="/mobile/onboarding" element={renderMobilePage(<OnboardingMobile />)} />
+          <Route path="/mobile/onboarding" element={<RequireAuth allowOnboarding><MobileLayout><OnboardingMobile /></MobileLayout></RequireAuth>} />
 
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

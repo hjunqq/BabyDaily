@@ -330,6 +330,11 @@
   font-size: 28rpx;
   font-weight: 600;
   color: #4A342E;
+  margin-right: 8rpx;
+}
+.record-arrow {
+  font-size: 36rpx;
+  color: #ccc;
 }
 .empty-text {
   text-align: center;

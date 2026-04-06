@@ -58,13 +58,22 @@ export type ApiRecordDetails = Record<string, unknown>;
 export interface Family {
     id: string;
     name: string;
-    creatorId: string;
+    creatorId?: string;
 }
 
 export interface User {
     id: string;
-    nickname: string;
-    avatarUrl: string;
+    openid?: string;
+    nickname?: string | null;
+    avatarUrl?: string | null;
+}
+
+export interface AuthSession {
+    accessToken: string;
+    user: User;
+    family: Family | null;
+    baby: Baby | null;
+    onboardingRequired: boolean;
 }
 
 export interface UserSettings {

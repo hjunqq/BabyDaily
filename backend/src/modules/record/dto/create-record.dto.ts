@@ -6,6 +6,7 @@ import {
   IsDateString,
   IsNumber,
   IsIn,
+  IsUUID,
 } from 'class-validator';
 
 export enum RecordType {
@@ -59,7 +60,7 @@ export class SupplementDetailsDto {
 }
 
 export class CreateRecordDto {
-  @IsString()
+  @IsUUID()
   babyId: string;
 
   @IsEnum(RecordType)

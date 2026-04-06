@@ -166,3 +166,25 @@
 - `GET /notifications?limit=20&offset=0` - 获取列表
 - `POST /notifications/:id/read` - 标记已读
 - `POST /notifications` - 创建通知（内部）
+## 2026-04-06 Auth Update
+- `POST /auth/bootstrap`
+  - supports `method: "wechat" | "pin" | "dev"`
+  - returns `access_token`, `user`, `family`, `baby`, `onboardingRequired`
+  - no longer auto-creates family or baby
+- `GET /auth/session`
+  - requires JWT
+  - returns current `user`, `family`, `baby`, `onboardingRequired`
+- first-time users must explicitly create onboarding data through:
+  - `POST /families`
+  - `POST /babies`
+## 2026-04-06 Rate Limit Update
+- Global throttle:
+  - `120 requests / 60 seconds / IP`
+- Sensitive routes override the global throttle:
+  - auth bootstrap and login
+  - onboarding creation (`POST /families`, `POST /babies`)
+  - record write and delete endpoints
+  - OOTD write, upload, like, and delete endpoints
+- When throttled, the API returns unified error fields with:
+  - `statusCode: 429`
+  - `code: "RATE_LIMITED"`

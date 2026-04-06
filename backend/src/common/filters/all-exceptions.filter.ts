@@ -46,6 +46,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
       } else {
         message = exceptionResponse;
       }
+
+      if (status === HttpStatus.TOO_MANY_REQUESTS) {
+        error = 'Too Many Requests';
+        code = ErrorCodes.RATE_LIMITED;
+        if (!message || message === 'Internal server error') {
+          message = 'Too many requests';
+        }
+      }
     } else if (exception instanceof Error) {
       message = exception.message;
       error = exception.name;

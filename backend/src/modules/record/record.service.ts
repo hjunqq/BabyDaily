@@ -9,6 +9,7 @@ import { ErrorCodes } from '../../common/enums/error-codes.enum';
 import {
   mapToCamelCase,
   mapDetailsToSnakeCase,
+  sanitizeDetails,
   enrichWithTimeFields,
   getTimeAgo,
   formatTime,
@@ -36,8 +37,8 @@ export class RecordService {
         data.endTime || data.end_time
           ? new Date(data.endTime || data.end_time)
           : undefined,
-      details: data.details ? mapDetailsToSnakeCase(data.details) : undefined,
-      remark: data.remark,
+      details: sanitizeDetails(data.type, data.details),
+      remark: data.remark ? String(data.remark).slice(0, 500) : undefined,
       media_urls: data.media_urls || data.mediaUrls,
     });
   }
@@ -78,7 +79,7 @@ export class RecordService {
         endTime || data.end_time
           ? new Date(endTime || data.end_time)
           : undefined,
-      details: data.details ? mapDetailsToSnakeCase(data.details) : undefined,
+      details: data.details ? sanitizeDetails(existing.type, data.details) : undefined,
     });
 
     const updated = await this.recordRepo.findById(id);

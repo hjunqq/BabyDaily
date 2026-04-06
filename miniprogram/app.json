@@ -1,8 +1,39 @@
 {
     "pages": [
+        "pages/onboarding/onboarding",
         "pages/home/home",
-        "pages/record/record"
+        "pages/records/records",
+        "pages/statistics/statistics",
+        "pages/record/record",
+        "pages/record-detail/record-detail",
+        "pages/record-edit/record-edit"
     ],
+    "tabBar": {
+        "color": "#8b7670",
+        "selectedColor": "#F3B6C2",
+        "backgroundColor": "#ffffff",
+        "borderStyle": "white",
+        "list": [
+            {
+                "pagePath": "pages/home/home",
+                "text": "首页",
+                "iconPath": "assets/icons/home.png",
+                "selectedIconPath": "assets/icons/home-active.png"
+            },
+            {
+                "pagePath": "pages/records/records",
+                "text": "记录",
+                "iconPath": "assets/icons/records.png",
+                "selectedIconPath": "assets/icons/records-active.png"
+            },
+            {
+                "pagePath": "pages/statistics/statistics",
+                "text": "统计",
+                "iconPath": "assets/icons/stats.png",
+                "selectedIconPath": "assets/icons/stats-active.png"
+            }
+        ]
+    },
     "window": {
         "backgroundTextStyle": "dark",
         "navigationBarBackgroundColor": "#F3B6C2",
@@ -10,5 +41,6 @@
         "navigationBarTextStyle": "white"
     },
     "style": "v2",
-    "sitemapLocation": "sitemap.json"
+    "sitemapLocation": "sitemap.json",
+    "lazyCodeLoading": "requiredComponents"
 }

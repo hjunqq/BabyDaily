@@ -1,76 +1,100 @@
-# 错误码与权限说明
-**更新时间**：2026-02-02
+# BabyDaily Error Codes And Permissions
+**Updated:** 2026-04-06
 
-## 错误码枚举
+## Error Codes
 
-| 错误码 | HTTP 状态 | 说明 |
-|--------|-----------|------|
-| `GENERIC_ERROR` | 4xx/5xx | 通用错误 |
-| `AUTH_UNAUTHORIZED` | 401 | 未认证或 token 无效 |
-| `AUTH_FORBIDDEN` | 403 | 无权访问资源 |
-| `NOT_FOUND` | 404 | 资源不存在 |
-| `UPLOAD_INVALID_TYPE` | 400 | 上传文件类型不支持 |
-| `UPLOAD_TOO_LARGE` | 400 | 上传文件超过限制 |
-| `VALIDATION_FAILED` | 400 | 请求参数校验失败 |
+| Code | HTTP | Meaning |
+| --- | --- | --- |
+| `GENERIC_ERROR` | 4xx/5xx | Generic server or business error |
+| `AUTH_UNAUTHORIZED` | 401 | Missing, expired, or invalid JWT |
+| `AUTH_FORBIDDEN` | 403 | Authenticated but not allowed to access the resource |
+| `RATE_LIMITED` | 429 | Request frequency exceeded the route or global throttle |
+| `NOT_FOUND` | 404 | Resource does not exist |
+| `UPLOAD_INVALID_TYPE` | 400 | Unsupported upload file type |
+| `UPLOAD_TOO_LARGE` | 400 | Upload exceeds file size limit |
+| `VALIDATION_FAILED` | 400 | DTO validation failed |
 
-## 错误响应结构
+## Unified Error Response
+
 ```json
 {
-  "statusCode": 403,
-  "message": "No permission to access this resource",
-  "error": "ForbiddenException",
-  "code": "AUTH_FORBIDDEN",
-  "path": "/ootd/123",
-  "method": "GET",
-  "timestamp": "2026-02-02T10:00:00.000Z"
+  "statusCode": 429,
+  "message": "Too many requests",
+  "error": "Too Many Requests",
+  "code": "RATE_LIMITED",
+  "path": "/auth/bootstrap",
+  "method": "POST",
+  "timestamp": "2026-04-06T10:00:00.000Z"
 }
 ```
 
----
+## Authentication
 
-## 权限模型
+- JWT is required for protected APIs through `Authorization: Bearer <access_token>`.
+- `JWT_SECRET` must be configured or the application should not be considered deployable.
+- `GET /auth/session` returns the current session context and onboarding state.
 
-### 认证层
-| 检查项 | 处理 |
-|--------|------|
-| JWT_SECRET 未配置 | 应用启动失败 |
-| 无 Authorization header | 401 AUTH_UNAUTHORIZED |
-| Token 过期/无效 | 401 AUTH_UNAUTHORIZED |
+## Dev Login
 
-### 开发登录（/auth/login/dev）
-| 环境 | 行为 |
-|------|------|
-| `NODE_ENV=development` | ✅ 可用 |
-| 其他环境 | 403 AUTH_FORBIDDEN |
+- `POST /auth/login/dev` is only allowed when:
+  - `NODE_ENV=development`, or
+  - `ENABLE_DEV_LOGIN=true`
+- Production should keep `ENABLE_DEV_LOGIN=false`.
 
-### FamilyGuard（家庭权限）
-用于保护涉及 babyId 的路由：
-- `GET /records/baby/:babyId`
+## Family Access Control
+
+`FamilyGuard` protects APIs that operate on a `babyId` in route params or request body.
+
+Protected examples:
 - `POST /records`
-- `GET /ootd/baby/:babyId`
+- `GET /records/baby/:babyId`
+- `POST /records/baby/:babyId/import`
 - `POST /ootd`
 - `POST /ootd/upload`
-- `GET /ootd/calendar`
+- `GET /ootd/baby/:babyId`
+- `GET /ootd/calendar/:babyId/:year/:month`
 
-校验逻辑：`baby.family_id` 属于用户的家庭列表
+Validation rule:
+- the target baby must belong to a family that the current user is a member of
 
-### 所有权校验（Service 层）
-对于不含 babyId 的路由，在 Service 层校验：
-- `GET /ootd/:id` - 校验 OOTD 所属 baby 归属用户家庭
-- `DELETE /ootd/:id` - 同上
-- `PATCH /records/:id` - 校验 creator_id 是当前用户
-- `DELETE /records/:id` - 同上
+## Service-Level Ownership Checks
 
-### 已移除端点
-- ❌ `GET /users/:id` - 用户只能通过 `/users/me` 访问自己的信息
+Some APIs do not carry `babyId` directly in params and therefore validate ownership in the service layer:
 
----
+- `GET /ootd/:id`
+- `DELETE /ootd/:id`
+- `PATCH /records/:id`
+- `DELETE /records/:id`
+- `DELETE /records/batch`
 
-## Swagger 文档
-- 访问地址：`/api/docs`
-- 包含所有端点的请求/响应示例
+## Rate Limits
 
-## 待办
-- [ ] 扩展家庭成员权限策略（允许家庭成员编辑/删除其他成员的记录）
-- [ ] 补充上传相关的错误码（如存储空间不足）
-- [ ] 添加审计日志记录敏感操作
+Global throttle:
+- `120 requests / 60 seconds / IP`
+
+Route-specific throttles:
+- `POST /auth/login/wechat`: `10 / min`
+- `POST /auth/login/dev`: `5 / min`
+- `POST /auth/bootstrap`: `10 / min`
+- `POST /families`: `5 / min`
+- `POST /babies`: `10 / min`
+- `POST /babies/:id/avatar`: `10 / 10 min`
+- `POST /records`: `40 / min`
+- `POST /records/baby/:babyId/import`: `5 / min`
+- `PATCH /records/:id`: `30 / min`
+- `DELETE /records/batch`: `10 / min`
+- `DELETE /records/:id`: `20 / min`
+- `DELETE /records/baby/:babyId/all`: `5 / min`
+- `POST /ootd`: `20 / min`
+- `POST /ootd/upload`: `10 / 10 min`
+- `POST /ootd/:id/like`: `30 / min`
+- `DELETE /ootd/:id`: `20 / min`
+
+## Swagger
+
+- API docs: `/api/docs`
+
+## Notes
+
+- First-time users must complete onboarding explicitly through `POST /families` and `POST /babies`.
+- Auth bootstrap no longer auto-creates family or baby data.

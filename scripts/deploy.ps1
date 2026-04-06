@@ -20,6 +20,7 @@ param(
     [string]$DeployPath = "/opt/BabyDaily",
     [string]$AccessPin = "",
     [string]$EnableDevLogin = "",
+    [switch]$UploadProductionEnv,
     [switch]$SkipBuild,
     [switch]$NoBuildCache
 )
@@ -32,6 +33,8 @@ $ErrorActionPreference = "Stop"
 $ProjectPath = (Get-Item "$PSScriptRoot\..").FullName
 $ImageFile = "$PSScriptRoot\babydaily-images.tar"
 $FrontendEnvFile = Join-Path $ProjectPath "frontend\.env"
+$BackendEnvFile = Join-Path $ProjectPath "backend\.env"
+$ProductionEnvFile = Join-Path $PSScriptRoot ".env.production"
 
 function Resolve-AccessPin {
     param(
@@ -83,12 +86,99 @@ function Resolve-FrontendEnvValue {
     return $DefaultValue
 }
 
+function Get-EnvFileMap {
+    param(
+        [string]$EnvFilePath
+    )
+
+    $values = @{}
+    if (-not (Test-Path $EnvFilePath)) {
+        return $values
+    }
+
+    foreach ($line in Get-Content $EnvFilePath) {
+        if ($line -match '^\s*#' -or $line -match '^\s*$') {
+            continue
+        }
+
+        $parts = $line -split '=', 2
+        if ($parts.Count -ne 2) {
+            continue
+        }
+
+        $key = $parts[0].Trim()
+        $value = $parts[1].Trim()
+        if ($value -match '^".*"$' -or $value -match "^'.*'$") {
+            $value = $value.Substring(1, $value.Length - 2)
+        }
+        $values[$key] = $value
+    }
+
+    return $values
+}
+
+function Get-RequiredEnvValue {
+    param(
+        [hashtable]$EnvMap,
+        [string]$Key
+    )
+
+    $value = $EnvMap[$Key]
+    if (-not $value -or -not $value.Trim()) {
+        throw "Missing required value '$Key' in $BackendEnvFile"
+    }
+
+    return $value.Trim()
+}
+
+function Write-ProductionEnvFile {
+    param(
+        [string]$SourceEnvFile,
+        [string]$DestinationEnvFile
+    )
+
+    if (-not (Test-Path $SourceEnvFile)) {
+        throw "backend env file not found: $SourceEnvFile"
+    }
+
+    $envMap = Get-EnvFileMap -EnvFilePath $SourceEnvFile
+    $dbUser = Get-RequiredEnvValue -EnvMap $envMap -Key "DB_USERNAME"
+    $dbPassword = Get-RequiredEnvValue -EnvMap $envMap -Key "DB_PASSWORD"
+    $dbName = if ($envMap.ContainsKey("DB_DATABASE") -and $envMap["DB_DATABASE"].Trim()) {
+        $envMap["DB_DATABASE"].Trim()
+    }
+    else {
+        "babydaily"
+    }
+    $jwtSecret = Get-RequiredEnvValue -EnvMap $envMap -Key "JWT_SECRET"
+    $webAccessPin = if ($envMap.ContainsKey("WEB_ACCESS_PIN") -and $envMap["WEB_ACCESS_PIN"].Trim()) {
+        $envMap["WEB_ACCESS_PIN"].Trim()
+    }
+    else {
+        Resolve-AccessPin -CliPin $AccessPin -EnvFilePath $FrontendEnvFile
+    }
+    $wechatAppId = if ($envMap.ContainsKey("WECHAT_APPID")) { $envMap["WECHAT_APPID"].Trim() } else { "" }
+    $wechatSecret = if ($envMap.ContainsKey("WECHAT_SECRET")) { $envMap["WECHAT_SECRET"].Trim() } else { "" }
+
+    $content = @(
+        "DB_USERNAME=$dbUser"
+        "DB_PASSWORD=$dbPassword"
+        "DB_DATABASE=$dbName"
+        "JWT_SECRET=$jwtSecret"
+        "WEB_ACCESS_PIN=$webAccessPin"
+        "WECHAT_APPID=$wechatAppId"
+        "WECHAT_SECRET=$wechatSecret"
+    )
+
+    Set-Content -Path $DestinationEnvFile -Value $content -Encoding utf8
+}
+
 Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host "  BabyDaily Deploy Script" -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
 
 $ResolvedPin = Resolve-AccessPin -CliPin $AccessPin -EnvFilePath $FrontendEnvFile
-$ResolvedDevLogin = Resolve-FrontendEnvValue -CliValue $EnableDevLogin -EnvFilePath $FrontendEnvFile -Key "VITE_ENABLE_DEV_LOGIN" -DefaultValue "true"
+$ResolvedDevLogin = Resolve-FrontendEnvValue -CliValue $EnableDevLogin -EnvFilePath $FrontendEnvFile -Key "VITE_ENABLE_DEV_LOGIN" -DefaultValue "false"
 if ($ResolvedPin) {
     $env:VITE_ACCESS_PIN = $ResolvedPin
     Write-Host "[env] VITE_ACCESS_PIN loaded for frontend build" -ForegroundColor Green
@@ -98,6 +188,17 @@ else {
 }
 $env:VITE_ENABLE_DEV_LOGIN = $ResolvedDevLogin
 Write-Host "[env] VITE_ENABLE_DEV_LOGIN=$ResolvedDevLogin (frontend build)" -ForegroundColor Cyan
+if ($ResolvedDevLogin -eq "true") {
+    Write-Host "[warn] Frontend dev login is enabled for this build. Do not deploy this setting to production unless you explicitly intend to." -ForegroundColor Yellow
+}
+
+if ($UploadProductionEnv) {
+    Write-ProductionEnvFile -SourceEnvFile $BackendEnvFile -DestinationEnvFile $ProductionEnvFile
+    Write-Host "[env] Generated production compose env: $ProductionEnvFile" -ForegroundColor Green
+}
+else {
+    Write-Host "[env] Reusing remote .env.production (default safe behavior)" -ForegroundColor Cyan
+}
 
 # ===== 1. Build Images =====
 if ($SkipBuild) {
@@ -147,8 +248,8 @@ $FilesToUpload = @(
     "$ProjectPath\docker-compose.prod.yml",
     $ImageFile
 )
-if (Test-Path "$ProjectPath\backend\.env") {
-    $FilesToUpload += "$ProjectPath\backend\.env"
+if ($UploadProductionEnv) {
+    $FilesToUpload += $ProductionEnvFile
 }
 
 foreach ($file in $FilesToUpload) {
@@ -172,20 +273,26 @@ if [ -f docker-compose.prod.yml ]; then
     mv docker-compose.prod.yml docker-compose.yml
 fi
 
+if [ ! -f .env.production ]; then
+    echo 'Missing .env.production on remote host.' >&2
+    echo 'Run deploy.ps1 with -UploadProductionEnv for first-time setup, or create the file manually.' >&2
+    exit 1
+fi
+
 echo '>>> Loading Docker images...'
 docker load -i babydaily-images.tar
 
 echo '>>> Stopping old containers...'
-docker compose down --remove-orphans 2>/dev/null || true
+docker compose --env-file .env.production down --remove-orphans 2>/dev/null || true
 
 echo '>>> Starting new containers...'
-docker compose up -d
+docker compose --env-file .env.production up -d
 
 echo '>>> Cleaning up temp files...'
 rm -f babydaily-images.tar
 
 echo '>>> Container status...'
-docker compose ps
+docker compose --env-file .env.production ps
 
 echo '>>> Deploy completed!'
 "@
@@ -203,4 +310,5 @@ Write-Host ""
 
 # Cleanup local temp files
 if (Test-Path $ImageFile) { Remove-Item $ImageFile -Force }
+if ($UploadProductionEnv -and (Test-Path $ProductionEnvFile)) { Remove-Item $ProductionEnvFile -Force }
 Write-Host "[OK] Cleanup completed" -ForegroundColor Green

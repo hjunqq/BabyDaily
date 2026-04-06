@@ -1,0 +1,73 @@
+.container {
+  padding: 24rpx;
+  background: #fdf6f4;
+  min-height: 100vh;
+}
+
+.state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 40rpx;
+}
+.state-icon { font-size: 80rpx; margin-bottom: 20rpx; }
+.state-text { font-size: 28rpx; color: #888; margin-bottom: 24rpx; }
+.retry-btn { background: #F3B6C2; color: #fff; border-radius: 40rpx; font-size: 26rpx; }
+
+.card {
+  background: #fff;
+  border-radius: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.05);
+}
+
+.field-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28rpx 32rpx;
+  border-bottom: 1rpx solid #f5f0ee;
+}
+.field-row:last-child { border-bottom: none; }
+
+.field-label {
+  font-size: 28rpx;
+  color: #999;
+  flex-shrink: 0;
+  margin-right: 24rpx;
+}
+.field-value {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+  text-align: right;
+  flex: 1;
+}
+
+.actions {
+  margin-top: 40rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.btn-edit {
+  background: #F3B6C2;
+  color: #fff;
+  border-radius: 48rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  height: 88rpx;
+  line-height: 88rpx;
+  border: none;
+  box-shadow: 0 4rpx 20rpx rgba(243, 182, 194, 0.4);
+}
+.btn-delete {
+  background: #fff;
+  color: #e04040;
+  border: 1rpx solid #e04040;
+  border-radius: 48rpx;
+  font-size: 28rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+}

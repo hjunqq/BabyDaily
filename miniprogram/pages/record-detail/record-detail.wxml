@@ -1,0 +1,27 @@
+<view class="container">
+  <view wx:if="{{loading}}" class="state-box">
+    <text class="state-text">加载中...</text>
+  </view>
+
+  <view wx:elif="{{error}}" class="state-box">
+    <text class="state-icon">⚠️</text>
+    <text class="state-text">{{error}}</text>
+    <button class="retry-btn" size="mini" bindtap="loadData">重试</button>
+  </view>
+
+  <block wx:else>
+    <view class="card">
+      <block wx:for="{{fields}}" wx:key="label">
+        <view class="field-row">
+          <text class="field-label">{{item.label}}</text>
+          <text class="field-value">{{item.value}}</text>
+        </view>
+      </block>
+    </view>
+
+    <view class="actions">
+      <button class="btn-edit" bindtap="goToEdit">编辑记录</button>
+      <button class="btn-delete" bindtap="deleteRecord">删除记录</button>
+    </view>
+  </block>
+</view>

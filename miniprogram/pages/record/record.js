@@ -24,6 +24,7 @@ Page({
     },
 
     onLoad(options) {
+        if (!app.ensureBabyContext()) return;
         if (options.type) {
             this.setData({ selectedType: options.type });
         }
@@ -76,6 +77,7 @@ Page({
         this.setData({ submitting: true });
         try {
             await (app.readyPromise || Promise.resolve());
+            if (!app.ensureBabyContext()) return;
             await authedRequest('/records', {
                 method: 'POST',
                 data: {
@@ -100,6 +102,7 @@ Page({
         this.setData({ submitting: true });
         try {
             await (app.readyPromise || Promise.resolve());
+            if (!app.ensureBabyContext()) return;
             const babyId = app.globalData.babyId;
             const { selectedType, feedSubtype, amount, duration, bathDuration, sleepDuration } = this.data;
 
