@@ -97,12 +97,64 @@ export class AuthService {
     return this.loginDev();
   }
 
+  async loginAdmin(username: string, password: string) {
+    const expectedUser = this.configService.get<string>('ADMIN_USERNAME');
+    const expectedPass = this.configService.get<string>('ADMIN_PASSWORD');
+
+    if (!expectedUser || !expectedPass) {
+      throw new ForbiddenException('Admin login is not configured');
+    }
+
+    if (username !== expectedUser || password !== expectedPass) {
+      throw new UnauthorizedException('Invalid admin credentials');
+    }
+
+    // Use a dedicated openid for admin
+    const adminOpenId = `admin-${username}`;
+    let user = await this.usersService.findOneByOpenid(adminOpenId);
+    if (!user) {
+      user = await this.usersService.create(adminOpenId);
+      // Set nickname
+      user.nickname = username;
+      user = await this.usersService.update(user.id, { nickname: username });
+    }
+
+    const payload = { sub: user.id, openid: user.openid };
+    const authResult = {
+      access_token: this.jwtService.sign(payload),
+      user,
+    };
+
+    // Ensure this admin user is OWNER in all families
+    await this.ensureAdminOwnerRole(user.id);
+
+    return authResult;
+  }
+
+  private async ensureAdminOwnerRole(userId: string) {
+    const families = await this.familyService.findMyFamilies(userId);
+    if (families.length > 0) {
+      // Already a member — ensure OWNER role
+      for (const family of families) {
+        await this.familyService.ensureOwnerRole(family.id, userId);
+      }
+    } else {
+      // Not in any family yet — find the first family and add as OWNER
+      const allFamilies = await this.familyService.findAll();
+      if (allFamilies.length > 0) {
+        await this.familyService.addMemberAsOwner(allFamilies[0].id, userId);
+      }
+    }
+  }
+
   async bootstrap(dto: BootstrapDto) {
     let authResult: { access_token: string; user: User };
     if (dto.method === 'wechat') {
       authResult = await this.loginWithWechat(dto.code!);
     } else if (dto.method === 'pin') {
       authResult = await this.loginWithPin(dto.pin!);
+    } else if (dto.method === 'admin') {
+      authResult = await this.loginAdmin(dto.username!, dto.password!);
     } else {
       const isDev = process.env.NODE_ENV === 'development';
       const isDevLoginEnabled = process.env.ENABLE_DEV_LOGIN === 'true';

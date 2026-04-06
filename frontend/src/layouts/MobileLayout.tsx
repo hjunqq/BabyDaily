@@ -1,6 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { KindleSessionManager } from '../components/mobile/KindleSessionManager';
+import { BabyService } from '../services/api';
 
 const navItems = [
   { id: 0, icon: '首', iconEmoji: '🏠', label: '首页', path: '/' },
@@ -15,6 +16,7 @@ const moreMenuItems = [
   { icon: '衣', iconEmoji: '👗', label: '穿搭相册', path: '/ootd' },
   { icon: '家', iconEmoji: '👨‍👩‍👧', label: '家庭成员', path: '/family' },
   { icon: '设', iconEmoji: '⚙️', label: '设置', path: '/settings' },
+  { icon: '管', iconEmoji: '🔑', label: '管理员登录', path: '/login' },
 ];
 
 interface MobileLayoutProps {
@@ -103,7 +105,12 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
               <Link
                 key={item.path}
                 to={item.path}
-                onClick={() => setShowMoreMenu(false)}
+                onClick={() => {
+                  setShowMoreMenu(false);
+                  if (item.path === '/login') {
+                    BabyService.logout();
+                  }
+                }}
               >
                 <span className="icon">{isKindle ? item.icon : item.iconEmoji}</span>
                 {item.label}

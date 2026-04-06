@@ -61,6 +61,28 @@ export interface Family {
     creatorId?: string;
 }
 
+export type FamilyRole = 'OWNER' | 'GUARDIAN' | 'MEMBER' | 'VIEWER';
+export type MemberStatus = 'PENDING' | 'ACTIVE';
+
+export interface FamilyMember {
+    id: string;
+    family_id: string;
+    user_id: string;
+    role: FamilyRole;
+    status: MemberStatus;
+    relation?: string;
+    user?: User;
+}
+
+export interface FamilyInvite {
+    id: string;
+    family_id: string;
+    code: string;
+    role: FamilyRole;
+    expires_at: string;
+    used_by?: string;
+}
+
 export interface User {
     id: string;
     openid?: string;

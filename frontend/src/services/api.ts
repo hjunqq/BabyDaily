@@ -222,6 +222,20 @@ export const BabyService = {
         return BabyService.bootstrap();
     },
 
+    loginAdmin: async (username: string, password: string): Promise<AuthSession> => {
+        const res = await fetch(`${API_URL}/auth/bootstrap`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ method: 'admin', username, password }),
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || '管理员登录失败');
+        }
+        const data = await res.json();
+        return persistSession(data);
+    },
+
     refreshSession: async (): Promise<AuthSession> => {
         if (!ACCESS_TOKEN) {
             return BabyService.bootstrap();
@@ -280,6 +294,47 @@ export const BabyService = {
         return request(`${API_URL}/families`, {
             method: 'POST',
             body: JSON.stringify({ name }),
+        });
+    },
+
+    // ─── Family Management ─────────────────────────────────
+    createInvite: async (familyId: string, role: string = 'MEMBER'): Promise<any> => {
+        return request(`${API_URL}/families/${familyId}/invites`, {
+            method: 'POST',
+            body: JSON.stringify({ role }),
+        });
+    },
+
+    getMembers: async (familyId: string): Promise<any[]> => {
+        return request(`${API_URL}/families/${familyId}/members`);
+    },
+
+    getPendingMembers: async (familyId: string): Promise<any[]> => {
+        return request(`${API_URL}/families/${familyId}/members/pending`);
+    },
+
+    approveMember: async (familyId: string, memberId: string): Promise<any> => {
+        return request(`${API_URL}/families/${familyId}/members/${memberId}/approve`, {
+            method: 'POST',
+        });
+    },
+
+    rejectMember: async (familyId: string, memberId: string): Promise<any> => {
+        return request(`${API_URL}/families/${familyId}/members/${memberId}/reject`, {
+            method: 'POST',
+        });
+    },
+
+    updateMemberRole: async (familyId: string, memberId: string, role: string): Promise<any> => {
+        return request(`${API_URL}/families/${familyId}/members/${memberId}/role`, {
+            method: 'PATCH',
+            body: JSON.stringify({ role }),
+        });
+    },
+
+    removeMember: async (familyId: string, memberId: string): Promise<void> => {
+        return request(`${API_URL}/families/${familyId}/members/${memberId}`, {
+            method: 'DELETE',
         });
     },
 

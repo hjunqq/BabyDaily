@@ -22,6 +22,8 @@
       - WEB_ACCESS_PIN=${WEB_ACCESS_PIN:-}
       - WECHAT_APPID=${WECHAT_APPID:-}
       - WECHAT_SECRET=${WECHAT_SECRET:-}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
     volumes:
       - ./uploads:/app/uploads
     depends_on:

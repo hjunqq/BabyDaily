@@ -364,6 +364,38 @@ export class FamilyService {
     await this.familyMemberRepository.remove(member);
   }
 
+  // ─── Admin helpers ─────────────────────────────────────────
+
+  async findAll(): Promise<Family[]> {
+    return this.familyRepository.find();
+  }
+
+  async ensureOwnerRole(familyId: string, userId: string): Promise<void> {
+    const member = await this.familyMemberRepository.findOne({
+      where: { family_id: familyId, user_id: userId },
+    });
+    if (member) {
+      if (member.role !== FamilyRole.OWNER || member.status !== MemberStatus.ACTIVE) {
+        member.role = FamilyRole.OWNER;
+        member.status = MemberStatus.ACTIVE;
+        await this.familyMemberRepository.save(member);
+      }
+    } else {
+      await this.addMemberAsOwner(familyId, userId);
+    }
+  }
+
+  async addMemberAsOwner(familyId: string, userId: string): Promise<FamilyMember> {
+    const member = this.familyMemberRepository.create({
+      family_id: familyId,
+      user_id: userId,
+      role: FamilyRole.OWNER,
+      status: MemberStatus.ACTIVE,
+      relation: 'admin',
+    });
+    return this.familyMemberRepository.save(member);
+  }
+
   // ─── Helpers ──────────────────────────────────────────────
 
   private async requireRole(
