@@ -1,5 +1,5 @@
 const API_URL = 'https://baby.hydrosim.cn/api';
-const BOOTSTRAP_VERSION = 3;
+const BOOTSTRAP_VERSION = 4;
 
 const request = ({ url, method = 'GET', data, token }) => new Promise((resolve, reject) => {
     wx.request({
@@ -149,10 +149,16 @@ const authedRequest = async (url, options = {}) => {
     try {
         return await request({ url, method: options.method, data: options.data, token });
     } catch (err) {
-        if (err.statusCode === 401) {
+        if (err.statusCode === 401 || err.statusCode === 403) {
+            const oldBabyId = getCurrentBabyId();
             clearSession();
-            const { token: newToken } = await initSession();
-            return request({ url, method: options.method, data: options.data, token: newToken });
+            const session = await initSession();
+            // If babyId changed after re-bootstrap, update URL
+            let retryUrl = url;
+            if (oldBabyId && session.babyId && oldBabyId !== session.babyId) {
+                retryUrl = url.replace(oldBabyId, session.babyId);
+            }
+            return request({ url: retryUrl, method: options.method, data: options.data, token: session.token });
         }
         throw err;
     }
