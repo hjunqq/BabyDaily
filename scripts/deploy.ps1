@@ -159,6 +159,8 @@ function Write-ProductionEnvFile {
     }
     $wechatAppId = if ($envMap.ContainsKey("WECHAT_APPID")) { $envMap["WECHAT_APPID"].Trim() } else { "" }
     $wechatSecret = if ($envMap.ContainsKey("WECHAT_SECRET")) { $envMap["WECHAT_SECRET"].Trim() } else { "" }
+    $adminUsername = if ($envMap.ContainsKey("ADMIN_USERNAME")) { $envMap["ADMIN_USERNAME"].Trim() } else { "" }
+    $adminPassword = if ($envMap.ContainsKey("ADMIN_PASSWORD")) { $envMap["ADMIN_PASSWORD"].Trim() } else { "" }
 
     $content = @(
         "DB_USERNAME=$dbUser"
@@ -168,6 +170,8 @@ function Write-ProductionEnvFile {
         "WEB_ACCESS_PIN=$webAccessPin"
         "WECHAT_APPID=$wechatAppId"
         "WECHAT_SECRET=$wechatSecret"
+        "ADMIN_USERNAME=$adminUsername"
+        "ADMIN_PASSWORD=$adminPassword"
     )
 
     Set-Content -Path $DestinationEnvFile -Value $content -Encoding utf8
