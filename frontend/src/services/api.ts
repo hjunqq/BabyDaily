@@ -186,7 +186,9 @@ export const request = async (url: string, options: RequestInit = {}) => {
 export const BabyService = {
     bootstrap: async (): Promise<AuthSession> => {
         try {
-            if (ACCESS_TOKEN && !ENABLE_DEV_LOGIN && !ACCESS_PIN) {
+            // If we already have a token, just refresh the session
+            // (preserves admin login instead of re-authenticating with PIN)
+            if (ACCESS_TOKEN) {
                 return BabyService.refreshSession();
             }
 
