@@ -1,28 +1,38 @@
 <#
 .SYNOPSIS
-    BabyDaily Offline Docker Deployment Script
+    BabyDaily Local Build + Remote Deploy Script
 .DESCRIPTION
-    Build images, package and upload to remote server for offline deployment.
+    Build Docker images locally, export and upload to remote server for deployment.
+    Uses docker-compose.prod.yml for production configuration.
 .PARAMETER DeployHost
     Target server IP or hostname, default 192.168.8.106
 .PARAMETER DeployUser
     SSH username, default root
 .PARAMETER DeployPath
     Remote deployment path, default /opt/BabyDaily
+.PARAMETER SshKey
+    Path to SSH private key
 .PARAMETER SkipBuild
     Skip build step, use existing images
 .PARAMETER NoBuildCache
     Build without cache (full rebuild)
+.PARAMETER UploadProductionEnv
+    Generate and upload .env.production from local backend/.env
+.PARAMETER BackendOnly
+    Only rebuild and deploy the backend image
+.PARAMETER FrontendOnly
+    Only rebuild and deploy the frontend image
 #>
 param(
     [string]$DeployHost = "192.168.8.106",
     [string]$DeployUser = "root",
     [string]$DeployPath = "/opt/BabyDaily",
-    [string]$AccessPin = "",
-    [string]$EnableDevLogin = "",
+    [string]$SshKey = "$env:USERPROFILE\.ssh\CommonPrivateKey",
     [switch]$UploadProductionEnv,
     [switch]$SkipBuild,
-    [switch]$NoBuildCache
+    [switch]$NoBuildCache,
+    [switch]$BackendOnly,
+    [switch]$FrontendOnly
 )
 
 # Fix encoding issue
@@ -32,80 +42,36 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 $ErrorActionPreference = "Stop"
 $ProjectPath = (Get-Item "$PSScriptRoot\..").FullName
 $ImageFile = "$PSScriptRoot\babydaily-images.tar"
-$FrontendEnvFile = Join-Path $ProjectPath "frontend\.env"
 $BackendEnvFile = Join-Path $ProjectPath "backend\.env"
 $ProductionEnvFile = Join-Path $PSScriptRoot ".env.production"
 
-function Resolve-AccessPin {
-    param(
-        [string]$CliPin,
-        [string]$EnvFilePath
-    )
+$SshTarget = "$DeployUser@$DeployHost"
+$SshCmd = "ssh -i `"$SshKey`""
+$ScpCmd = "scp -i `"$SshKey`""
 
-    if ($CliPin -and $CliPin.Trim()) {
-        return $CliPin.Trim()
-    }
-
-    if (Test-Path $EnvFilePath) {
-        $line = Get-Content $EnvFilePath | Where-Object { $_ -match '^\s*VITE_ACCESS_PIN\s*=' } | Select-Object -First 1
-        if ($line) {
-            $value = ($line -replace '^\s*VITE_ACCESS_PIN\s*=\s*', '').Trim()
-            if ($value -match '^".*"$' -or $value -match "^'.*'$") {
-                $value = $value.Substring(1, $value.Length - 2)
-            }
-            return $value
-        }
-    }
-
-    return ""
+function Run-Ssh {
+    param([string]$Command)
+    $fullCmd = "$SshCmd $SshTarget `"$Command`""
+    $result = Invoke-Expression $fullCmd
+    if ($LASTEXITCODE -ne 0) { throw "SSH command failed: $Command" }
+    return $result
 }
 
-function Resolve-FrontendEnvValue {
-    param(
-        [string]$CliValue,
-        [string]$EnvFilePath,
-        [string]$Key,
-        [string]$DefaultValue
-    )
-
-    if ($CliValue -and $CliValue.Trim()) {
-        return $CliValue.Trim()
-    }
-
-    if (Test-Path $EnvFilePath) {
-        $line = Get-Content $EnvFilePath | Where-Object { $_ -match "^\s*$Key\s*=" } | Select-Object -First 1
-        if ($line) {
-            $value = ($line -replace "^\s*$Key\s*=\s*", '').Trim()
-            if ($value -match '^".*"$' -or $value -match "^'.*'$") {
-                $value = $value.Substring(1, $value.Length - 2)
-            }
-            return $value
-        }
-    }
-
-    return $DefaultValue
+function Run-Scp {
+    param([string]$LocalFile, [string]$RemotePath)
+    $fullCmd = "$ScpCmd `"$LocalFile`" `"${SshTarget}:$RemotePath`""
+    Invoke-Expression $fullCmd
+    if ($LASTEXITCODE -ne 0) { throw "SCP failed: $LocalFile" }
 }
 
 function Get-EnvFileMap {
-    param(
-        [string]$EnvFilePath
-    )
-
+    param([string]$EnvFilePath)
     $values = @{}
-    if (-not (Test-Path $EnvFilePath)) {
-        return $values
-    }
-
+    if (-not (Test-Path $EnvFilePath)) { return $values }
     foreach ($line in Get-Content $EnvFilePath) {
-        if ($line -match '^\s*#' -or $line -match '^\s*$') {
-            continue
-        }
-
+        if ($line -match '^\s*#' -or $line -match '^\s*$') { continue }
         $parts = $line -split '=', 2
-        if ($parts.Count -ne 2) {
-            continue
-        }
-
+        if ($parts.Count -ne 2) { continue }
         $key = $parts[0].Trim()
         $value = $parts[1].Trim()
         if ($value -match '^".*"$' -or $value -match "^'.*'$") {
@@ -113,206 +79,174 @@ function Get-EnvFileMap {
         }
         $values[$key] = $value
     }
-
     return $values
 }
 
-function Get-RequiredEnvValue {
-    param(
-        [hashtable]$EnvMap,
-        [string]$Key
-    )
-
-    $value = $EnvMap[$Key]
-    if (-not $value -or -not $value.Trim()) {
-        throw "Missing required value '$Key' in $BackendEnvFile"
-    }
-
-    return $value.Trim()
-}
-
 function Write-ProductionEnvFile {
-    param(
-        [string]$SourceEnvFile,
-        [string]$DestinationEnvFile
-    )
-
+    param([string]$SourceEnvFile, [string]$DestinationEnvFile)
     if (-not (Test-Path $SourceEnvFile)) {
         throw "backend env file not found: $SourceEnvFile"
     }
-
     $envMap = Get-EnvFileMap -EnvFilePath $SourceEnvFile
-    $dbUser = Get-RequiredEnvValue -EnvMap $envMap -Key "DB_USERNAME"
-    $dbPassword = Get-RequiredEnvValue -EnvMap $envMap -Key "DB_PASSWORD"
-    $dbName = if ($envMap.ContainsKey("DB_DATABASE") -and $envMap["DB_DATABASE"].Trim()) {
-        $envMap["DB_DATABASE"].Trim()
+    $requiredKeys = @("DB_USERNAME", "DB_PASSWORD", "JWT_SECRET")
+    foreach ($key in $requiredKeys) {
+        if (-not $envMap.ContainsKey($key) -or -not $envMap[$key].Trim()) {
+            throw "Missing required value '$key' in $SourceEnvFile"
+        }
     }
-    else {
-        "babydaily"
+    # Write all key=value pairs (excluding local-only keys)
+    $localOnlyKeys = @("DB_HOST", "DB_PORT")
+    $content = @()
+    foreach ($key in $envMap.Keys) {
+        if ($localOnlyKeys -contains $key) { continue }
+        $content += "$key=$($envMap[$key])"
     }
-    $jwtSecret = Get-RequiredEnvValue -EnvMap $envMap -Key "JWT_SECRET"
-    $webAccessPin = if ($envMap.ContainsKey("WEB_ACCESS_PIN") -and $envMap["WEB_ACCESS_PIN"].Trim()) {
-        $envMap["WEB_ACCESS_PIN"].Trim()
-    }
-    else {
-        Resolve-AccessPin -CliPin $AccessPin -EnvFilePath $FrontendEnvFile
-    }
-    $wechatAppId = if ($envMap.ContainsKey("WECHAT_APPID")) { $envMap["WECHAT_APPID"].Trim() } else { "" }
-    $wechatSecret = if ($envMap.ContainsKey("WECHAT_SECRET")) { $envMap["WECHAT_SECRET"].Trim() } else { "" }
-    $adminUsername = if ($envMap.ContainsKey("ADMIN_USERNAME")) { $envMap["ADMIN_USERNAME"].Trim() } else { "" }
-    $adminPassword = if ($envMap.ContainsKey("ADMIN_PASSWORD")) { $envMap["ADMIN_PASSWORD"].Trim() } else { "" }
-
-    $content = @(
-        "DB_USERNAME=$dbUser"
-        "DB_PASSWORD=$dbPassword"
-        "DB_DATABASE=$dbName"
-        "JWT_SECRET=$jwtSecret"
-        "WEB_ACCESS_PIN=$webAccessPin"
-        "WECHAT_APPID=$wechatAppId"
-        "WECHAT_SECRET=$wechatSecret"
-        "ADMIN_USERNAME=$adminUsername"
-        "ADMIN_PASSWORD=$adminPassword"
-    )
-
     Set-Content -Path $DestinationEnvFile -Value $content -Encoding utf8
+    Write-Host "[env] Generated: $DestinationEnvFile" -ForegroundColor Green
 }
 
+# ===== Start =====
 Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host "  BabyDaily Deploy Script" -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
+Write-Host "[config] Host: $DeployHost | Path: $DeployPath" -ForegroundColor DarkGray
+Write-Host "[config] SSH Key: $SshKey" -ForegroundColor DarkGray
 
-$ResolvedPin = Resolve-AccessPin -CliPin $AccessPin -EnvFilePath $FrontendEnvFile
-$ResolvedDevLogin = Resolve-FrontendEnvValue -CliValue $EnableDevLogin -EnvFilePath $FrontendEnvFile -Key "VITE_ENABLE_DEV_LOGIN" -DefaultValue "false"
+# Resolve build args from backend/.env
+$envMap = Get-EnvFileMap -EnvFilePath $BackendEnvFile
+$ResolvedPin = if ($envMap.ContainsKey("WEB_ACCESS_PIN")) { $envMap["WEB_ACCESS_PIN"] } else { "" }
 if ($ResolvedPin) {
-    $env:VITE_ACCESS_PIN = $ResolvedPin
-    Write-Host "[env] VITE_ACCESS_PIN loaded for frontend build" -ForegroundColor Green
-}
-else {
-    Write-Host "[env] VITE_ACCESS_PIN is empty; PIN gate will be disabled in built frontend" -ForegroundColor Yellow
-}
-$env:VITE_ENABLE_DEV_LOGIN = $ResolvedDevLogin
-Write-Host "[env] VITE_ENABLE_DEV_LOGIN=$ResolvedDevLogin (frontend build)" -ForegroundColor Cyan
-if ($ResolvedDevLogin -eq "true") {
-    Write-Host "[warn] Frontend dev login is enabled for this build. Do not deploy this setting to production unless you explicitly intend to." -ForegroundColor Yellow
+    Write-Host "[env] VITE_ACCESS_PIN=$ResolvedPin (from backend/.env)" -ForegroundColor Green
+} else {
+    Write-Host "[env] VITE_ACCESS_PIN is empty; PIN gate disabled" -ForegroundColor Yellow
 }
 
 if ($UploadProductionEnv) {
     Write-ProductionEnvFile -SourceEnvFile $BackendEnvFile -DestinationEnvFile $ProductionEnvFile
-    Write-Host "[env] Generated production compose env: $ProductionEnvFile" -ForegroundColor Green
 }
 else {
-    Write-Host "[env] Reusing remote .env.production (default safe behavior)" -ForegroundColor Cyan
+    Write-Host "[env] Reusing remote .env.production (use -UploadProductionEnv to override)" -ForegroundColor Cyan
 }
 
-# ===== 1. Build Images =====
+# Determine which images to build
+$BuildBackend = -not $FrontendOnly
+$BuildFrontend = -not $BackendOnly
+
+# ===== 1. Build Images Locally =====
 if ($SkipBuild) {
-    Write-Host "[1/4] Skip build (using existing images)" -ForegroundColor Yellow
-    if ($ResolvedPin) {
-        Write-Host "      Note: -SkipBuild is set, so updated VITE_ACCESS_PIN will NOT be baked into images." -ForegroundColor Yellow
-    }
-    Write-Host "      Note: -SkipBuild is set, so updated VITE_ENABLE_DEV_LOGIN will NOT be baked into images." -ForegroundColor Yellow
+    Write-Host "`n[1/4] Skip build (using existing images)" -ForegroundColor Yellow
 }
 else {
-    Write-Host "[1/4] Building Docker images..." -ForegroundColor Yellow
-    Push-Location $ProjectPath
-    try {
-        if ($NoBuildCache) {
-            Write-Host "   (using --no-cache for full rebuild)" -ForegroundColor Gray
-            docker-compose build --no-cache
-        }
-        else {
-            docker-compose build
-        }
-        if ($LASTEXITCODE -ne 0) { throw "Docker build failed" }
+    Write-Host "`n[1/4] Building Docker images locally..." -ForegroundColor Yellow
+    $cacheFlag = if ($NoBuildCache) { "--no-cache" } else { "" }
+
+    if ($BuildBackend) {
+        Write-Host "   Building backend..." -ForegroundColor DarkGray
+        $cmd = "docker build $cacheFlag -t babydaily-backend `"$ProjectPath\backend`""
+        Invoke-Expression $cmd
+        if ($LASTEXITCODE -ne 0) { throw "Backend build failed" }
+        Write-Host "   [OK] Backend built" -ForegroundColor Green
     }
-    finally {
-        Pop-Location
+
+    if ($BuildFrontend) {
+        Write-Host "   Building frontend..." -ForegroundColor DarkGray
+        $cmd = "docker build $cacheFlag --build-arg VITE_ACCESS_PIN=$ResolvedPin --build-arg VITE_ENABLE_DEV_LOGIN=false -t babydaily-frontend `"$ProjectPath\frontend`""
+        Invoke-Expression $cmd
+        if ($LASTEXITCODE -ne 0) { throw "Frontend build failed" }
+        Write-Host "   [OK] Frontend built" -ForegroundColor Green
     }
-    Write-Host "[OK] Images built successfully" -ForegroundColor Green
 }
 
 # ===== 2. Export Images =====
-Write-Host "`n[2/4] Exporting images to file..." -ForegroundColor Yellow
+Write-Host "`n[2/4] Exporting images..." -ForegroundColor Yellow
 if (Test-Path $ImageFile) { Remove-Item $ImageFile -Force }
 
-docker save babydaily-backend babydaily-frontend -o $ImageFile
+$imagesToSave = @()
+if ($BuildBackend -or (-not $FrontendOnly)) { $imagesToSave += "babydaily-backend" }
+if ($BuildFrontend -or (-not $BackendOnly)) { $imagesToSave += "babydaily-frontend" }
+$imageList = $imagesToSave -join " "
+
+Invoke-Expression "docker save $imageList -o `"$ImageFile`""
 if ($LASTEXITCODE -ne 0) { throw "Image export failed" }
 
-$ImageSizeMB = [math]::Round((Get-Item $ImageFile).Length / 1MB, 2)
-Write-Host "[OK] Images exported: $ImageFile ($ImageSizeMB MB)" -ForegroundColor Green
+$ImageSizeMB = [math]::Round((Get-Item $ImageFile).Length / 1MB, 1)
+Write-Host "[OK] Exported: $ImageSizeMB MB" -ForegroundColor Green
 
 # ===== 3. Upload Files =====
-Write-Host "`n[3/4] Uploading files to server ($DeployUser@$DeployHost)..." -ForegroundColor Yellow
-$SshTarget = "$DeployUser@$DeployHost"
+Write-Host "`n[3/4] Uploading to $DeployHost..." -ForegroundColor Yellow
+Run-Ssh "mkdir -p $DeployPath/uploads $DeployPath/database/postgres"
 
-ssh $SshTarget "mkdir -p $DeployPath/uploads $DeployPath/database/postgres"
-if ($LASTEXITCODE -ne 0) { throw "Failed to create remote directory" }
-
-$FilesToUpload = @(
-    "$ProjectPath\docker-compose.prod.yml",
-    $ImageFile
+$filesToUpload = @(
+    @{ Local = "$ProjectPath\docker-compose.prod.yml"; Remote = "$DeployPath/" }
+    @{ Local = $ImageFile; Remote = "$DeployPath/" }
 )
 if ($UploadProductionEnv) {
-    $FilesToUpload += $ProductionEnvFile
+    $filesToUpload += @{ Local = $ProductionEnvFile; Remote = "$DeployPath/" }
 }
 
-foreach ($file in $FilesToUpload) {
-    $fileName = Split-Path $file -Leaf
-    Write-Host "   -> $fileName" -ForegroundColor DarkGray
-    scp $file "${SshTarget}:$DeployPath/"
-    if ($LASTEXITCODE -ne 0) { throw "Failed to upload $fileName" }
+foreach ($f in $filesToUpload) {
+    $name = Split-Path $f.Local -Leaf
+    Write-Host "   -> $name" -ForegroundColor DarkGray
+    Run-Scp -LocalFile $f.Local -RemotePath $f.Remote
 }
-Write-Host "[OK] Files uploaded successfully" -ForegroundColor Green
+Write-Host "[OK] Upload complete" -ForegroundColor Green
 
 # ===== 4. Remote Deploy =====
-Write-Host "`n[4/4] Executing remote deploy commands..." -ForegroundColor Yellow
+Write-Host "`n[4/4] Deploying on remote..." -ForegroundColor Yellow
 
 $RemoteScript = @"
 #!/bin/bash
 set -e
 cd $DeployPath
 
-echo '>>> Preparing config files...'
-if [ -f docker-compose.prod.yml ]; then
-    mv docker-compose.prod.yml docker-compose.yml
-fi
+echo '>>> Applying production compose config...'
+cp docker-compose.prod.yml docker-compose.yml
 
 if [ ! -f .env.production ]; then
-    echo 'Missing .env.production on remote host.' >&2
-    echo 'Run deploy.ps1 with -UploadProductionEnv for first-time setup, or create the file manually.' >&2
+    echo 'ERROR: Missing .env.production on remote host.' >&2
+    echo 'Run deploy.ps1 with -UploadProductionEnv for first-time setup.' >&2
     exit 1
 fi
 
 echo '>>> Loading Docker images...'
 docker load -i babydaily-images.tar
 
-echo '>>> Stopping old containers...'
+echo '>>> Restarting services...'
 docker compose --env-file .env.production down --remove-orphans 2>/dev/null || true
-
-echo '>>> Starting new containers...'
 docker compose --env-file .env.production up -d
 
-echo '>>> Cleaning up temp files...'
+echo '>>> Cleaning up...'
 rm -f babydaily-images.tar
 
-echo '>>> Container status...'
+echo '>>> Waiting for backend startup...'
+sleep 3
+
+echo '>>> Verifying deployment...'
 docker compose --env-file .env.production ps
+
+# Health check: verify backend responds
+if docker exec babydaily-frontend wget -qO- --timeout=5 http://backend:3000/auth/session 2>/dev/null | grep -q 'Unauthorized\|user'; then
+    echo '>>> Backend health check: OK'
+else
+    echo '>>> WARNING: Backend may not be responding correctly'
+    docker logs babydaily-backend --tail 10
+fi
 
 echo '>>> Deploy completed!'
 "@
 
 $RemoteScriptLF = $RemoteScript -replace "`r`n", "`n"
-$RemoteScriptLF | ssh $SshTarget 'bash -s'
+$RemoteScriptLF | & ssh -i "$SshKey" $SshTarget 'bash -s'
 if ($LASTEXITCODE -ne 0) { throw "Remote deploy failed" }
 
 Write-Host "`n========================================" -ForegroundColor Cyan
-Write-Host "  [OK] Deploy Successful!" -ForegroundColor Green
+Write-Host "  Deploy Successful!" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "`nFrontend URL: http://${DeployHost}:8080" -ForegroundColor White
-Write-Host "Backend API:  http://${DeployHost}:3000" -ForegroundColor White
-Write-Host ""
+Write-Host "  URL: http://$DeployHost" -ForegroundColor White
+Write-Host "  Admin: http://$DeployHost/login" -ForegroundColor White
+Write-Host "========================================`n" -ForegroundColor Cyan
 
 # Cleanup local temp files
 if (Test-Path $ImageFile) { Remove-Item $ImageFile -Force }
 if ($UploadProductionEnv -and (Test-Path $ProductionEnvFile)) { Remove-Item $ProductionEnvFile -Force }
-Write-Host "[OK] Cleanup completed" -ForegroundColor Green
+Write-Host "[OK] Local cleanup done" -ForegroundColor Green
