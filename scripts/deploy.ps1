@@ -64,6 +64,29 @@ function Run-Scp {
     if ($LASTEXITCODE -ne 0) { throw "SCP failed: $LocalFile" }
 }
 
+function Invoke-CommandWithRetry {
+    param(
+        [string]$Command,
+        [string]$Label,
+        [int]$MaxAttempts = 3,
+        [int]$DelaySeconds = 5
+    )
+
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        Write-Host "   -> $Label (attempt $attempt/$MaxAttempts)" -ForegroundColor DarkGray
+        Invoke-Expression $Command
+        if ($LASTEXITCODE -eq 0) {
+            return
+        }
+        if ($attempt -lt $MaxAttempts) {
+            Write-Host "   [retry] $Label failed, waiting ${DelaySeconds}s..." -ForegroundColor Yellow
+            Start-Sleep -Seconds $DelaySeconds
+        }
+    }
+
+    throw "$Label failed after $MaxAttempts attempts"
+}
+
 function Get-EnvFileMap {
     param([string]$EnvFilePath)
     $values = @{}
@@ -132,18 +155,21 @@ else {
     $cacheFlag = if ($NoBuildCache) { "--no-cache" } else { "" }
 
     if ($BuildBackend) {
+        Write-Host "   Pulling backend base image..." -ForegroundColor DarkGray
+        Invoke-CommandWithRetry -Command "docker pull node:20-alpine" -Label "Pull node:20-alpine"
         Write-Host "   Building backend..." -ForegroundColor DarkGray
         $cmd = "docker build $cacheFlag -t babydaily-backend `"$ProjectPath\backend`""
-        Invoke-Expression $cmd
-        if ($LASTEXITCODE -ne 0) { throw "Backend build failed" }
+        Invoke-CommandWithRetry -Command $cmd -Label "Build backend image"
         Write-Host "   [OK] Backend built" -ForegroundColor Green
     }
 
     if ($BuildFrontend) {
+        Write-Host "   Pulling frontend base images..." -ForegroundColor DarkGray
+        Invoke-CommandWithRetry -Command "docker pull node:20-alpine" -Label "Pull node:20-alpine"
+        Invoke-CommandWithRetry -Command "docker pull nginx:alpine" -Label "Pull nginx:alpine"
         Write-Host "   Building frontend..." -ForegroundColor DarkGray
         $cmd = "docker build $cacheFlag --build-arg VITE_ENABLE_DEV_LOGIN=false -t babydaily-frontend `"$ProjectPath\frontend`""
-        Invoke-Expression $cmd
-        if ($LASTEXITCODE -ne 0) { throw "Frontend build failed" }
+        Invoke-CommandWithRetry -Command $cmd -Label "Build frontend image"
         Write-Host "   [OK] Frontend built" -ForegroundColor Green
     }
 }

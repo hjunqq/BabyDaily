@@ -20,6 +20,17 @@
       </view>
     </view>
 
+    <view class="home-tools">
+      <view wx:if="{{canManageFamily}}" class="tool-chip primary" bindtap="goToFamily">
+        <text class="tool-chip-text">家庭管理</text>
+        <text class="tool-chip-sub">{{familyName || '审核 / 邀请'}}</text>
+      </view>
+      <view class="tool-chip ghost" bindtap="switchAccount">
+        <text class="tool-chip-text">切换账号</text>
+        <text class="tool-chip-sub">邀请码 / 测试账号</text>
+      </view>
+    </view>
+
     <!-- Last Feed Card -->
     <view class="feed-card" style="background: {{feedCardBg}}">
       <block wx:if="{{lastFeed.time}}">

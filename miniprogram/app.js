@@ -1,11 +1,18 @@
-const { initSession } = require('./utils/api');
+const { initSession, getSettings } = require('./utils/api');
 
 App({
     onLaunch() {
         this.readyPromise = initSession()
             .then((session) => {
                 this.applySession(session);
-                if (session.onboardingRequired) {
+                if (!session || !session.token) {
+                    this.applySettings(null);
+                    return null;
+                }
+                return this.loadSettings().then(() => session);
+            })
+            .then((session) => {
+                if (session && session.onboardingRequired) {
                     setTimeout(() => {
                         wx.reLaunch({ url: '/pages/onboarding/onboarding' });
                     }, 0);
@@ -14,27 +21,54 @@ App({
             })
             .catch((err) => {
                 console.error('[App] Login failed:', err.message || err);
-                wx.showModal({
-                    title: '登录失败',
-                    content: err.message || '无法连接服务器，请检查网络后重试',
-                    showCancel: false,
-                });
+                this.applySession(null);
+                this.applySettings(null);
                 throw err;
             });
     },
 
+    loadSettings() {
+        return getSettings()
+            .then((settings) => {
+                this.applySettings(settings);
+                return settings;
+            })
+            .catch((err) => {
+                console.warn('[App] Load settings failed:', err.message || err);
+                this.applySettings(null);
+                return null;
+            });
+    },
+
     applySession(session) {
-        this.globalData.token = session.token || '';
-        this.globalData.userInfo = session.user || null;
-        this.globalData.family = session.family || null;
-        this.globalData.babyId = session.babyId || '';
-        this.globalData.babyProfile = session.baby || null;
-        this.globalData.onboardingRequired = !!session.onboardingRequired;
-        this.globalData.membershipPending = !!session.membershipPending;
-        this.globalData.role = session.role || null;
+        const next = session || {};
+        this.globalData.token = next.token || '';
+        this.globalData.userInfo = next.user || null;
+        this.globalData.family = next.family || null;
+        this.globalData.babyId = next.babyId || '';
+        this.globalData.babyProfile = next.baby || null;
+        this.globalData.onboardingRequired = !!next.onboardingRequired;
+        this.globalData.membershipPending = !!next.membershipPending;
+        this.globalData.role = next.role || null;
+    },
+
+    applySettings(settings) {
+        this.globalData.settings = settings || null;
+        this.globalData.dayStartHour = settings?.dayStartHour || 0;
+    },
+
+    ensureLoggedIn() {
+        if (!this.globalData.token) {
+            wx.reLaunch({ url: '/pages/login/login' });
+            return false;
+        }
+        return true;
     },
 
     ensureBabyContext() {
+        if (!this.ensureLoggedIn()) {
+            return false;
+        }
         if (this.globalData.onboardingRequired || !this.globalData.babyId) {
             wx.reLaunch({ url: '/pages/onboarding/onboarding' });
             return false;
@@ -51,6 +85,8 @@ App({
         onboardingRequired: false,
         membershipPending: false,
         role: null,
+        settings: null,
+        dayStartHour: 0,
         theme: 'A',
     },
 });

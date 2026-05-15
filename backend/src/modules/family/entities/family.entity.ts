@@ -19,6 +19,9 @@ export class Family {
   @Column()
   creator_id: string;
 
+  @Column({ type: 'int', nullable: true })
+  day_start_hour: number | null;
+
   @OneToMany(() => FamilyMember, (member) => member.family)
   members: FamilyMember[];
 

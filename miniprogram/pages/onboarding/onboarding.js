@@ -1,5 +1,5 @@
 const app = getApp();
-const { authedRequest, refreshSession } = require('../../utils/api');
+const { authedRequest, refreshSession, logout } = require('../../utils/api');
 
 Page({
     data: {
@@ -14,6 +14,9 @@ Page({
     },
 
     onLoad() {
+        if (!app.ensureLoggedIn()) {
+            return;
+        }
         // If already pending, go straight to pending screen
         const session = app.globalData;
         if (session.membershipPending) {
@@ -132,5 +135,12 @@ Page({
         this.setData({ loading: true });
         await this.checkApproval();
         this.setData({ loading: false });
+    },
+
+    switchAccount() {
+        logout();
+        app.applySession(null);
+        app.applySettings(null);
+        wx.reLaunch({ url: '/pages/login/login' });
     },
 });

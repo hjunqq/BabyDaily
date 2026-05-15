@@ -1,5 +1,7 @@
 const app = getApp();
 const { fetchRecords, fetchSummary } = require('./home.api');
+const { formatLocalTime, getLogicalDateKey, toApiISOString } = require('../../utils/datetime');
+const { logout } = require('../../utils/api');
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -36,6 +38,8 @@ Page({
         bathProgress: 0,
         solidsProgress: 0,
         topicalProgress: 0,
+        canManageFamily: false,
+        familyName: '',
     },
 
     onLoad: function() {
@@ -51,6 +55,7 @@ Page({
                     babyAge: self.calcDays(baby.birthday),
                 });
             }
+            self.syncAccessState();
             self.loadData();
         }).catch(function(err) {
             console.error('App init failed', err);
@@ -61,9 +66,19 @@ Page({
     },
 
     onShow: function() {
+        this.syncAccessState();
         if (!this.data.loading && !app.globalData.onboardingRequired && app.globalData.babyId) {
             this.loadData();
         }
+    },
+
+    syncAccessState: function() {
+        const family = app.globalData.family || null;
+        const role = app.globalData.role || '';
+        this.setData({
+            canManageFamily: role === 'OWNER' || role === 'GUARDIAN',
+            familyName: family && family.name ? family.name : '',
+        });
     },
 
     onPullDownRefresh: function() {
@@ -155,7 +170,7 @@ Page({
         const amount = isBreast ? (details.duration || 0) + ' 分钟' : (details.amount || 0) + ' ml';
         const subtype = isBreast ? '亲喂' : '瓶喂';
         const elapsedMs = Date.now() - new Date(feed.time).getTime();
-        const timeStr = feed.time ? feed.time.slice(11, 16) : '';
+        const timeStr = feed.formattedTime || formatLocalTime(feed.time);
 
         this.setData({
             lastFeed: { time: feed.time, amount: amount, subtype: subtype, elapsed: this.formatElapsed(feed.time), timeStr: timeStr },
@@ -164,16 +179,17 @@ Page({
     },
 
     computeTodayFeeds: function(records) {
-        const today = new Date().toISOString().slice(0, 10);
+        const dayStartHour = app.globalData.dayStartHour || 0;
+        const today = getLogicalDateKey(new Date(), dayStartHour);
         const list = records || [];
         const feeds = [];
         for (var i = 0; i < list.length; i++) {
             const r = list[i];
-            if (r.type === 'FEED' && r.time && r.time.slice(0, 10) === today) {
+            if (r.type === 'FEED' && r.time && getLogicalDateKey(r.time, dayStartHour) === today) {
                 const d = r.details || {};
                 feeds.push({
                     id: r.id,
-                    time: r.time.slice(11, 16),
+                    time: r.formattedTime || formatLocalTime(r.time),
                     value: d.subtype === 'BREAST' ? (d.duration || 0) + '分钟' : (d.amount || 0) + 'ml',
                 });
             }
@@ -189,7 +205,7 @@ Page({
         const self = this;
         self.setData({ loading: true, error: '' });
         return Promise.all([
-            fetchSummary(babyId),
+            fetchSummary(babyId, app.globalData.dayStartHour),
             fetchRecords(babyId),
         ]).then(function(results) {
             const summaryResp = results[0] || {};
@@ -222,7 +238,7 @@ Page({
                     icon: self.getIcon(r.type, d.subtype),
                     iconClass: self.getIconClass(r.type),
                     type: self.mapType(r.type, d.subtype),
-                    time: r.time ? r.time.slice(11, 16) : '',
+                    time: r.formattedTime || formatLocalTime(r.time),
                     value: self.mapValue(r),
                 });
             }
@@ -337,6 +353,24 @@ Page({
         wx.navigateTo({ url: '/pages/record-detail/record-detail?id=' + id });
     },
 
+    goToFamily: function() {
+        wx.navigateTo({ url: '/pages/family/family' });
+    },
+
+    switchAccount: function() {
+        wx.showModal({
+            title: '切换账号',
+            content: '退出当前账号并返回登录页？',
+            success: function(res) {
+                if (!res.confirm) return;
+                logout();
+                app.applySession(null);
+                app.applySettings(null);
+                wx.reLaunch({ url: '/pages/login/login' });
+            },
+        });
+    },
+
     quickSupplement: function(e) {
         const supplementType = e.currentTarget.dataset.type;
         const self = this;
@@ -354,7 +388,7 @@ Page({
             data: {
                 babyId: app.globalData.babyId,
                 type: supplementType,
-                time: new Date().toISOString(),
+                time: toApiISOString(),
                 details: { amount: 1, unit: '粒' },
             },
         }).then(function() {

@@ -1,5 +1,6 @@
 const API_URL = 'https://baby.hydrosim.cn/api';
-const BOOTSTRAP_VERSION = 4;
+const BOOTSTRAP_VERSION = 5;
+const AUTH_CONTEXT_KEY = 'auth_context';
 
 const request = ({ url, method = 'GET', data, token }) => new Promise((resolve, reject) => {
     wx.request({
@@ -32,7 +33,7 @@ const wxLogin = () => new Promise((resolve, reject) => {
     wx.login({ success: resolve, fail: reject });
 });
 
-const saveSession = ({ token, user, family, babyId, baby, onboardingRequired }) => {
+const saveSession = ({ token, user, family, babyId, baby, onboardingRequired, membershipPending, role }) => {
     if (token) wx.setStorageSync('access_token', token);
     if (user) wx.setStorageSync('current_user', user);
     if (family) wx.setStorageSync('current_family', family);
@@ -42,6 +43,8 @@ const saveSession = ({ token, user, family, babyId, baby, onboardingRequired }) 
         family: family || null,
         baby: baby || null,
         onboardingRequired: !!onboardingRequired,
+        membershipPending: !!membershipPending,
+        role: role || null,
     });
 };
 
@@ -54,15 +57,57 @@ const clearSession = () => {
     wx.removeStorageSync('session_context');
 };
 
+const setAuthContext = (authContext) => {
+    if (authContext) {
+        wx.setStorageSync(AUTH_CONTEXT_KEY, authContext);
+    }
+};
+
+const getAuthContext = () => wx.getStorageSync(AUTH_CONTEXT_KEY) || null;
+
+const clearAuthContext = () => {
+    wx.removeStorageSync(AUTH_CONTEXT_KEY);
+    wx.removeStorageSync('bootstrap_version');
+};
+
 const getStoredToken = () => wx.getStorageSync('access_token') || '';
 const getCurrentBabyId = () => wx.getStorageSync('current_baby_id') || '';
 const getCurrentFamily = () => wx.getStorageSync('current_family') || null;
 const getSessionContext = () => wx.getStorageSync('session_context') || {};
 
+const mapBootstrapResponseToSession = (res, fallbackToken) => ({
+    token: res.access_token || fallbackToken || '',
+    user: res.user || null,
+    family: res.family || null,
+    babyId: res.baby?.id || '',
+    baby: res.baby || null,
+    onboardingRequired: !!res.onboardingRequired,
+    membershipPending: !!res.membershipPending,
+    role: res.role || null,
+});
+
+const getSettings = async () => {
+    const token = getStoredToken();
+    const family = getCurrentFamily();
+    const familyQuery = family?.id ? `?familyId=${encodeURIComponent(family.id)}` : '';
+    if (!token) {
+        throw new Error('No active session');
+    }
+    return request({
+        url: `/settings${familyQuery}`,
+        method: 'GET',
+        token,
+    });
+};
+
 const bootstrap = async (method, payload) => {
     const data = { method };
     if (method === 'wechat' && payload) {
         data.code = payload;
+    }
+    if (method === 'admin' && payload) {
+        data.username = payload.username;
+        data.password = payload.password;
     }
 
     return request({
@@ -98,6 +143,27 @@ const refreshSession = async () => {
     return session;
 };
 
+const loginWithWechat = async () => {
+    setAuthContext({ method: 'wechat' });
+    clearSession();
+    const loginRes = await wxLogin();
+    const res = await bootstrap('wechat', loginRes.code);
+    const session = mapBootstrapResponseToSession(res);
+    saveSession(session);
+    wx.setStorageSync('bootstrap_version', BOOTSTRAP_VERSION);
+    return session;
+};
+
+const loginWithAdmin = async (username, password) => {
+    setAuthContext({ method: 'admin', username, password });
+    clearSession();
+    const res = await bootstrap('admin', { username, password });
+    const session = mapBootstrapResponseToSession(res);
+    saveSession(session);
+    wx.setStorageSync('bootstrap_version', BOOTSTRAP_VERSION);
+    return session;
+};
+
 const initSession = async () => {
     const cached = getStoredToken();
     const ver = wx.getStorageSync('bootstrap_version') || 0;
@@ -114,30 +180,29 @@ const initSession = async () => {
             babyId,
             baby,
             onboardingRequired: !!session.onboardingRequired,
+            membershipPending: !!session.membershipPending,
+            role: session.role || null,
         };
+    }
+
+    const authContext = getAuthContext();
+    if (!authContext || !authContext.method) {
+        clearSession();
+        return null;
     }
 
     clearSession();
 
     try {
-        const loginRes = await wxLogin();
-        const res = await bootstrap('wechat', loginRes.code);
-        const { access_token, user, family, baby, onboardingRequired, membershipPending, role } = res;
-        const session = {
-            token: access_token,
-            user,
-            family: family || null,
-            babyId: baby?.id || '',
-            baby: baby || null,
-            onboardingRequired: !!onboardingRequired,
-            membershipPending: !!membershipPending,
-            role: role || null,
-        };
-        saveSession(session);
-        wx.setStorageSync('bootstrap_version', BOOTSTRAP_VERSION);
-        return session;
+        if (authContext.method === 'wechat') {
+            return await loginWithWechat();
+        }
+        if (authContext.method === 'admin') {
+            return await loginWithAdmin(authContext.username || '', authContext.password || '');
+        }
+        throw new Error('Unsupported auth method');
     } catch (err) {
-        throw new Error('登录失败，请检查网络连接后重试');
+        throw new Error('登录失败，请检查网络或重新输入账号信息');
     }
 };
 
@@ -150,7 +215,9 @@ const authedRequest = async (url, options = {}) => {
             const oldBabyId = getCurrentBabyId();
             clearSession();
             const session = await initSession();
-            // If babyId changed after re-bootstrap, update URL
+            if (!session || !session.token) {
+                throw new Error('AUTH_REQUIRED');
+            }
             let retryUrl = url;
             if (oldBabyId && session.babyId && oldBabyId !== session.babyId) {
                 retryUrl = url.replace(oldBabyId, session.babyId);
@@ -161,15 +228,64 @@ const authedRequest = async (url, options = {}) => {
     }
 };
 
+const loginWithInviteCode = async (code) => {
+    if (!code) {
+        throw new Error('请输入邀请码');
+    }
+
+    await loginWithWechat();
+    await authedRequest('/families/join', {
+        method: 'POST',
+        data: { code },
+    });
+    return refreshSession();
+};
+
+const getFamilies = async () => authedRequest('/families/my');
+
+const getMembers = async (familyId) => authedRequest(`/families/${familyId}/members`);
+
+const getPendingMembers = async (familyId) => authedRequest(`/families/${familyId}/members/pending`);
+
+const createInvite = async (familyId, role) => authedRequest(`/families/${familyId}/invites`, {
+    method: 'POST',
+    data: { role: role || 'MEMBER' },
+});
+
+const approveMember = async (familyId, memberId) => authedRequest(`/families/${familyId}/members/${memberId}/approve`, {
+    method: 'POST',
+});
+
+const rejectMember = async (familyId, memberId) => authedRequest(`/families/${familyId}/members/${memberId}/reject`, {
+    method: 'POST',
+});
+
+const logout = () => {
+    clearSession();
+    clearAuthContext();
+};
+
 module.exports = {
     API_URL,
     request,
     authedRequest,
     initSession,
     refreshSession,
+    loginWithWechat,
+    loginWithInviteCode,
+    loginWithAdmin,
+    getSettings,
     getStoredToken,
     getCurrentBabyId,
     getCurrentFamily,
     getSessionContext,
     clearSession,
+    getFamilies,
+    getMembers,
+    getPendingMembers,
+    createInvite,
+    approveMember,
+    rejectMember,
+    getAuthContext,
+    logout,
 };

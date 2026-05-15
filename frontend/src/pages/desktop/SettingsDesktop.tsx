@@ -47,6 +47,12 @@ export const SettingsDesktop = () => {
     }
   };
 
+  const handleFieldDataChanged = (e: any) => {
+    const dataField = e?.dataField;
+    if (!dataField) return;
+    setSettings(prev => (prev ? { ...prev, [dataField]: e.value } : prev));
+  };
+
   const handleImport = async (e: any) => {
     const file = e.value[0];
     if (!file || !baby?.id) return;
@@ -123,7 +129,12 @@ export const SettingsDesktop = () => {
     <div>
       <h2 className="bd-title">设置</h2>
       <div className="bd-card" style={{ maxWidth: 520 }}>
-        <Form formData={settings} labelMode="floating" colCount={1}>
+        <Form
+          formData={settings}
+          labelMode="floating"
+          colCount={1}
+          onFieldDataChanged={handleFieldDataChanged}
+        >
           <Item dataField="theme" label={{ text: '主题' }} />
           <Item dataField="language" label={{ text: '语言' }} />
           <Item dataField="exportFormat" label={{ text: '导出格式' }} />

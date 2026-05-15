@@ -1,0 +1,114 @@
+<view class="page">
+    <view wx:if="{{loading}}" class="state-card">
+        <view class="state-text">加载中...</view>
+    </view>
+
+    <view wx:elif="{{error}}" class="state-card">
+        <view class="state-text">{{error}}</view>
+        <button class="secondary-btn" bindtap="loadData">重试</button>
+    </view>
+
+    <block wx:else>
+        <view class="hero">
+            <view class="hero-title">{{family ? family.name : '家庭管理'}}</view>
+            <view class="hero-subtitle">Role: {{currentRoleLabel}}</view>
+        </view>
+
+        <view class="hero-actions">
+            <button class="secondary-btn action-btn" bindtap="goHome">进入首页</button>
+            <button class="secondary-btn action-btn" bindtap="switchAccount">切换账号</button>
+        </view>
+
+        <view wx:if="{{canManage}}" class="card">
+            <view class="card-title">生成邀请码</view>
+            <view class="role-switch">
+                <view
+                    class="role-chip {{inviteRole === 'MEMBER' ? 'active' : ''}}"
+                    data-role="MEMBER"
+                    bindtap="selectInviteRole"
+                >
+                    成员
+                </view>
+                <view
+                    class="role-chip {{inviteRole === 'VIEWER' ? 'active' : ''}}"
+                    data-role="VIEWER"
+                    bindtap="selectInviteRole"
+                >
+                    访客
+                </view>
+                <view
+                    wx:if="{{currentRole === 'OWNER'}}"
+                    class="role-chip {{inviteRole === 'GUARDIAN' ? 'active' : ''}}"
+                    data-role="GUARDIAN"
+                    bindtap="selectInviteRole"
+                >
+                    监护人
+                </view>
+            </view>
+
+            <button class="primary-btn" loading="{{actionLoading}}" bindtap="handleCreateInvite">
+                生成邀请码
+            </button>
+
+            <view wx:if="{{latestInviteCode}}" class="invite-box">
+                <view class="invite-code">{{latestInviteCode}}</view>
+                <view class="invite-meta">{{latestInviteRoleLabel}} · 24 小时有效 · 一次性</view>
+                <button class="secondary-btn" bindtap="copyInviteCode">复制邀请码</button>
+            </view>
+        </view>
+
+        <view class="card">
+            <view class="card-title">
+                待审核申请
+                <text class="count">{{pendingMembers.length}}</text>
+            </view>
+
+            <view wx:if="{{pendingMembers.length === 0}}" class="empty-text">当前没有待审核成员</view>
+
+            <block wx:for="{{pendingMembers}}" wx:key="id">
+                <view class="member-row">
+                    <view class="member-main">
+                        <view class="member-name">{{item.displayName}}</view>
+                        <view class="member-role">{{item.roleLabel}}</view>
+                    </view>
+                    <view wx:if="{{canManage}}" class="member-actions">
+                        <button
+                            class="mini-btn approve-btn"
+                            size="mini"
+                            data-member-id="{{item.id}}"
+                            bindtap="handleApprove"
+                        >
+                            批准
+                        </button>
+                        <button
+                            class="mini-btn reject-btn"
+                            size="mini"
+                            data-member-id="{{item.id}}"
+                            data-nickname="{{item.displayName}}"
+                            bindtap="handleReject"
+                        >
+                            拒绝
+                        </button>
+                    </view>
+                </view>
+            </block>
+        </view>
+
+        <view class="card">
+            <view class="card-title">
+                当前成员
+                <text class="count">{{members.length}}</text>
+            </view>
+
+            <block wx:for="{{members}}" wx:key="id">
+                <view class="member-row">
+                    <view class="member-main">
+                        <view class="member-name">{{item.displayName}}</view>
+                        <view class="member-role">{{item.roleLabel}}</view>
+                    </view>
+                    <view class="member-status">{{item.statusLabel}}</view>
+                </view>
+            </block>
+        </view>
+    </block>
+</view>

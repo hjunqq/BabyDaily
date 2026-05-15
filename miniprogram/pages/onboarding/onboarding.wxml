@@ -29,6 +29,9 @@
             <view class="hint">
                 没有邀请码？请联系家长在「家庭管理」中生成邀请码。
             </view>
+            <button class="switch-btn" bindtap="switchAccount">
+                切换登录方式
+            </button>
         </block>
 
         <!-- Step 2: Pending approval -->
@@ -50,6 +53,9 @@
                 bindtap="manualRefresh"
             >
                 {{loading ? '检查中...' : '手动刷新状态'}}
+            </button>
+            <button class="switch-btn" bindtap="switchAccount">
+                切换账号
             </button>
         </block>
     </view>

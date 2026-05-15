@@ -52,7 +52,8 @@ Page({
         const babyId = app.globalData.babyId;
         const self = this;
         self.setData({ loading: true, error: '' });
-        return authedRequest('/records/baby/' + babyId + '/trend?days=' + self.data.days).then(function(data) {
+        const dayStartHour = app.globalData.dayStartHour || 0;
+        return authedRequest('/records/baby/' + babyId + '/trend?days=' + self.data.days + '&dayStartHour=' + dayStartHour).then(function(data) {
             const list = Array.isArray(data) ? data : [];
 
             // Compute milk values for summary

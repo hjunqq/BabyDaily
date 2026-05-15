@@ -389,11 +389,13 @@ export const BabyService = {
     },
 
     getSettings: async (): Promise<UserSettings> => {
-        return request(`${API_URL}/settings`);
+        const familyId = CURRENT_FAMILY_ID ? `?familyId=${encodeURIComponent(CURRENT_FAMILY_ID)}` : '';
+        return request(`${API_URL}/settings${familyId}`);
     },
 
     updateSettings: async (data: Partial<UserSettings>): Promise<UserSettings> => {
-        return request(`${API_URL}/settings`, {
+        const familyId = CURRENT_FAMILY_ID ? `?familyId=${encodeURIComponent(CURRENT_FAMILY_ID)}` : '';
+        return request(`${API_URL}/settings${familyId}`, {
             method: 'PUT',
             body: JSON.stringify(data),
         });

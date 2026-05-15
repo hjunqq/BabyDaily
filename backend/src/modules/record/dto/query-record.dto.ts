@@ -21,4 +21,10 @@ export class SummaryQueryDto {
   @IsInt()
   @Min(1)
   days?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  dayStartHour?: number;
 }

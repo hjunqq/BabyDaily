@@ -126,7 +126,6 @@ export class RecordService {
     if (!ids.length) return { deleted: 0 };
 
     const records = await this.recordRepo.findByIds(ids);
-    // Cache per-baby role lookups to avoid N queries
     const babyRoleCache = new Map<string, boolean>();
     const allowedIds: string[] = [];
 
@@ -157,12 +156,16 @@ export class RecordService {
     await this.recordRepo.deleteByBabyId(babyId);
   }
 
-  async summary(babyId: string, userId: string) {
-    let dayStartHour = 0;
-    if (userId) {
-      const settings = await this.settingsService.getOrCreate(userId);
-      dayStartHour = settings.dayStartHour || 0;
-    }
+  async summary(
+    babyId: string,
+    userId: string,
+    dayStartHourOverride?: number,
+  ) {
+    const dayStartHour = await this.resolveDayStartHour(
+      babyId,
+      userId,
+      dayStartHourOverride,
+    );
 
     const { from } = this.getDayRange(dayStartHour);
 
@@ -266,12 +269,17 @@ export class RecordService {
     };
   }
 
-  async trend(babyId: string, days = 7, userId?: string) {
-    let dayStartHour = 0;
-    if (userId) {
-      const settings = await this.settingsService.getOrCreate(userId);
-      dayStartHour = settings.dayStartHour || 0;
-    }
+  async trend(
+    babyId: string,
+    days = 7,
+    userId?: string,
+    dayStartHourOverride?: number,
+  ) {
+    const dayStartHour = await this.resolveDayStartHour(
+      babyId,
+      userId,
+      dayStartHourOverride,
+    );
 
     const now = new Date();
     const from = new Date(now.getTime() - (days + 1) * 24 * 60 * 60 * 1000);
@@ -317,12 +325,16 @@ export class RecordService {
     return result;
   }
 
-  async kindleSummary(babyId: string, userId: string) {
-    let dayStartHour = 0;
-    if (userId) {
-      const settings = await this.settingsService.getOrCreate(userId);
-      dayStartHour = settings.dayStartHour || 0;
-    }
+  async kindleSummary(
+    babyId: string,
+    userId: string,
+    dayStartHourOverride?: number,
+  ) {
+    const dayStartHour = await this.resolveDayStartHour(
+      babyId,
+      userId,
+      dayStartHourOverride,
+    );
 
     const { from } = this.getDayRange(dayStartHour);
     const [aggResult, latestTimes, recentRecords] = await Promise.all([
@@ -411,5 +423,17 @@ export class RecordService {
 
     await this.recordRepo.saveMany(entities);
     return { count: entities.length };
+  }
+
+  private async resolveDayStartHour(
+    babyId: string,
+    userId?: string,
+    override?: number,
+  ): Promise<number> {
+    if (Number.isFinite(override)) {
+      return Math.max(0, Math.min(23, Math.floor(override as number)));
+    }
+
+    return this.settingsService.resolveDayStartHour(userId, { babyId });
   }
 }

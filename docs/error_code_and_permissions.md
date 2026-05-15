@@ -57,6 +57,13 @@ Protected examples:
 Validation rule:
 - the target baby must belong to a family that the current user is a member of
 
+## Family Management Permissions
+
+- `OWNER` can manage all family members, including role changes and removals.
+- `GUARDIAN` can create invite codes and can review pending join requests for roles below `GUARDIAN`.
+- `GUARDIAN` cannot approve or reject another pending `GUARDIAN` request.
+- `MEMBER` and `VIEWER` cannot access family management actions.
+
 ## Service-Level Ownership Checks
 
 Some APIs do not carry `babyId` directly in params and therefore validate ownership in the service layer:
@@ -66,6 +73,8 @@ Some APIs do not carry `babyId` directly in params and therefore validate owners
 - `PATCH /records/:id`
 - `DELETE /records/:id`
 - `DELETE /records/batch`
+
+For `PATCH /records/:id`, `DELETE /records/:id`, and `DELETE /records/batch`, the caller must be **either** the record's creator **or** a `GUARDIAN`/`OWNER` in the family that owns the record's baby. `MEMBER`/`VIEWER` cannot modify records created by other users. Batch delete silently skips records the caller has no permission to remove.
 
 ## Rate Limits
 

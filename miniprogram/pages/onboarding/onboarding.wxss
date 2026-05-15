@@ -82,6 +82,14 @@
     color: #5c4035;
 }
 
+.switch-btn {
+    margin-top: 20rpx;
+    border-radius: 999rpx;
+    background: #fff;
+    color: #7a625a;
+    border: 1rpx solid #ead8d1;
+}
+
 .hint {
     margin-top: 24rpx;
     text-align: center;

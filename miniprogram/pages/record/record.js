@@ -1,5 +1,6 @@
 const app = getApp();
 const { authedRequest } = require('../../utils/api');
+const { toApiISOString } = require('../../utils/datetime');
 
 Page({
     data: {
@@ -130,7 +131,7 @@ Page({
                 data: {
                     babyId: app.globalData.babyId,
                     type: 'DIAPER',
-                    time: new Date().toISOString(),
+                    time: toApiISOString(),
                     details: { type: diaperType },
                 },
             });
@@ -196,7 +197,7 @@ Page({
                 data: {
                     babyId,
                     type: selectedType,
-                    time: new Date().toISOString(),
+                    time: toApiISOString(),
                     details,
                 },
             });

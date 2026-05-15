@@ -45,15 +45,25 @@ export class RecordController {
   @Get('baby/:babyId/summary')
   @UseGuards(FamilyGuard)
   @RequireRole(FamilyRole.VIEWER)
-  summary(@Param('babyId') babyId: string, @Request() req: any) {
-    return this.recordService.summary(babyId, req.user.userId);
+  summary(
+    @Param('babyId') babyId: string,
+    @Query('dayStartHour') dayStartHour: string | undefined,
+    @Request() req: any,
+  ) {
+    const hour = dayStartHour ? parseInt(dayStartHour, 10) : undefined;
+    return this.recordService.summary(babyId, req.user.userId, hour);
   }
 
   @Get('baby/:babyId/kindle-summary')
   @UseGuards(FamilyGuard)
   @RequireRole(FamilyRole.VIEWER)
-  kindleSummary(@Param('babyId') babyId: string, @Request() req: any) {
-    return this.recordService.kindleSummary(babyId, req.user.userId);
+  kindleSummary(
+    @Param('babyId') babyId: string,
+    @Query('dayStartHour') dayStartHour: string | undefined,
+    @Request() req: any,
+  ) {
+    const hour = dayStartHour ? parseInt(dayStartHour, 10) : undefined;
+    return this.recordService.kindleSummary(babyId, req.user.userId, hour);
   }
 
   @Get('baby/:babyId/trend')
@@ -64,7 +74,12 @@ export class RecordController {
     @Query() query: SummaryQueryDto,
     @Request() req: any,
   ) {
-    return this.recordService.trend(babyId, query.days ?? 7, req.user.userId);
+    return this.recordService.trend(
+      babyId,
+      query.days ?? 7,
+      req.user.userId,
+      query.dayStartHour,
+    );
   }
 
   @Get('baby/:babyId/feed-timeline')

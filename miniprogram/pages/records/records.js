@@ -1,5 +1,6 @@
 const app = getApp();
 const { authedRequest } = require('../../utils/api');
+const { formatLocalTime, formatMonthDay, isSameLocalDay } = require('../../utils/datetime');
 
 Page({
     data: {
@@ -84,10 +85,11 @@ Page({
         const allRecords = this.data.allRecords;
         const q = (this.data.query || '').toLowerCase();
         const self = this;
-        var list = allRecords;
+        let list = allRecords;
+
         if (q) {
             list = [];
-            for (var i = 0; i < allRecords.length; i++) {
+            for (let i = 0; i < allRecords.length; i++) {
                 const r = allRecords[i];
                 const d = r.details || {};
                 const label = self.mapType(r.type, d.subtype);
@@ -104,31 +106,33 @@ Page({
         const yesterday = new Date();
         yesterday.setDate(today.getDate() - 1);
 
-        for (var j = 0; j < list.length; j++) {
+        for (let j = 0; j < list.length; j++) {
             const r = list[j];
             const date = new Date(r.time);
             const d = r.details || {};
-            var key;
-            if (date.toDateString() === today.toDateString()) key = '今天';
-            else if (date.toDateString() === yesterday.toDateString()) key = '昨天';
-            else key = (date.getMonth() + 1) + '月' + date.getDate() + '日';
+            let key;
+
+            if (isSameLocalDay(date, today)) key = '今天';
+            else if (isSameLocalDay(date, yesterday)) key = '昨天';
+            else key = formatMonthDay(date);
 
             if (!groupMap[key]) {
                 groupMap[key] = [];
                 groupOrder.push(key);
             }
+
             groupMap[key].push({
                 id: r.id,
                 icon: self.getIcon(r.type, d.subtype),
                 iconClass: self.getIconClass(r.type),
                 typeLabel: self.mapType(r.type, d.subtype),
-                timeStr: r.time ? r.time.slice(11, 16) : '',
+                timeStr: r.formattedTime || formatLocalTime(r.time),
                 value: self.mapValue(r),
             });
         }
 
         const groups = [];
-        for (var k = 0; k < groupOrder.length; k++) {
+        for (let k = 0; k < groupOrder.length; k++) {
             groups.push({ key: groupOrder[k], items: groupMap[groupOrder[k]] });
         }
         this.setData({ groups: groups });
@@ -140,10 +144,10 @@ Page({
     },
 
     getIcon: function(type, subtype) {
-        if (type === 'FEED') return subtype === 'BREAST' ? '🤱' : (subtype === 'SOLID' ? '🥣' : '🍼');
-        if (type === 'DIAPER') return '🧷';
+        if (type === 'FEED') return subtype === 'BREAST' ? '🍼' : (subtype === 'SOLID' ? '🥣' : '🍼');
+        if (type === 'DIAPER') return '💩';
         if (type === 'BATH') return '🛁';
-        if (type === 'SLEEP') return '💤';
+        if (type === 'SLEEP') return '😴';
         if (type === 'VITA_AD') return '💊';
         if (type === 'VITA_D3') return '☀️';
         return '📝';

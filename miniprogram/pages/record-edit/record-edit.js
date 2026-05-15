@@ -1,5 +1,6 @@
 const app = getApp();
 const { authedRequest } = require('../../utils/api');
+const { formatEditableDateTime, toApiISOString } = require('../../utils/datetime');
 
 Page({
     data: {
@@ -56,7 +57,7 @@ Page({
             const d = r.details || {};
             const patch = {
                 type: r.type,
-                timeStr: r.time ? r.time.slice(0, 16).replace('T', ' ') : '',
+                timeStr: formatEditableDateTime(r.time),
                 remark: r.remark || '',
                 loading: false,
             };
@@ -213,7 +214,7 @@ Page({
         }
 
         // Parse timeStr back to ISO
-        const time = timeStr ? new Date(timeStr.replace(' ', 'T')).toISOString() : new Date().toISOString();
+        const time = toApiISOString(timeStr);
 
         try {
             await authedRequest(`/records/${this.recordId}`, {

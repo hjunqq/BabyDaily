@@ -81,14 +81,17 @@ export class AuthService {
   }
 
   async loginAdmin(username: string, password: string) {
-    const expectedUser = this.configService.get<string>('ADMIN_USERNAME');
-    const expectedPass = this.configService.get<string>('ADMIN_PASSWORD');
-
-    if (!expectedUser || !expectedPass) {
+    const adminCredentials = this.getAdminCredentials();
+    if (adminCredentials.length === 0) {
       throw new ForbiddenException('Admin login is not configured');
     }
 
-    if (username !== expectedUser || password !== expectedPass) {
+    const matchedAdmin = adminCredentials.find(
+      (account) =>
+        username === account.username && password === account.password,
+    );
+
+    if (!matchedAdmin) {
       throw new UnauthorizedException('Invalid admin credentials');
     }
 
@@ -112,6 +115,32 @@ export class AuthService {
     await this.ensureAdminOwnerRole(user.id);
 
     return authResult;
+  }
+
+  private getAdminCredentials(): Array<{ username: string; password: string }> {
+    const accounts: Array<{ username: string; password: string }> = [];
+    const env = process.env as Record<string, string | undefined>;
+
+    const pushCredential = (usernameKey: string, passwordKey: string) => {
+      const username = this.configService.get<string>(usernameKey);
+      const password = this.configService.get<string>(passwordKey);
+      if (username && password) {
+        accounts.push({ username, password });
+      }
+    };
+
+    pushCredential('ADMIN_USERNAME', 'ADMIN_PASSWORD');
+
+    Object.keys(env)
+      .filter((key) => /^ADMIN_USERNAME_\d+$/.test(key))
+      .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }))
+      .forEach((usernameKey) => {
+        const suffix = usernameKey.slice('ADMIN_USERNAME'.length);
+        const passwordKey = `ADMIN_PASSWORD${suffix}`;
+        pushCredential(usernameKey, passwordKey);
+      });
+
+    return accounts;
   }
 
   private async ensureAdminOwnerRole(userId: string) {

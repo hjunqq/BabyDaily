@@ -52,7 +52,8 @@
 ```
 
 ### 2) 今日统计
-- `GET /records/baby/:babyId/summary?days=1`
+- `GET /records/baby/:babyId/summary`
+- 可选查询参数：`dayStartHour=0-23`，用于指定一天从几点开始；未传时按当前家庭设置中的 `dayStartHour`
 - 响应（camelCase）：
 ```json
 {
@@ -73,6 +74,7 @@
 
 ### 3) 近 7 天趋势
 - `GET /records/baby/:babyId/trend?days=7`
+- 可选查询参数：`dayStartHour=0-23`，用于指定趋势统计的日切时间；未传时按当前家庭设置中的 `dayStartHour`
 - 响应（camelCase）：`[{ date: "2024-02-15", milkMl: 520, solidG: 30 }]`
 
 ### 4) 今日喂奶时间线
@@ -159,8 +161,10 @@
 ---
 
 ## 设置（Settings）
-- `GET /settings` - 获取用户设置
-- `PUT /settings` - 更新设置
+- `GET /settings?familyId=:familyId` - 获取设置
+- `PUT /settings?familyId=:familyId` - 更新设置
+- `theme` / `language` / `exportFormat` 为用户级设置
+- `dayStartHour` 为家庭级设置，同一家庭内三端共享
 
 ## 通知（Notifications）
 - `GET /notifications?limit=20&offset=0` - 获取列表
@@ -188,3 +192,26 @@
 - When throttled, the API returns unified error fields with:
   - `statusCode: 429`
   - `code: "RATE_LIMITED"`
+## 2026-04-06 Record Day Start Update
+- `GET /records/baby/:babyId/summary`
+  - supports optional `dayStartHour` query
+  - when omitted, server falls back to the current family's `dayStartHour`
+- `GET /records/baby/:babyId/trend`
+  - supports optional `dayStartHour` query
+  - when omitted, server falls back to the current family's `dayStartHour`
+- `GET /records/baby/:babyId/kindle-summary`
+  - supports optional `dayStartHour` query
+  - when omitted, server falls back to the current family's `dayStartHour`
+## 2026-04-06 Family Invite And Approval Update
+- `POST /families/:familyId/invites`
+  - permission: `GUARDIAN` and above
+  - `GUARDIAN` may only create `MEMBER` or `VIEWER` invites
+- `GET /families/:familyId/members/pending`
+  - permission: `GUARDIAN` and above
+  - returns only pending members whose role is lower than the caller's role
+- `POST /families/:familyId/members/:memberId/approve`
+  - permission: `GUARDIAN` and above
+  - caller may only approve pending members whose role is lower than the caller's role
+- `POST /families/:familyId/members/:memberId/reject`
+  - permission: `GUARDIAN` and above
+  - caller may only reject pending members whose role is lower than the caller's role

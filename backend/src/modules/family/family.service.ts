@@ -143,6 +143,26 @@ export class FamilyService {
     });
   }
 
+  /**
+   * Resolve the caller's active role in the family that owns the given baby.
+   * Returns null if the baby does not exist or the caller is not an ACTIVE member.
+   */
+  async getRoleForBaby(
+    babyId: string,
+    userId: string,
+  ): Promise<FamilyRole | null> {
+    const baby = await this.babyRepository.findOne({ where: { id: babyId } });
+    if (!baby) return null;
+    const member = await this.familyMemberRepository.findOne({
+      where: {
+        family_id: baby.family_id,
+        user_id: userId,
+        status: MemberStatus.ACTIVE,
+      },
+    });
+    return member?.role ?? null;
+  }
+
   // ─── Invite codes ─────────────────────────────────────────
 
   async createInvite(
@@ -264,11 +284,15 @@ export class FamilyService {
     familyId: string,
     userId: string,
   ): Promise<FamilyMember[]> {
-    await this.requireRole(familyId, userId, FamilyRole.OWNER);
-    return this.familyMemberRepository.find({
+    const caller = await this.requireRole(familyId, userId, FamilyRole.GUARDIAN);
+    const pendingMembers = await this.familyMemberRepository.find({
       where: { family_id: familyId, status: MemberStatus.PENDING },
       relations: ['user'],
     });
+
+    return pendingMembers.filter(
+      (member) => ROLE_HIERARCHY[caller.role] > ROLE_HIERARCHY[member.role],
+    );
   }
 
   async approveMember(
@@ -276,7 +300,11 @@ export class FamilyService {
     memberId: string,
     approverId: string,
   ): Promise<FamilyMember> {
-    await this.requireRole(familyId, approverId, FamilyRole.OWNER);
+    const approver = await this.requireRole(
+      familyId,
+      approverId,
+      FamilyRole.GUARDIAN,
+    );
 
     const member = await this.familyMemberRepository.findOne({
       where: { id: memberId, family_id: familyId, status: MemberStatus.PENDING },
@@ -288,6 +316,7 @@ export class FamilyService {
       });
     }
 
+    this.ensureCanManagePendingMember(approver, member);
     member.status = MemberStatus.ACTIVE;
     return this.familyMemberRepository.save(member);
   }
@@ -297,7 +326,11 @@ export class FamilyService {
     memberId: string,
     approverId: string,
   ): Promise<void> {
-    await this.requireRole(familyId, approverId, FamilyRole.OWNER);
+    const approver = await this.requireRole(
+      familyId,
+      approverId,
+      FamilyRole.GUARDIAN,
+    );
 
     const member = await this.familyMemberRepository.findOne({
       where: { id: memberId, family_id: familyId, status: MemberStatus.PENDING },
@@ -309,6 +342,7 @@ export class FamilyService {
       });
     }
 
+    this.ensureCanManagePendingMember(approver, member);
     await this.familyMemberRepository.remove(member);
   }
 
@@ -432,6 +466,18 @@ export class FamilyService {
       });
     }
     return member;
+  }
+
+  private ensureCanManagePendingMember(
+    caller: FamilyMember,
+    target: FamilyMember,
+  ): void {
+    if (ROLE_HIERARCHY[caller.role] <= ROLE_HIERARCHY[target.role]) {
+      throw new ForbiddenException({
+        message: 'Cannot manage pending member with equal or higher role',
+        code: ErrorCodes.ROLE_INSUFFICIENT,
+      });
+    }
   }
 
   private generateInviteCode(): string {

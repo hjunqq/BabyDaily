@@ -5,8 +5,9 @@ module.exports = {
         const targetId = babyId || getCurrentBabyId();
         return authedRequest(`/records/baby/${targetId}?limit=20`);
     },
-    fetchSummary: async (babyId) => {
+    fetchSummary: async (babyId, dayStartHour) => {
         const targetId = babyId || getCurrentBabyId();
-        return authedRequest(`/records/baby/${targetId}/summary`);
-    }
+        const query = Number.isFinite(dayStartHour) ? `?dayStartHour=${dayStartHour}` : '';
+        return authedRequest(`/records/baby/${targetId}/summary${query}`);
+    },
 };

@@ -1,5 +1,6 @@
 const app = getApp();
 const { authedRequest } = require('../../utils/api');
+const { formatLocalDateTime } = require('../../utils/datetime');
 
 Page({
     data: {
@@ -70,9 +71,7 @@ Page({
     },
 
     formatTime(str) {
-        if (!str) return '';
-        const d = new Date(str);
-        return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        return formatLocalDateTime(str);
     },
 
     mapType(type, subtype) {

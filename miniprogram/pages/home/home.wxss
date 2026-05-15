@@ -52,6 +52,45 @@
   margin-top: 4rpx;
 }
 
+.home-tools {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.tool-chip {
+  flex: 1;
+  min-width: 0;
+  padding: 22rpx 24rpx;
+  border-radius: 22rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+}
+
+.tool-chip.primary {
+  background: linear-gradient(135deg, #fce1e8, #fff6f8);
+}
+
+.tool-chip.ghost {
+  background: #fff;
+}
+
+.tool-chip-text {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #4A342E;
+}
+
+.tool-chip-sub {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #8b7670;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Last Feed Card */
 .feed-card {
   border-radius: 24rpx;
