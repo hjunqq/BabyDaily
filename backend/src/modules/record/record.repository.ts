@@ -169,18 +169,26 @@ export class RecordRepository {
         ? `TO_CHAR(r.time, 'YYYY-MM-DD')`
         : `TO_CHAR(r.time - interval '${safeHour} hours', 'YYYY-MM-DD')`;
 
+    // solid_g 兼容两种数据形态：
+    //   - 旧记录：type=FEED, details.subtype='SOLID'
+    //   - 新记录：type=SOLIDS（独立类型，details.amount）
     const query = this.repo
       .createQueryBuilder('r')
       .select([
         `${dateFormula} as day`,
-        `SUM(CASE WHEN r.type = 'FEED' AND (r.details->>'subtype' IS NULL OR r.details->>'subtype' != 'SOLID') 
+        `SUM(CASE WHEN r.type = 'FEED' AND (r.details->>'subtype' IS NULL OR r.details->>'subtype' != 'SOLID')
                     THEN COALESCE((r.details->>'amount')::int, 0) ELSE 0 END) as milk_ml`,
-        `SUM(CASE WHEN r.type = 'FEED' AND r.details->>'subtype' = 'SOLID' 
-                    THEN COALESCE((r.details->>'amount')::int, 0) ELSE 0 END) as solid_g`,
+        `SUM(CASE
+              WHEN r.type = 'FEED' AND r.details->>'subtype' = 'SOLID' THEN COALESCE((r.details->>'amount')::int, 0)
+              WHEN r.type = 'SOLIDS' THEN COALESCE((r.details->>'amount')::int, 0)
+              ELSE 0
+            END) as solid_g`,
       ])
       .where('r.baby_id = :babyId', { babyId })
       .andWhere('r.time >= :from', { from })
-      .andWhere('r.type = :type', { type: RecordType.FEED })
+      .andWhere('r.type IN (:...types)', {
+        types: [RecordType.FEED, RecordType.SOLIDS],
+      })
       .groupBy(dateFormula)
       .orderBy('day', 'ASC');
 
