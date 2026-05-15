@@ -8,7 +8,7 @@
     avatarUrl?: string;
 }
 
-export type RecordType = 'FEED' | 'SLEEP' | 'DIAPER' | 'BATH' | 'HEALTH' | 'GROWTH' | 'MILESTONE' | 'VITA_AD' | 'VITA_D3';
+export type RecordType = 'FEED' | 'SLEEP' | 'DIAPER' | 'BATH' | 'HEALTH' | 'GROWTH' | 'MILESTONE' | 'VITA_AD' | 'VITA_D3' | 'TOPICAL' | 'SOLIDS';
 
 export interface BabyRecord {
     id: string;
@@ -17,7 +17,7 @@ export interface BabyRecord {
     type: RecordType;
     time: string;
     endTime?: string;
-    details: FeedDetails | DiaperDetails | SleepDetails | GrowthDetails | SupplementDetails | ApiRecordDetails;
+    details: FeedDetails | DiaperDetails | SleepDetails | GrowthDetails | SupplementDetails | TopicalDetails | SolidsDetails | ApiRecordDetails;
     mediaUrls?: string[];
     remark?: string;
 }
@@ -51,6 +51,17 @@ export interface GrowthDetails {
 export interface SupplementDetails {
     amount?: number;
     unit?: string;
+}
+
+export interface TopicalDetails {
+    product: string;  // 桃子水 / 护臀膏 / 湿疹膏 等
+    area?: string;    // 涂抹部位，可选
+}
+
+export interface SolidsDetails {
+    food: string;     // 米粉 / 蛋黄 / 蔬菜泥 等
+    amount?: number;
+    unit?: string;    // g / ml / 勺 / 块
 }
 
 export type ApiRecordDetails = Record<string, unknown>;

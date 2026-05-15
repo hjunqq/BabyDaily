@@ -88,6 +88,70 @@
     </view>
   </view>
 
+  <!-- Topical (涂药膏) Input -->
+  <view wx:if="{{selectedType === 'TOPICAL'}}" class="input-section">
+    <text class="input-hint">药膏 / 外用药</text>
+    <view class="presets-grid">
+      <block wx:for="{{topicalPresets}}" wx:key="*this">
+        <view class="preset-btn {{topicalProduct === item ? 'active' : ''}}" bindtap="setTopicalProduct" data-value="{{item}}">
+          {{item}}
+        </view>
+      </block>
+    </view>
+    <input
+      class="text-input"
+      placeholder="或输入其他药膏名称"
+      value="{{topicalProduct}}"
+      bindinput="onTopicalProductInput"
+      maxlength="40"
+    />
+    <text class="input-hint" style="margin-top: 20rpx;">部位（可选）</text>
+    <input
+      class="text-input"
+      placeholder="如：颈部 / 屁屁 / 脸"
+      value="{{topicalArea}}"
+      bindinput="onTopicalAreaInput"
+      maxlength="40"
+    />
+  </view>
+
+  <!-- Solids (辅食) Input -->
+  <view wx:if="{{selectedType === 'SOLIDS'}}" class="input-section">
+    <text class="input-hint">辅食</text>
+    <view class="presets-grid">
+      <block wx:for="{{solidsFoodPresets}}" wx:key="*this">
+        <view class="preset-btn {{solidsFood === item ? 'active' : ''}}" bindtap="setSolidsFood" data-value="{{item}}">
+          {{item}}
+        </view>
+      </block>
+    </view>
+    <input
+      class="text-input"
+      placeholder="或输入其他辅食"
+      value="{{solidsFood}}"
+      bindinput="onSolidsFoodInput"
+      maxlength="40"
+    />
+    <text class="input-hint" style="margin-top: 20rpx;">分量</text>
+    <view class="stepper-row">
+      <view class="stepper-btn" bindtap="adjustSolidsAmount" data-delta="-5">−</view>
+      <input
+        class="stepper-value-input"
+        type="number"
+        value="{{solidsAmount}}"
+        bindinput="onSolidsAmountInput"
+      />
+      <view class="stepper-btn" bindtap="adjustSolidsAmount" data-delta="5">+</view>
+    </view>
+    <view class="presets-grid">
+      <block wx:for="{{solidsUnits}}" wx:key="*this">
+        <view class="preset-btn {{solidsUnit === item ? 'active' : ''}}" bindtap="setSolidsUnit" data-value="{{item}}">
+          {{item}}
+        </view>
+      </block>
+    </view>
+  </view>
+
   <!-- Submit -->
   <view wx:if="{{selectedType !== 'DIAPER'}}" class="submit-section">
     <button class="submit-btn" bindtap="submit" disabled="{{submitting}}">

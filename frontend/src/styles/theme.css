@@ -627,6 +627,13 @@ main.bd-mobile-shell {
 .bd-actions .bd-action-btn:nth-child(5) {
   grid-column: 4 / 6;
 }
+/* 辅食和涂药膏按钮居中（第三行） */
+.bd-actions .bd-action-btn:nth-child(6) {
+  grid-column: 2 / 4;
+}
+.bd-actions .bd-action-btn:nth-child(7) {
+  grid-column: 4 / 6;
+}
 
 .bd-action-btn {
   display: flex;

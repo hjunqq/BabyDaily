@@ -217,6 +217,10 @@ docker compose --env-file .env.production up -d
 
 echo '>>> Cleaning up...'
 rm -f babydaily-images.tar
+# Prune dangling images left over from previous `docker load`s (the previous
+# babydaily-backend/frontend images become <none> after the new ones take the tag).
+# Only touches untagged images with no container — safe.
+docker image prune -f 2>&1 | tail -2 || true
 
 echo '>>> Waiting for backend startup...'
 sleep 3

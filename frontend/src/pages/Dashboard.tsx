@@ -63,12 +63,14 @@ const QuickActionBtn = ({ label, color, onClick }: { label: string; color: strin
 );
 
 const getTypeIcon = (category: string): string => {
-  if (category === '瓶喂' || category === '亲喂') return '🍼';
+  if (category === '瓶喂' || category === '亲喂' || category === '喂养') return '🍼';
   if (category === '尿布') return '🧷';
   if (category === '洗澡') return '🛁';
-  if (category === '维生素AD') return '💊';
-  if (category === '维生素D3') return '☀️';
+  if (category === '维生素AD' || category === '维生素 AD') return '💊';
+  if (category === '维生素D3' || category === '维生素 D3') return '☀️';
   if (category === '睡眠') return '💤';
+  if (category === '涂药膏') return '🧴';
+  if (category === '辅食') return '🥣';
   return '📝';
 };
 
@@ -92,7 +94,9 @@ export const Dashboard = () => {
     pee: getElapsed(summary.lastPeeTime || summary.lastDiaperTime),
     poo: getElapsed(summary.lastPooTime || summary.lastDiaperTime),
     bath: getElapsed(summary.lastBathTime),
-  }), [summary.lastFeedTime, summary.lastPeeTime, summary.lastPooTime, summary.lastDiaperTime, summary.lastBathTime]);
+    solids: getElapsed(summary.lastSolidsTime),
+    topical: getElapsed(summary.lastTopicalTime),
+  }), [summary.lastFeedTime, summary.lastPeeTime, summary.lastPooTime, summary.lastDiaperTime, summary.lastBathTime, summary.lastSolidsTime, summary.lastTopicalTime]);
 
   if (loading) {
     return (
@@ -205,6 +209,27 @@ export const Dashboard = () => {
             await BabyService.createRecord({ type: 'VITA_D3', babyId: baby.id, time: new Date().toISOString(), details: { amount: 1, unit: '粒' } });
             refresh();
           }} />
+          <QuickActionBtn label="🥣 辅食" color="#7DC093" onClick={async () => {
+            if (!baby?.id) return;
+            const food = prompt('辅食名称', '米粉');
+            if (!food) return;
+            const amountStr = prompt('分量（g，可留空）', '30');
+            const amount = amountStr ? parseInt(amountStr, 10) : undefined;
+            const details: any = { food: food.trim(), unit: 'g' };
+            if (amount && amount > 0) details.amount = amount;
+            await BabyService.createRecord({ type: 'SOLIDS', babyId: baby.id, time: new Date().toISOString(), details });
+            refresh();
+          }} />
+          <QuickActionBtn label="🧴 涂药膏" color="#E89BAB" onClick={async () => {
+            if (!baby?.id) return;
+            const product = prompt('药膏名称', '桃子水');
+            if (!product) return;
+            const area = prompt('部位（可留空）', '') || undefined;
+            const details: any = { product: product.trim() };
+            if (area && area.trim()) details.area = area.trim();
+            await BabyService.createRecord({ type: 'TOPICAL', babyId: baby.id, time: new Date().toISOString(), details });
+            refresh();
+          }} />
         </div>
       </section>
 
@@ -214,6 +239,8 @@ export const Dashboard = () => {
           <CountdownBar label="尿尿" elapsedMs={elapsed.pee} maxMs={24 * HOUR} color="#64b5f6" />
           <CountdownBar label="便便" elapsedMs={elapsed.poo} maxMs={7 * DAY} color="#ffb74d" />
           <CountdownBar label="洗澡" elapsedMs={elapsed.bath} maxMs={5 * DAY} color="#4db6ac" />
+          <CountdownBar label={`辅食${summary.solidsCount > 0 ? ` (今日${summary.solidsCount}次)` : ''}`} elapsedMs={elapsed.solids} maxMs={6 * HOUR} color="#7DC093" />
+          <CountdownBar label={`涂药膏${summary.topicalCount > 0 ? ` (今日${summary.topicalCount}次)` : ''}`} elapsedMs={elapsed.topical} maxMs={12 * HOUR} color="#E89BAB" />
         </div>
       </section>
 

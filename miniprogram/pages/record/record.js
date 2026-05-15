@@ -9,6 +9,16 @@ Page({
         duration: 15,
         bathDuration: 10,
         sleepDuration: 90,
+        // TOPICAL
+        topicalProduct: '桃子水',
+        topicalArea: '',
+        topicalPresets: ['桃子水', '护臀膏', '湿疹膏', '面霜', '碘伏'],
+        // SOLIDS
+        solidsFood: '米粉',
+        solidsAmount: 30,
+        solidsUnit: 'g',
+        solidsFoodPresets: ['米粉', '蛋黄', '蔬菜泥', '果泥', '肉泥'],
+        solidsUnits: ['g', 'ml', '勺', '块'],
         submitting: false,
         feedPresets: [100, 120, 140, 150, 160, 180, 200, 220],
         breastPresets: [5, 10, 15, 20, 25, 30],
@@ -20,6 +30,8 @@ Page({
             { key: 'DIAPER', label: '换尿布', icon: '🧷' },
             { key: 'SLEEP', label: '睡眠', icon: '💤' },
             { key: 'BATH', label: '洗澡', icon: '🛁' },
+            { key: 'SOLIDS', label: '辅食', icon: '🥣' },
+            { key: 'TOPICAL', label: '涂药膏', icon: '🧴' },
         ],
     },
 
@@ -64,6 +76,41 @@ Page({
         this.setData({ sleepDuration: parseInt(e.currentTarget.dataset.duration, 10) });
     },
 
+    setTopicalProduct(e) {
+        this.setData({ topicalProduct: e.currentTarget.dataset.value });
+    },
+
+    onTopicalProductInput(e) {
+        this.setData({ topicalProduct: e.detail.value });
+    },
+
+    onTopicalAreaInput(e) {
+        this.setData({ topicalArea: e.detail.value });
+    },
+
+    setSolidsFood(e) {
+        this.setData({ solidsFood: e.currentTarget.dataset.value });
+    },
+
+    onSolidsFoodInput(e) {
+        this.setData({ solidsFood: e.detail.value });
+    },
+
+    onSolidsAmountInput(e) {
+        const v = parseInt(e.detail.value, 10);
+        this.setData({ solidsAmount: Number.isNaN(v) ? '' : v });
+    },
+
+    adjustSolidsAmount(e) {
+        const delta = parseInt(e.currentTarget.dataset.delta, 10);
+        const cur = typeof this.data.solidsAmount === 'number' ? this.data.solidsAmount : 0;
+        this.setData({ solidsAmount: Math.max(0, cur + delta) });
+    },
+
+    setSolidsUnit(e) {
+        this.setData({ solidsUnit: e.currentTarget.dataset.value });
+    },
+
     formatSleepPreset(mins) {
         if (mins < 60) return `${mins}分钟`;
         const h = Math.floor(mins / 60);
@@ -104,7 +151,10 @@ Page({
             await (app.readyPromise || Promise.resolve());
             if (!app.ensureBabyContext()) return;
             const babyId = app.globalData.babyId;
-            const { selectedType, feedSubtype, amount, duration, bathDuration, sleepDuration } = this.data;
+            const {
+                selectedType, feedSubtype, amount, duration, bathDuration, sleepDuration,
+                topicalProduct, topicalArea, solidsFood, solidsAmount, solidsUnit,
+            } = this.data;
 
             let details = {};
             if (selectedType === 'FEED') {
@@ -119,6 +169,26 @@ Page({
                 details = { duration: bathDuration, unit: 'min' };
             } else if (selectedType === 'SLEEP') {
                 details = { duration: sleepDuration, unit: 'min' };
+            } else if (selectedType === 'TOPICAL') {
+                const p = (topicalProduct || '').trim();
+                if (!p) {
+                    wx.showToast({ title: '请填写药膏名称', icon: 'none' });
+                    this.setData({ submitting: false });
+                    return;
+                }
+                details = { product: p };
+                if (topicalArea && topicalArea.trim()) details.area = topicalArea.trim();
+            } else if (selectedType === 'SOLIDS') {
+                const f = (solidsFood || '').trim();
+                if (!f) {
+                    wx.showToast({ title: '请填写辅食名称', icon: 'none' });
+                    this.setData({ submitting: false });
+                    return;
+                }
+                details = { food: f, unit: solidsUnit || 'g' };
+                if (typeof solidsAmount === 'number' && solidsAmount > 0) {
+                    details.amount = solidsAmount;
+                }
             }
 
             await authedRequest('/records', {

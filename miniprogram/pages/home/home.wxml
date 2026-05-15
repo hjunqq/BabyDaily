@@ -55,6 +55,14 @@
         <text class="bar-label">洗澡</text>
         <text class="bar-value">{{lastBathText}}</text>
       </view>
+      <view class="countdown-bar solids-bar" style="background: linear-gradient(90deg, #eef9ec 0%, #7DC093 {{solidsProgress}}%, #fff {{solidsProgress}}%)">
+        <text class="bar-label">辅食{{summary.solidsCount > 0 ? ' (今日' + summary.solidsCount + '次)' : ''}}</text>
+        <text class="bar-value">{{lastSolidsText}}</text>
+      </view>
+      <view class="countdown-bar topical-bar" style="background: linear-gradient(90deg, #fdeef2 0%, #E89BAB {{topicalProgress}}%, #fff {{topicalProgress}}%)">
+        <text class="bar-label">涂药膏{{summary.topicalCount > 0 ? ' (今日' + summary.topicalCount + '次)' : ''}}</text>
+        <text class="bar-value">{{lastTopicalText}}</text>
+      </view>
     </view>
 
     <!-- Today Stats -->
@@ -141,6 +149,20 @@
         <view class="action-info">
           <text class="action-text">记录睡眠</text>
           <text class="action-sub">时长</text>
+        </view>
+      </view>
+      <view class="action-btn solids-action" bindtap="goToSolids">
+        <text class="action-icon">🥣</text>
+        <view class="action-info">
+          <text class="action-text">辅食</text>
+          <text class="action-sub">米粉 / 蛋黄</text>
+        </view>
+      </view>
+      <view class="action-btn topical-action" bindtap="goToTopical">
+        <text class="action-icon">🧴</text>
+        <view class="action-info">
+          <text class="action-text">涂药膏</text>
+          <text class="action-sub">桃子水等</text>
         </view>
       </view>
     </view>

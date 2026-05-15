@@ -13,6 +13,9 @@ Page({
             diaperSoiled: 0,
             todayAdTaken: false,
             todayD3Taken: false,
+            solidsCount: 0,
+            solidsG: 0,
+            topicalCount: 0,
         },
         recentRecords: [],
         todayFeeds: [],
@@ -26,9 +29,13 @@ Page({
         lastPeeText: '暂无记录',
         lastPooText: '暂无记录',
         lastBathText: '暂无记录',
+        lastSolidsText: '暂无记录',
+        lastTopicalText: '暂无记录',
         peeProgress: 0,
         pooProgress: 0,
         bathProgress: 0,
+        solidsProgress: 0,
+        topicalProgress: 0,
     },
 
     onLoad: function() {
@@ -112,14 +119,20 @@ Page({
         const lastPeeTime = sr.lastPeeTime || sr.lastDiaperTime || '';
         const lastPooTime = sr.lastPooTime || sr.lastDiaperTime || '';
         const lastBathTime = sr.lastBathTime || '';
+        const lastSolidsTime = sr.lastSolidsTime || '';
+        const lastTopicalTime = sr.lastTopicalTime || '';
 
         this.setData({
             lastPeeText: lastPeeTime ? this.formatElapsed(lastPeeTime) : '暂无记录',
             lastPooText: lastPooTime ? this.formatElapsed(lastPooTime) : '暂无记录',
             lastBathText: lastBathTime ? this.formatElapsed(lastBathTime) : '暂无记录',
+            lastSolidsText: lastSolidsTime ? this.formatElapsed(lastSolidsTime) : '暂无记录',
+            lastTopicalText: lastTopicalTime ? this.formatElapsed(lastTopicalTime) : '暂无记录',
             peeProgress: this.getProgress(lastPeeTime, 24 * HOUR),
             pooProgress: this.getProgress(lastPooTime, 7 * DAY),
             bathProgress: this.getProgress(lastBathTime, 5 * DAY),
+            solidsProgress: this.getProgress(lastSolidsTime, 6 * HOUR),
+            topicalProgress: this.getProgress(lastTopicalTime, 12 * HOUR),
         });
     },
 
@@ -189,6 +202,9 @@ Page({
                     diaperSoiled: summaryResp.diaperSoiled || 0,
                     todayAdTaken: !!summaryResp.todayAdTaken,
                     todayD3Taken: !!summaryResp.todayD3Taken,
+                    solidsCount: summaryResp.solidsCount || 0,
+                    solidsG: summaryResp.solidsG || 0,
+                    topicalCount: summaryResp.topicalCount || 0,
                 },
             });
 
@@ -226,6 +242,8 @@ Page({
         if (type === 'SLEEP') return '💤';
         if (type === 'VITA_AD') return '💊';
         if (type === 'VITA_D3') return '☀️';
+        if (type === 'TOPICAL') return '🧴';
+        if (type === 'SOLIDS') return '🥣';
         return '📝';
     },
 
@@ -235,6 +253,8 @@ Page({
         if (type === 'BATH') return 'bath';
         if (type === 'SLEEP') return 'sleep';
         if (type === 'VITA_AD' || type === 'VITA_D3') return 'supplement';
+        if (type === 'TOPICAL') return 'supplement';
+        if (type === 'SOLIDS') return 'feed';
         return 'feed';
     },
 
@@ -249,6 +269,8 @@ Page({
         if (type === 'SLEEP') return '睡眠';
         if (type === 'VITA_AD') return '维生素 AD';
         if (type === 'VITA_D3') return '维生素 D3';
+        if (type === 'TOPICAL') return '涂药膏';
+        if (type === 'SOLIDS') return '辅食';
         return '记录';
     },
 
@@ -271,6 +293,14 @@ Page({
         }
         if (r.type === 'BATH') return d.duration ? d.duration + '分钟' : '';
         if (r.type === 'VITA_AD' || r.type === 'VITA_D3') return '已服用';
+        if (r.type === 'TOPICAL') {
+            const p = d.product || '药膏';
+            return d.area ? p + ' · ' + d.area : p;
+        }
+        if (r.type === 'SOLIDS') {
+            const f = d.food || '辅食';
+            return d.amount ? f + ' ' + d.amount + (d.unit || 'g') : f;
+        }
         return '';
     },
 
@@ -288,6 +318,14 @@ Page({
 
     quickSleep: function() {
         wx.navigateTo({ url: '/pages/record/record?type=SLEEP' });
+    },
+
+    goToSolids: function() {
+        wx.navigateTo({ url: '/pages/record/record?type=SOLIDS' });
+    },
+
+    goToTopical: function() {
+        wx.navigateTo({ url: '/pages/record/record?type=TOPICAL' });
     },
 
     goToRecord: function() {

@@ -87,22 +87,29 @@ export class RecordRepository {
     feed_count: string;
     ad_taken: string;
     d3_taken: string;
+    solids_count: string;
+    solids_g: string;
+    topical_count: string;
   } | null> {
     const result = await this.repo
       .createQueryBuilder('r')
       .select([
-        `SUM(CASE WHEN r.type = 'FEED' AND (r.details->>'subtype' IS NULL OR r.details->>'subtype' != 'SOLID') 
+        `SUM(CASE WHEN r.type = 'FEED' AND (r.details->>'subtype' IS NULL OR r.details->>'subtype' != 'SOLID')
                     THEN COALESCE((r.details->>'amount')::int, 0) ELSE 0 END) as milk_ml`,
-        `SUM(CASE WHEN r.type = 'DIAPER' AND r.details->>'type' IN ('PEE','BOTH') 
+        `SUM(CASE WHEN r.type = 'DIAPER' AND r.details->>'type' IN ('PEE','BOTH')
                     THEN 1 ELSE 0 END) as diaper_wet`,
-        `SUM(CASE WHEN r.type = 'DIAPER' AND r.details->>'type' IN ('POO','BOTH') 
+        `SUM(CASE WHEN r.type = 'DIAPER' AND r.details->>'type' IN ('POO','BOTH')
                     THEN 1 ELSE 0 END) as diaper_soiled`,
-        `SUM(CASE WHEN r.type = 'SLEEP' 
-                    THEN EXTRACT(EPOCH FROM (COALESCE(r.end_time, r.time + interval '90 minutes') - r.time))/60 
+        `SUM(CASE WHEN r.type = 'SLEEP'
+                    THEN EXTRACT(EPOCH FROM (COALESCE(r.end_time, r.time + interval '90 minutes') - r.time))/60
                     ELSE 0 END)::int as sleep_minutes`,
         `SUM(CASE WHEN r.type = 'FEED' THEN 1 ELSE 0 END) as feed_count`,
         `SUM(CASE WHEN r.type = 'VITA_AD' THEN 1 ELSE 0 END) as ad_taken`,
         `SUM(CASE WHEN r.type = 'VITA_D3' THEN 1 ELSE 0 END) as d3_taken`,
+        `SUM(CASE WHEN r.type = 'SOLIDS' THEN 1 ELSE 0 END) as solids_count`,
+        `SUM(CASE WHEN r.type = 'SOLIDS'
+                    THEN COALESCE((r.details->>'amount')::int, 0) ELSE 0 END) as solids_g`,
+        `SUM(CASE WHEN r.type = 'TOPICAL' THEN 1 ELSE 0 END) as topical_count`,
       ])
       .where('r.baby_id = :babyId', { babyId })
       .andWhere('r.time >= :from', { from })
@@ -116,6 +123,8 @@ export class RecordRepository {
     last_pee_time: Date | null;
     last_poo_time: Date | null;
     last_bath_time: Date | null;
+    last_solids_time: Date | null;
+    last_topical_time: Date | null;
   } | null> {
     const result = await this.repo
       .createQueryBuilder('r')
@@ -125,6 +134,8 @@ export class RecordRepository {
         `MAX(CASE WHEN r.type = 'DIAPER' AND r.details->>'type' IN ('PEE','BOTH') THEN r.time END) as last_pee_time`,
         `MAX(CASE WHEN r.type = 'DIAPER' AND r.details->>'type' IN ('POO','BOTH') THEN r.time END) as last_poo_time`,
         `MAX(CASE WHEN r.type = 'BATH' THEN r.time END) as last_bath_time`,
+        `MAX(CASE WHEN r.type = 'SOLIDS' THEN r.time END) as last_solids_time`,
+        `MAX(CASE WHEN r.type = 'TOPICAL' THEN r.time END) as last_topical_time`,
       ])
       .where('r.baby_id = :babyId', { babyId })
       .getRawOne();

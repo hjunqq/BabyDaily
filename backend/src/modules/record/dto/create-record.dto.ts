@@ -19,6 +19,8 @@ export enum RecordType {
   MILESTONE = 'MILESTONE',
   VITA_AD = 'VITA_AD',
   VITA_D3 = 'VITA_D3',
+  TOPICAL = 'TOPICAL',
+  SOLIDS = 'SOLIDS',
 }
 
 export class FeedDetailsDto {
@@ -50,6 +52,28 @@ export class SleepDetailsDto {
 }
 
 export class SupplementDetailsDto {
+  @IsNumber()
+  @IsOptional()
+  amount?: number;
+
+  @IsString()
+  @IsOptional()
+  unit?: string;
+}
+
+export class TopicalDetailsDto {
+  @IsString()
+  product: string; // e.g. 桃子水 / 护臀膏
+
+  @IsString()
+  @IsOptional()
+  area?: string; // 涂抹部位，可选
+}
+
+export class SolidsDetailsDto {
+  @IsString()
+  food: string; // 辅食名称，如 米粉 / 蛋黄
+
   @IsNumber()
   @IsOptional()
   amount?: number;

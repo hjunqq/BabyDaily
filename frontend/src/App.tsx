@@ -116,12 +116,20 @@ const RequireAuth = ({ children, allowOnboarding = false }: { children: React.Re
           <div style={{ fontSize: 42 }}>⚠️</div>
           <h3>连接失败</h3>
           <p style={{ color: '#6b524b' }}>{error}</p>
-          <button
-            onClick={() => { setError(null); setReady(false); setRetrySeed(v => v + 1); }}
-            style={{ marginTop: 16, padding: '8px 24px', background: '#F3B6C2', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}
-          >
-            重试
-          </button>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 16 }}>
+            <button
+              onClick={() => { setError(null); setReady(false); setRetrySeed(v => v + 1); }}
+              style={{ padding: '8px 24px', background: '#F3B6C2', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}
+            >
+              重试
+            </button>
+            <button
+              onClick={() => { window.location.href = '/login'; }}
+              style={{ padding: '8px 24px', background: '#fff', color: '#4A342E', border: '1px solid #ddd', borderRadius: 8, cursor: 'pointer' }}
+            >
+              去登录
+            </button>
+          </div>
         </div>
       </div>
     );

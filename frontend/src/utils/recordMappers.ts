@@ -23,6 +23,10 @@ export const mapRecordType = (type: BabyRecord['type']): string => {
             return '维生素 AD';
         case 'VITA_D3':
             return '维生素 D3';
+        case 'TOPICAL':
+            return '涂药膏';
+        case 'SOLIDS':
+            return '辅食';
         default:
             return '记录';
     }
@@ -52,6 +56,15 @@ export const mapRecordDetail = (record: BabyRecord): string => {
         const details: any = record.details || {};
         const amount = details.amount ? `${details.amount}${details.unit || '粒'}` : '1粒';
         main = amount;
+    } else if (record.type === 'TOPICAL') {
+        const details: any = record.details || {};
+        const product = details.product || '药膏';
+        main = details.area ? `${product} · ${details.area}` : product;
+    } else if (record.type === 'SOLIDS') {
+        const details: any = record.details || {};
+        const food = details.food || '辅食';
+        if (details.amount) main = `${food} ${details.amount}${details.unit || 'g'}`;
+        else main = food;
     }
 
     // If there's no specific detail, use remark as main

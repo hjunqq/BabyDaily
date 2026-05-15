@@ -258,6 +258,8 @@
 .action-btn.ad-action { border-left-color: #CE93D8; }
 .action-btn.d3-action { border-left-color: #FFD54F; }
 .action-btn.sleep-action { border-left-color: #B39DDB; }
+.action-btn.solids-action { border-left-color: #7DC093; }
+.action-btn.topical-action { border-left-color: #E89BAB; }
 .action-btn.done { opacity: 0.5; }
 .action-icon {
   font-size: 36rpx;

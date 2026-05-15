@@ -144,9 +144,18 @@ export class RecordService {
       lastBathTime: latestTimes?.last_bath_time
         ? new Date(latestTimes.last_bath_time).toISOString()
         : undefined,
+      lastSolidsTime: latestTimes?.last_solids_time
+        ? new Date(latestTimes.last_solids_time).toISOString()
+        : undefined,
+      lastTopicalTime: latestTimes?.last_topical_time
+        ? new Date(latestTimes.last_topical_time).toISOString()
+        : undefined,
       feedCount: parseInt(result?.feed_count ?? '0') || 0,
       todayAdTaken: (parseInt(result?.ad_taken ?? '0') || 0) > 0,
       todayD3Taken: (parseInt(result?.d3_taken ?? '0') || 0) > 0,
+      solidsCount: parseInt(result?.solids_count ?? '0') || 0,
+      solidsG: parseInt(result?.solids_g ?? '0') || 0,
+      topicalCount: parseInt(result?.topical_count ?? '0') || 0,
     };
   }
 

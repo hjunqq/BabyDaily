@@ -21,6 +21,8 @@ export enum RecordType {
   MILESTONE = 'MILESTONE',
   VITA_AD = 'VITA_AD',
   VITA_D3 = 'VITA_D3',
+  TOPICAL = 'TOPICAL',
+  SOLIDS = 'SOLIDS',
 }
 
 @Entity('records')

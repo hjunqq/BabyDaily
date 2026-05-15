@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Milk, Baby, Moon, X, Check, Droplets, Trash2 } from 'lucide-react';
+import { Milk, Baby, Moon, X, Check, Droplets, Trash2, Pill, Utensils } from 'lucide-react';
 import { BabyService } from '../../services/api';
 import type { RecordType, BabyRecord } from '../../types';
 
@@ -12,10 +12,16 @@ interface RecordModalProps {
 }
 
 const RECORD_TYPES: { type: RecordType; label: string; icon: any; emoji: string; color: string; bg: string }[] = [
-    { type: 'FEED', label: 'Feed', icon: Milk, emoji: '奶', color: 'text-blue-500', bg: 'bg-blue-100' },
-    { type: 'DIAPER', label: 'Diaper', icon: Baby, emoji: '尿', color: 'text-orange-500', bg: 'bg-orange-100' },
-    { type: 'SLEEP', label: 'Sleep', icon: Moon, emoji: '睡', color: 'text-purple-500', bg: 'bg-purple-100' },
+    { type: 'FEED', label: '喂奶', icon: Milk, emoji: '奶', color: 'text-blue-500', bg: 'bg-blue-100' },
+    { type: 'DIAPER', label: '尿布', icon: Baby, emoji: '尿', color: 'text-orange-500', bg: 'bg-orange-100' },
+    { type: 'SLEEP', label: '睡眠', icon: Moon, emoji: '睡', color: 'text-purple-500', bg: 'bg-purple-100' },
+    { type: 'SOLIDS', label: '辅食', icon: Utensils, emoji: '辅', color: 'text-emerald-600', bg: 'bg-emerald-100' },
+    { type: 'TOPICAL', label: '涂药膏', icon: Pill, emoji: '涂', color: 'text-rose-500', bg: 'bg-rose-100' },
 ];
+
+const TOPICAL_PRESETS = ['桃子水', '护臀膏', '湿疹膏', '面霜', '碘伏'];
+const SOLIDS_PRESETS = ['米粉', '蛋黄', '蔬菜泥', '果泥', '肉泥'];
+const SOLIDS_UNITS = ['g', 'ml', '勺', '块'];
 
 export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: RecordModalProps) => {
     const { theme } = useTheme();
@@ -59,6 +65,8 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
         if (type === 'FEED') setDetails({ subtype: 'BOTTLE', amount: 100, unit: 'ml' });
         if (type === 'DIAPER') setDetails({ type: 'PEE' });
         if (type === 'SLEEP') setDetails({ is_nap: true, duration: 90 }); // default 1.5h
+        if (type === 'TOPICAL') setDetails({ product: '桃子水', area: '' });
+        if (type === 'SOLIDS') setDetails({ food: '米粉', amount: 30, unit: 'g' });
     };
 
     const handleSubmit = async () => {
@@ -77,6 +85,16 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
                 }
                 if (selectedType === 'SLEEP' && !details.duration) {
                     setDetails({ ...details, duration: 90 });
+                }
+                if (selectedType === 'TOPICAL') {
+                    if (!details.product || !String(details.product).trim()) {
+                        throw new Error('请填写药膏名称');
+                    }
+                }
+                if (selectedType === 'SOLIDS') {
+                    if (!details.food || !String(details.food).trim()) {
+                        throw new Error('请填写辅食名称');
+                    }
                 }
                 await BabyService.createRecord({
                     type: selectedType,
@@ -189,6 +207,105 @@ export const RecordModal = ({ isOpen, onClose, onRecordUpdated, initialData }: R
                             className="w-full accent-purple-400"
                         />
                         <div className="text-center text-lg font-bold text-sakura-text">{details.duration || 90} min</div>
+                    </div>
+                );
+            case 'TOPICAL':
+                return (
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-bold text-gray-500 mb-2">药膏 / 外用药</label>
+                            <div className="grid grid-cols-3 gap-2 mb-2">
+                                {TOPICAL_PRESETS.map(p => (
+                                    <button
+                                        key={p}
+                                        type="button"
+                                        onClick={() => setDetails({ ...details, product: p })}
+                                        className={`py-2 px-2 rounded-lg text-sm font-bold border-2 transition-all ${details.product === p
+                                            ? 'bg-sakura-pink text-white border-sakura-pink'
+                                            : 'bg-white text-gray-600 border-gray-200'}`}
+                                    >
+                                        {p}
+                                    </button>
+                                ))}
+                            </div>
+                            <input
+                                type="text"
+                                value={details.product || ''}
+                                onChange={e => setDetails({ ...details, product: e.target.value })}
+                                placeholder="或输入其他药膏名称"
+                                maxLength={40}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-gray-500 mb-2">部位（可选）</label>
+                            <input
+                                type="text"
+                                value={details.area || ''}
+                                onChange={e => setDetails({ ...details, area: e.target.value })}
+                                placeholder="如：颈部 / 屁屁 / 脸"
+                                maxLength={40}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                            />
+                        </div>
+                    </div>
+                );
+            case 'SOLIDS':
+                return (
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-bold text-gray-500 mb-2">辅食</label>
+                            <div className="grid grid-cols-3 gap-2 mb-2">
+                                {SOLIDS_PRESETS.map(p => (
+                                    <button
+                                        key={p}
+                                        type="button"
+                                        onClick={() => setDetails({ ...details, food: p })}
+                                        className={`py-2 px-2 rounded-lg text-sm font-bold border-2 transition-all ${details.food === p
+                                            ? 'bg-emerald-500 text-white border-emerald-500'
+                                            : 'bg-white text-gray-600 border-gray-200'}`}
+                                    >
+                                        {p}
+                                    </button>
+                                ))}
+                            </div>
+                            <input
+                                type="text"
+                                value={details.food || ''}
+                                onChange={e => setDetails({ ...details, food: e.target.value })}
+                                placeholder="或输入其他辅食"
+                                maxLength={40}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-gray-500 mb-2">分量</label>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="number"
+                                    min={0}
+                                    max={2000}
+                                    value={details.amount ?? ''}
+                                    onChange={e => setDetails({ ...details, amount: e.target.value === '' ? undefined : Number(e.target.value) })}
+                                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                                    placeholder="0"
+                                />
+                                <div className="flex gap-1">
+                                    {SOLIDS_UNITS.map(u => (
+                                        <button
+                                            key={u}
+                                            type="button"
+                                            onClick={() => setDetails({ ...details, unit: u })}
+                                            className={`px-3 py-2 rounded-lg text-sm font-bold border-2 ${details.unit === u
+                                                ? 'bg-emerald-500 text-white border-emerald-500'
+                                                : 'bg-white text-gray-600 border-gray-200'}`}
+                                        >
+                                            {u}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 );
             default:

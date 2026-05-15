@@ -48,6 +48,8 @@ const getRecordIcon = (type: string, subtype?: string): string => {
   if (type === 'HEALTH') return kindle ? '健' : '🏥';
   if (type === 'GROWTH') return kindle ? '长' : '📏';
   if (type === 'MILESTONE') return kindle ? '碑' : '🎉';
+  if (type === 'TOPICAL') return kindle ? '涂' : '🧴';
+  if (type === 'SOLIDS') return kindle ? '辅' : '🥣';
   return kindle ? '记' : '📝';
 };
 
@@ -61,6 +63,8 @@ const getRecordTypeName = (type: string, subtype?: string): string => {
   if (type === 'HEALTH') return '健康';
   if (type === 'GROWTH') return '成长';
   if (type === 'MILESTONE') return '里程碑';
+  if (type === 'TOPICAL') return '涂药膏';
+  if (type === 'SOLIDS') return '辅食';
   return '记录';
 };
 
@@ -90,10 +94,20 @@ const formatRecordValue = (record: any): string => {
     const duration = record.details?.duration;
     return duration ? `${duration}分钟` : (record.remark || '洗澡');
   }
+  if (record.type === 'TOPICAL') {
+    const d = record.details || {};
+    const product = d.product || '药膏';
+    return d.area ? `${product} · ${d.area}` : product;
+  }
+  if (record.type === 'SOLIDS') {
+    const d = record.details || {};
+    const food = d.food || '辅食';
+    return d.amount ? `${food} ${d.amount}${d.unit || 'g'}` : food;
+  }
   return record.remark || '—';
 };
 
-type CountdownTone = 'pee' | 'poo' | 'bath';
+type CountdownTone = 'pee' | 'poo' | 'bath' | 'solids' | 'topical';
 
 const COUNTDOWN_COLORS: Record<CountdownTone, { base: string; tip: string; kindleBase: string; kindleTip: string }> = {
   pee: {
@@ -113,6 +127,18 @@ const COUNTDOWN_COLORS: Record<CountdownTone, { base: string; tip: string; kindl
     tip: '#72d8c8',
     kindleBase: '#ffffff',
     kindleTip: '#00AA00',
+  },
+  solids: {
+    base: '#eef9ec',
+    tip: '#7DC093',
+    kindleBase: '#ffffff',
+    kindleTip: '#008000',
+  },
+  topical: {
+    base: '#fdeef2',
+    tip: '#E89BAB',
+    kindleBase: '#ffffff',
+    kindleTip: '#C71585',
   },
 };
 
@@ -179,6 +205,8 @@ export const MobileHome = () => {
   const [showDiaperModal, setShowDiaperModal] = useState(false);
   const [showBathModal, setShowBathModal] = useState(false);
   const [showSupplementModal, setShowSupplementModal] = useState({ visible: false, type: 'VITA_AD' as 'VITA_AD' | 'VITA_D3' });
+  const [showTopicalModal, setShowTopicalModal] = useState(false);
+  const [showSolidsModal, setShowSolidsModal] = useState(false);
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [_tick, setTick] = useState(0);
 
@@ -352,6 +380,8 @@ export const MobileHome = () => {
           <CountdownBar label="尿尿" time={summary?.lastPeeTime || summary?.lastDiaperTime} maxMs={24 * HOUR} tone="pee" />
           <CountdownBar label="便便" time={summary?.lastPooTime || summary?.lastDiaperTime} maxMs={7 * DAY} tone="poo" />
           <CountdownBar label="洗澡" time={summary?.lastBathTime} maxMs={5 * DAY} tone="bath" />
+          <CountdownBar label={`辅食${summary?.solidsCount ? ` (今日${summary.solidsCount}次)` : ''}`} time={summary?.lastSolidsTime} maxMs={6 * HOUR} tone="solids" />
+          <CountdownBar label={`涂药膏${summary?.topicalCount ? ` (今日${summary.topicalCount}次)` : ''}`} time={summary?.lastTopicalTime} maxMs={12 * HOUR} tone="topical" />
         </div>
       </section>
 
@@ -421,6 +451,20 @@ export const MobileHome = () => {
           <span className="bd-action-info">
             <span className="text">D3</span>
             <span className="sub-text">每日一粒</span>
+          </span>
+        </button>
+        <button className="bd-action-btn supplement" onClick={() => setShowSolidsModal(true)}>
+          <span className="icon">{isKindleMode() ? '辅' : '🥣'}</span>
+          <span className="bd-action-info">
+            <span className="text">辅食</span>
+            <span className="sub-text">米粉 / 蛋黄</span>
+          </span>
+        </button>
+        <button className="bd-action-btn supplement" onClick={() => setShowTopicalModal(true)}>
+          <span className="icon">{isKindleMode() ? '涂' : '🧴'}</span>
+          <span className="bd-action-info">
+            <span className="text">涂药膏</span>
+            <span className="sub-text">桃子水等</span>
           </span>
         </button>
       </div>
@@ -536,9 +580,35 @@ export const MobileHome = () => {
           }}
         />
       )}
+
+      {showTopicalModal && (
+        <TopicalModal
+          babyId={baby?.id || ''}
+          onClose={() => setShowTopicalModal(false)}
+          onSuccess={async () => {
+            setShowTopicalModal(false);
+            await refreshAll();
+          }}
+        />
+      )}
+
+      {showSolidsModal && (
+        <SolidsModal
+          babyId={baby?.id || ''}
+          onClose={() => setShowSolidsModal(false)}
+          onSuccess={async () => {
+            setShowSolidsModal(false);
+            await refreshAll();
+          }}
+        />
+      )}
     </>
   );
 };
+
+const TOPICAL_PRESETS = ['桃子水', '护臀膏', '湿疹膏', '面霜', '碘伏'];
+const SOLIDS_FOOD_PRESETS = ['米粉', '蛋黄', '蔬菜泥', '果泥', '肉泥'];
+const SOLIDS_UNITS: Array<'g' | 'ml' | '勺' | '块'> = ['g', 'ml', '勺', '块'];
 
 const FEED_PRESETS = [30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230];
 
@@ -830,6 +900,199 @@ const SupplementModal = ({ babyId, type, alreadyTaken, onClose, onSuccess }: { b
           }}
         >
           {alreadyTaken ? '今日已服用' : isSubmitting ? '保存中...' : '✓ 确认打卡'}
+        </button>
+        <button onClick={onClose} style={cancelBtnStyle(kindle)}>取消</button>
+      </div>
+    </div>
+  );
+};
+
+const TopicalModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: () => void; onSuccess: () => void }) => {
+  const [product, setProduct] = useState('桃子水');
+  const [area, setArea] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const kindle = isKindleMode();
+
+  const handleSubmit = async () => {
+    const trimmed = product.trim();
+    if (!trimmed) {
+      alert('请填写药膏名称');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await BabyService.createRecord({
+        type: 'TOPICAL',
+        babyId,
+        time: new Date().toISOString(),
+        details: { product: trimmed, area: area.trim() || undefined },
+      });
+      onSuccess();
+    } catch (err) {
+      console.error(err);
+      alert('保存失败');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="bd-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="bd-modal-sheet">
+        <div className="bd-modal-handle" />
+        <h2 style={{ textAlign: 'center', marginBottom: 20 }}>{kindle ? '涂 记录涂药膏' : '🧴 记录涂药膏'}</h2>
+
+        <div style={{ marginBottom: 18 }}>
+          <label style={{ display: 'block', fontSize: 13, color: '#8b7670', marginBottom: 8 }}>药膏 / 外用药</label>
+          <div className="bd-quick-select" style={{ flexWrap: 'wrap' }}>
+            {TOPICAL_PRESETS.map(p => (
+              <button key={p} className={product === p ? 'active' : ''} onClick={() => setProduct(p)}>{p}</button>
+            ))}
+          </div>
+          <input
+            type="text"
+            value={product}
+            onChange={e => setProduct(e.target.value)}
+            placeholder="或输入其他药膏名称"
+            maxLength={40}
+            style={{
+              width: '100%',
+              marginTop: 10,
+              border: `1px solid ${kindle ? '#BDBDBD' : '#e5e5e5'}`,
+              borderRadius: 16,
+              padding: 10,
+              fontSize: 14,
+              color: kindle ? '#000' : '#4A342E',
+              background: '#fff',
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 18 }}>
+          <label style={{ display: 'block', fontSize: 13, color: '#8b7670', marginBottom: 8 }}>部位（可选）</label>
+          <input
+            type="text"
+            value={area}
+            onChange={e => setArea(e.target.value)}
+            placeholder="如：颈部 / 屁屁 / 脸"
+            maxLength={40}
+            style={{
+              width: '100%',
+              border: `1px solid ${kindle ? '#BDBDBD' : '#e5e5e5'}`,
+              borderRadius: 16,
+              padding: 10,
+              fontSize: 14,
+              color: kindle ? '#000' : '#4A342E',
+              background: '#fff',
+            }}
+          />
+        </div>
+
+        <button className="bd-submit-btn" onClick={handleSubmit} disabled={isSubmitting} style={submitBtnStyle('#E89BAB', kindle)}>
+          {isSubmitting ? '保存中...' : '✓ 保存记录'}
+        </button>
+        <button onClick={onClose} style={cancelBtnStyle(kindle)}>取消</button>
+      </div>
+    </div>
+  );
+};
+
+const SolidsModal = ({ babyId, onClose, onSuccess }: { babyId: string; onClose: () => void; onSuccess: () => void }) => {
+  const [food, setFood] = useState('米粉');
+  const [amount, setAmount] = useState<number | ''>(30);
+  const [unit, setUnit] = useState<'g' | 'ml' | '勺' | '块'>('g');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const kindle = isKindleMode();
+
+  const handleSubmit = async () => {
+    const trimmed = food.trim();
+    if (!trimmed) {
+      alert('请填写辅食名称');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await BabyService.createRecord({
+        type: 'SOLIDS',
+        babyId,
+        time: new Date().toISOString(),
+        details: {
+          food: trimmed,
+          amount: amount === '' ? undefined : Number(amount),
+          unit,
+        },
+      });
+      onSuccess();
+    } catch (err) {
+      console.error(err);
+      alert('保存失败');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="bd-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="bd-modal-sheet">
+        <div className="bd-modal-handle" />
+        <h2 style={{ textAlign: 'center', marginBottom: 20 }}>{kindle ? '辅 记录辅食' : '🥣 记录辅食'}</h2>
+
+        <div style={{ marginBottom: 18 }}>
+          <label style={{ display: 'block', fontSize: 13, color: '#8b7670', marginBottom: 8 }}>辅食</label>
+          <div className="bd-quick-select" style={{ flexWrap: 'wrap' }}>
+            {SOLIDS_FOOD_PRESETS.map(p => (
+              <button key={p} className={food === p ? 'active' : ''} onClick={() => setFood(p)}>{p}</button>
+            ))}
+          </div>
+          <input
+            type="text"
+            value={food}
+            onChange={e => setFood(e.target.value)}
+            placeholder="或输入其他辅食"
+            maxLength={40}
+            style={{
+              width: '100%',
+              marginTop: 10,
+              border: `1px solid ${kindle ? '#BDBDBD' : '#e5e5e5'}`,
+              borderRadius: 16,
+              padding: 10,
+              fontSize: 14,
+              color: kindle ? '#000' : '#4A342E',
+              background: '#fff',
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 18 }}>
+          <label style={{ display: 'block', fontSize: 13, color: '#8b7670', marginBottom: 8 }}>分量</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input
+              type="number"
+              min={0}
+              max={2000}
+              value={amount}
+              onChange={e => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
+              style={{
+                flex: 1,
+                border: `1px solid ${kindle ? '#BDBDBD' : '#e5e5e5'}`,
+                borderRadius: 16,
+                padding: 10,
+                fontSize: 14,
+                background: '#fff',
+                color: kindle ? '#000' : '#4A342E',
+              }}
+              placeholder="0"
+            />
+            <div className="bd-quick-select" style={{ flex: 0 }}>
+              {SOLIDS_UNITS.map(u => (
+                <button key={u} className={unit === u ? 'active' : ''} onClick={() => setUnit(u)}>{u}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <button className="bd-submit-btn" onClick={handleSubmit} disabled={isSubmitting} style={submitBtnStyle('#7DC093', kindle)}>
+          {isSubmitting ? '保存中...' : '✓ 保存记录'}
         </button>
         <button onClick={onClose} style={cancelBtnStyle(kindle)}>取消</button>
       </div>

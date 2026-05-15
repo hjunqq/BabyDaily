@@ -55,6 +55,12 @@ Page({
             fields.push({ label: '时长', value: h > 0 ? `${h}小时${m > 0 ? m + '分钟' : ''}` : `${mins}分钟` });
         } else if (r.type === 'BATH') {
             fields.push({ label: '洗澡时长', value: d.duration ? `${d.duration} 分钟` : '未填写' });
+        } else if (r.type === 'TOPICAL') {
+            fields.push({ label: '药膏', value: d.product || '—' });
+            if (d.area) fields.push({ label: '部位', value: d.area });
+        } else if (r.type === 'SOLIDS') {
+            fields.push({ label: '辅食', value: d.food || '—' });
+            if (d.amount) fields.push({ label: '分量', value: `${d.amount}${d.unit || 'g'}` });
         }
 
         if (r.remark) {
@@ -75,7 +81,7 @@ Page({
             if (subtype === 'SOLID') return '辅食';
             return '瓶喂';
         }
-        const map = { DIAPER: '换尿布', BATH: '洗澡', SLEEP: '睡眠', VITA_AD: '维生素 AD', VITA_D3: '维生素 D3' };
+        const map = { DIAPER: '换尿布', BATH: '洗澡', SLEEP: '睡眠', VITA_AD: '维生素 AD', VITA_D3: '维生素 D3', TOPICAL: '涂药膏', SOLIDS: '辅食' };
         return map[type] || '记录';
     },
 

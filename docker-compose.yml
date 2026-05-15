@@ -15,6 +15,7 @@ services:
       - DB_PASSWORD=postgres
       - DB_DATABASE=babydaily
       - JWT_SECRET=super-secret-key
+      - ENABLE_DEV_LOGIN=true
       - WECHAT_APPID=${WECHAT_APPID:-your_appid_here}
       - WECHAT_SECRET=${WECHAT_SECRET:-your_secret_here}
     volumes:

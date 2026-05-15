@@ -13,8 +13,13 @@ type Summary = {
   lastPooTime?: string;
   lastDiaperTime?: string;
   lastBathTime?: string;
+  lastSolidsTime?: string;
+  lastTopicalTime?: string;
   todayAdTaken: boolean;
   todayD3Taken: boolean;
+  solidsCount: number;
+  solidsG: number;
+  topicalCount: number;
 };
 
 type TrendPoint = { name: string; milk: number; solid: number };
@@ -40,8 +45,13 @@ const emptySummary: Summary = {
   lastPooTime: undefined,
   lastDiaperTime: undefined,
   lastBathTime: undefined,
+  lastSolidsTime: undefined,
+  lastTopicalTime: undefined,
   todayAdTaken: false,
   todayD3Taken: false,
+  solidsCount: 0,
+  solidsG: 0,
+  topicalCount: 0,
 };
 
 export const useDashboardData = () => {
@@ -120,6 +130,14 @@ const buildActivities = (records: BabyRecord[]): Activity[] => {
       detail = `${amount}${unit}`;
     } else if (r.type === 'BATH') {
       detail = '洗澡';
+    } else if (r.type === 'TOPICAL') {
+      const d = r.details as any;
+      const product = d?.product || '药膏';
+      detail = d?.area ? `${product} · ${d.area}` : product;
+    } else if (r.type === 'SOLIDS') {
+      const d = r.details as any;
+      const food = d?.food || '辅食';
+      detail = d?.amount ? `${food} ${d.amount}${d.unit || 'g'}` : food;
     } else if (r.type === 'HEALTH') {
       detail = r.remark || '健康检查';
     } else if (r.type === 'GROWTH') {
@@ -160,6 +178,10 @@ const mapCategory = (type: BabyRecord['type']) => {
       return '成长';
     case 'MILESTONE':
       return '里程碑';
+    case 'TOPICAL':
+      return '涂药膏';
+    case 'SOLIDS':
+      return '辅食';
     default:
       return '记录';
   }
@@ -176,8 +198,13 @@ const mapSummary = (res: any): Summary => ({
     lastPooTime: res.lastPooTime,
     lastDiaperTime: res.lastDiaperTime,
     lastBathTime: res.lastBathTime,
+    lastSolidsTime: res.lastSolidsTime,
+    lastTopicalTime: res.lastTopicalTime,
     todayAdTaken: !!res.todayAdTaken,
     todayD3Taken: !!res.todayD3Taken,
+    solidsCount: res.solidsCount ?? 0,
+    solidsG: res.solidsG ?? 0,
+    topicalCount: res.topicalCount ?? 0,
 });
 
 const mapTrends = (res: any[]): TrendPoint[] => {

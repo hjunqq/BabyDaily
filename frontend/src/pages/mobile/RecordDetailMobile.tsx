@@ -81,6 +81,14 @@ export const RecordDetailMobile = () => {
     } else if (record.type === 'BATH') {
       const bath = record.details as any;
       formData.bathDuration = bath?.duration ? `${bath.duration} 分钟` : '未填写';
+    } else if (record.type === 'TOPICAL') {
+      const t = record.details as any;
+      formData.product = t.product || '—';
+      formData.area = t.area || '—';
+    } else if (record.type === 'SOLIDS') {
+      const s = record.details as any;
+      formData.food = s.food || '—';
+      formData.amount = s.amount ? `${s.amount}${s.unit || 'g'}` : '—';
     }
   }
 
@@ -105,6 +113,18 @@ export const RecordDetailMobile = () => {
           )}
           {record.type === 'BATH' && (
             <Item dataField="bathDuration" label={{ text: '洗澡时长' }} />
+          )}
+          {record.type === 'TOPICAL' && (
+            <Item dataField="product" label={{ text: '药膏' }} />
+          )}
+          {record.type === 'TOPICAL' && (
+            <Item dataField="area" label={{ text: '部位' }} />
+          )}
+          {record.type === 'SOLIDS' && (
+            <Item dataField="food" label={{ text: '辅食' }} />
+          )}
+          {record.type === 'SOLIDS' && (
+            <Item dataField="amount" label={{ text: '分量' }} />
           )}
           <Item dataField="remark" label={{ text: '备注' }} />
         </Form>
@@ -132,6 +152,14 @@ const mapRecordType = (type: BabyRecord['type']) => {
       return '成长';
     case 'MILESTONE':
       return '里程碑';
+    case 'VITA_AD':
+      return '维生素 AD';
+    case 'VITA_D3':
+      return '维生素 D3';
+    case 'TOPICAL':
+      return '涂药膏';
+    case 'SOLIDS':
+      return '辅食';
     default:
       return '记录';
   }
