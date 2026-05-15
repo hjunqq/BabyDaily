@@ -1,19 +1,14 @@
-import { IsString, IsIn, IsOptional, Length, ValidateIf } from 'class-validator';
+import { IsString, IsIn, Length, ValidateIf } from 'class-validator';
 
 export class BootstrapDto {
   @IsString()
-  @IsIn(['dev', 'wechat', 'pin', 'admin'])
-  method: 'dev' | 'wechat' | 'pin' | 'admin';
+  @IsIn(['dev', 'wechat', 'admin'])
+  method: 'dev' | 'wechat' | 'admin';
 
   @ValidateIf((o) => o.method === 'wechat')
   @IsString()
   @Length(1, 200)
   code?: string;
-
-  @ValidateIf((o) => o.method === 'pin')
-  @IsString()
-  @Length(1, 200)
-  pin?: string;
 
   @ValidateIf((o) => o.method === 'admin')
   @IsString()

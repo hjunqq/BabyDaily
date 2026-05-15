@@ -64,9 +64,6 @@ const bootstrap = async (method, payload) => {
     if (method === 'wechat' && payload) {
         data.code = payload;
     }
-    if (method === 'pin' && payload) {
-        data.pin = payload;
-    }
 
     return request({
         url: '/auth/bootstrap',

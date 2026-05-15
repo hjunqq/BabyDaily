@@ -40,7 +40,6 @@ services:
     build:
       context: ./frontend
       args:
-        VITE_ACCESS_PIN: ${VITE_ACCESS_PIN}
         VITE_ENABLE_DEV_LOGIN: ${VITE_ENABLE_DEV_LOGIN:-true}
     image: babydaily-frontend
     container_name: babydaily-frontend

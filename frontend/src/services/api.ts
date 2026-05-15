@@ -24,7 +24,6 @@ let CURRENT_FAMILY: Family | null = localStorage.getItem('current_family')
     : null;
 
 const ENABLE_DEV_LOGIN = String((import.meta as any).env?.VITE_ENABLE_DEV_LOGIN || '').trim() === 'true';
-const ACCESS_PIN = String((import.meta as any).env?.VITE_ACCESS_PIN || '').trim();
 const LEGACY_BABY_PLACEHOLDER = 'u-sakura-001';
 
 const getHeaders = () => ({
@@ -192,11 +191,7 @@ export const BabyService = {
                 return BabyService.refreshSession();
             }
 
-            const body = ENABLE_DEV_LOGIN
-                ? { method: 'dev' }
-                : ACCESS_PIN
-                    ? { method: 'pin', pin: ACCESS_PIN }
-                    : null;
+            const body = ENABLE_DEV_LOGIN ? { method: 'dev' } : null;
 
             if (!body) {
                 throw new Error('No login method configured');

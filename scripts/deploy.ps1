@@ -112,15 +112,6 @@ Write-Host "========================================`n" -ForegroundColor Cyan
 Write-Host "[config] Host: $DeployHost | Path: $DeployPath" -ForegroundColor DarkGray
 Write-Host "[config] SSH Key: $SshKey" -ForegroundColor DarkGray
 
-# Resolve build args from backend/.env
-$envMap = Get-EnvFileMap -EnvFilePath $BackendEnvFile
-$ResolvedPin = if ($envMap.ContainsKey("WEB_ACCESS_PIN")) { $envMap["WEB_ACCESS_PIN"] } else { "" }
-if ($ResolvedPin) {
-    Write-Host "[env] VITE_ACCESS_PIN=$ResolvedPin (from backend/.env)" -ForegroundColor Green
-} else {
-    Write-Host "[env] VITE_ACCESS_PIN is empty; PIN gate disabled" -ForegroundColor Yellow
-}
-
 if ($UploadProductionEnv) {
     Write-ProductionEnvFile -SourceEnvFile $BackendEnvFile -DestinationEnvFile $ProductionEnvFile
 }
@@ -150,7 +141,7 @@ else {
 
     if ($BuildFrontend) {
         Write-Host "   Building frontend..." -ForegroundColor DarkGray
-        $cmd = "docker build $cacheFlag --build-arg VITE_ACCESS_PIN=$ResolvedPin --build-arg VITE_ENABLE_DEV_LOGIN=false -t babydaily-frontend `"$ProjectPath\frontend`""
+        $cmd = "docker build $cacheFlag --build-arg VITE_ENABLE_DEV_LOGIN=false -t babydaily-frontend `"$ProjectPath\frontend`""
         Invoke-Expression $cmd
         if ($LASTEXITCODE -ne 0) { throw "Frontend build failed" }
         Write-Host "   [OK] Frontend built" -ForegroundColor Green

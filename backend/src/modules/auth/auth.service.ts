@@ -80,23 +80,6 @@ export class AuthService {
     };
   }
 
-  async loginWithPin(pin: string) {
-    const expectedPin =
-      this.configService.get<string>('WEB_ACCESS_PIN') ||
-      this.configService.get<string>('ACCESS_PIN') ||
-      this.configService.get<string>('VITE_ACCESS_PIN');
-
-    if (!expectedPin) {
-      throw new ForbiddenException('Web PIN login is not configured');
-    }
-
-    if (!pin || pin !== expectedPin) {
-      throw new UnauthorizedException('Invalid access PIN');
-    }
-
-    return this.loginDev();
-  }
-
   async loginAdmin(username: string, password: string) {
     const expectedUser = this.configService.get<string>('ADMIN_USERNAME');
     const expectedPass = this.configService.get<string>('ADMIN_PASSWORD');
@@ -151,8 +134,6 @@ export class AuthService {
     let authResult: { access_token: string; user: User };
     if (dto.method === 'wechat') {
       authResult = await this.loginWithWechat(dto.code!);
-    } else if (dto.method === 'pin') {
-      authResult = await this.loginWithPin(dto.pin!);
     } else if (dto.method === 'admin') {
       authResult = await this.loginAdmin(dto.username!, dto.password!);
     } else {

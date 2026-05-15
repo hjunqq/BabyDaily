@@ -48,8 +48,6 @@ import { SkeletonStatePage } from './pages/states/SkeletonStatePage';
 import { NotFoundPage } from './pages/states/NotFoundPage';
 import { ServerErrorPage } from './pages/states/ServerErrorPage';
 
-const ACCESS_PIN = String((import.meta as any).env?.VITE_ACCESS_PIN || '').trim();
-const PIN_STORAGE_KEY = 'bd_pin_verified';
 const KINDLE_BOOTSTRAP_KEY = 'bd_kindle_bootstrap_done';
 
 const ResponsivePage = ({ desktop, mobile }: { desktop: React.ReactElement; mobile: React.ReactElement }) => {
@@ -147,81 +145,6 @@ const RequireAuth = ({ children, allowOnboarding = false }: { children: React.Re
   }
 
   return children;
-};
-
-const PinGate = ({ children }: { children: React.ReactNode }) => {
-  const [verified, setVerified] = useState(false);
-  const [pin, setPin] = useState('');
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (!ACCESS_PIN) {
-      setVerified(true);
-      return;
-    }
-    if (localStorage.getItem(PIN_STORAGE_KEY) === '1') {
-      setVerified(true);
-    }
-  }, []);
-
-  if (!ACCESS_PIN || verified) {
-    return children;
-  }
-
-  const submitPin = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (pin === ACCESS_PIN) {
-      localStorage.setItem(PIN_STORAGE_KEY, '1');
-      setVerified(true);
-      setError('');
-      return;
-    }
-
-    setError('PIN 不正确');
-    setPin('');
-  };
-
-  return (
-    <div className="bd-state">
-      <div className="bd-state-card" style={{ width: 'min(92vw, 420px)' }}>
-        <h3>访问保护</h3>
-        <p style={{ color: '#6b524b', marginBottom: 16 }}>请输入 PIN 码继续访问。</p>
-        <form onSubmit={submitPin}>
-          <input
-            type="password"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            autoComplete="off"
-            value={pin}
-            onChange={(e) => setPin(e.target.value)}
-            style={{
-              width: '100%',
-              boxSizing: 'border-box',
-              padding: '10px 12px',
-              borderRadius: 8,
-              border: '1px solid #d1d5db',
-              marginBottom: 12,
-            }}
-          />
-          {error ? <p style={{ color: '#b91c1c', marginBottom: 12 }}>{error}</p> : null}
-          <button
-            type="submit"
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              background: '#F3B6C2',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 8,
-              cursor: 'pointer',
-            }}
-          >
-            解锁
-          </button>
-        </form>
-      </div>
-    </div>
-  );
 };
 
 const useKindleMode = () => {
@@ -357,8 +280,7 @@ const KindleModeWrapper = () => {
 
   return (
     <ThemeProvider>
-      <PinGate>
-        <DebugPanel />
+      <DebugPanel />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/onboarding" element={<RequireAuth allowOnboarding><OnboardingMobile /></RequireAuth>} />
@@ -420,7 +342,6 @@ const KindleModeWrapper = () => {
 
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
-      </PinGate>
     </ThemeProvider>
   );
 };

@@ -19,7 +19,6 @@
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
       - TZ=Asia/Shanghai
       - ENABLE_DEV_LOGIN=false
-      - WEB_ACCESS_PIN=${WEB_ACCESS_PIN:-}
       - WECHAT_APPID=${WECHAT_APPID:-}
       - WECHAT_SECRET=${WECHAT_SECRET:-}
       - ADMIN_USERNAME=${ADMIN_USERNAME:-}

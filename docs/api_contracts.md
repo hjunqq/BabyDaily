@@ -168,7 +168,7 @@
 - `POST /notifications` - 创建通知（内部）
 ## 2026-04-06 Auth Update
 - `POST /auth/bootstrap`
-  - supports `method: "wechat" | "pin" | "dev"`
+  - supports `method: "wechat" | "admin" | "dev"`
   - returns `access_token`, `user`, `family`, `baby`, `onboardingRequired`
   - no longer auto-creates family or baby
 - `GET /auth/session`
