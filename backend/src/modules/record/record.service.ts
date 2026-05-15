@@ -15,6 +15,8 @@ import {
   formatTime,
 } from './record.mapper';
 import { SettingsService } from '../settings/settings.service';
+import { FamilyService } from '../family/family.service';
+import { FamilyRole } from '../family/entities/family-member.entity';
 
 /**
  * Record Service - Business logic layer
@@ -25,7 +27,21 @@ export class RecordService {
   constructor(
     private readonly recordRepo: RecordRepository,
     private readonly settingsService: SettingsService,
+    private readonly familyService: FamilyService,
   ) {}
+
+  /** Allow operation if user is record creator OR has MEMBER+ role in baby's family. */
+  private async canMutateRecord(
+    rec: { creator_id: string; baby_id: string },
+    userId: string,
+  ): Promise<boolean> {
+    if (rec.creator_id === userId) return true;
+    return this.familyService.hasMinRoleForBaby(
+      rec.baby_id,
+      userId,
+      FamilyRole.MEMBER,
+    );
+  }
 
   async create(userId: string, data: any): Promise<Record> {
     return this.recordRepo.create({
@@ -63,7 +79,7 @@ export class RecordService {
         code: ErrorCodes.NOT_FOUND,
       });
     }
-    if (existing.creator_id !== userId) {
+    if (!(await this.canMutateRecord(existing, userId))) {
       throw new ForbiddenException({
         message: 'No permission to modify this record',
         code: ErrorCodes.AUTH_FORBIDDEN,
@@ -94,7 +110,7 @@ export class RecordService {
         code: ErrorCodes.NOT_FOUND,
       });
     }
-    if (rec.creator_id !== userId) {
+    if (!(await this.canMutateRecord(rec, userId))) {
       throw new ForbiddenException({
         message: 'No permission to delete this record',
         code: ErrorCodes.AUTH_FORBIDDEN,
@@ -103,9 +119,38 @@ export class RecordService {
     await this.recordRepo.delete(id);
   }
 
-  async removeManyWithGuard(ids: string[], userId: string): Promise<void> {
-    if (!ids.length) return;
-    await this.recordRepo.deleteManyByCreator(ids, userId);
+  async removeManyWithGuard(
+    ids: string[],
+    userId: string,
+  ): Promise<{ deleted: number }> {
+    if (!ids.length) return { deleted: 0 };
+
+    const records = await this.recordRepo.findByIds(ids);
+    // Cache per-baby role lookups to avoid N queries
+    const babyRoleCache = new Map<string, boolean>();
+    const allowedIds: string[] = [];
+
+    for (const rec of records) {
+      if (rec.creator_id === userId) {
+        allowedIds.push(rec.id);
+        continue;
+      }
+      let allowed = babyRoleCache.get(rec.baby_id);
+      if (allowed === undefined) {
+        allowed = await this.familyService.hasMinRoleForBaby(
+          rec.baby_id,
+          userId,
+          FamilyRole.MEMBER,
+        );
+        babyRoleCache.set(rec.baby_id, allowed);
+      }
+      if (allowed) allowedIds.push(rec.id);
+    }
+
+    if (allowedIds.length > 0) {
+      await this.recordRepo.deleteMany(allowedIds);
+    }
+    return { deleted: allowedIds.length };
   }
 
   async removeAllByBaby(babyId: string, userId: string): Promise<void> {

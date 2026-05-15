@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, In } from 'typeorm';
 import { Record, RecordType } from './entities/record.entity';
 
 /**
@@ -53,14 +53,14 @@ export class RecordRepository {
     await this.repo.delete({ baby_id: babyId });
   }
 
-  async deleteManyByCreator(ids: string[], userId: string): Promise<void> {
-    await this.repo
-      .createQueryBuilder()
-      .delete()
-      .from(Record)
-      .where('id IN (:...ids)', { ids })
-      .andWhere('creator_id = :userId', { userId })
-      .execute();
+  async findByIds(ids: string[]): Promise<Record[]> {
+    if (!ids.length) return [];
+    return this.repo.findBy({ id: In(ids) });
+  }
+
+  async deleteMany(ids: string[]): Promise<void> {
+    if (!ids.length) return;
+    await this.repo.delete(ids);
   }
 
   async save(entity: Record): Promise<Record> {

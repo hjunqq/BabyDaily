@@ -108,6 +108,25 @@ export class FamilyService {
     return this.isActiveMemberOfBabyFamily(babyId, userId);
   }
 
+  /** Check whether user has at least `minRole` in the baby's family. */
+  async hasMinRoleForBaby(
+    babyId: string,
+    userId: string,
+    minRole: FamilyRole,
+  ): Promise<boolean> {
+    const baby = await this.babyRepository.findOne({ where: { id: babyId } });
+    if (!baby) return false;
+    const member = await this.familyMemberRepository.findOne({
+      where: {
+        family_id: baby.family_id,
+        user_id: userId,
+        status: MemberStatus.ACTIVE,
+      },
+    });
+    if (!member) return false;
+    return ROLE_HIERARCHY[member.role] >= ROLE_HIERARCHY[minRole];
+  }
+
   async findPendingMembership(userId: string): Promise<FamilyMember | null> {
     return this.familyMemberRepository.findOne({
       where: { user_id: userId, status: MemberStatus.PENDING },
