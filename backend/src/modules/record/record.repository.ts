@@ -19,12 +19,13 @@ export class RecordRepository {
     limit: number,
     offset: number,
   ): Promise<Record[]> {
+    // No relations: list consumers only need creator_id (column), not the full
+    // joined User row. Dropping the JOIN cuts response time on list endpoints.
     return this.repo.find({
       where: { baby_id: babyId },
       order: { time: 'DESC' },
       take: limit,
       skip: offset,
-      relations: ['creator'],
     });
   }
 

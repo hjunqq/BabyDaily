@@ -6,6 +6,7 @@ import { join } from 'path';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { BusinessExceptionFilter } from './common/filters/business-exception.filter';
+import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -24,6 +25,8 @@ async function bootstrap() {
     new AllExceptionsFilter(),
     new BusinessExceptionFilter(),
   );
+
+  app.useGlobalInterceptors(new TimeoutInterceptor());
 
   const config = new DocumentBuilder()
     .setTitle('BabyDaily API')

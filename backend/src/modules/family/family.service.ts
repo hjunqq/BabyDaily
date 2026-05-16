@@ -83,21 +83,35 @@ export class FamilyService {
 
   // ─── Membership checks ────────────────────────────────────
 
+  /**
+   * Single-query resolver: returns { familyId, role } if the user is an ACTIVE
+   * member of the given baby's family, else null.
+   * Replaces a baby+family_member 2-step lookup that was being hit on every
+   * record-related request.
+   */
+  async resolveBabyAccess(
+    babyId: string,
+    userId: string,
+  ): Promise<{ familyId: string; role: FamilyRole } | null> {
+    const row = await this.familyMemberRepository
+      .createQueryBuilder('m')
+      .innerJoin('babies', 'b', 'b.family_id = m.family_id')
+      .where('b.id = :babyId', { babyId })
+      .andWhere('m.user_id = :userId', { userId })
+      .andWhere('m.status = :status', { status: MemberStatus.ACTIVE })
+      .select(['m.family_id AS family_id', 'm.role AS role'])
+      .getRawOne<{ family_id: string; role: FamilyRole }>();
+
+    if (!row) return null;
+    return { familyId: row.family_id, role: row.role };
+  }
+
   /** Check if user is an ACTIVE member of the baby's family */
   async isActiveMemberOfBabyFamily(
     babyId: string,
     userId: string,
   ): Promise<boolean> {
-    const baby = await this.babyRepository.findOne({ where: { id: babyId } });
-    if (!baby) return false;
-    const member = await this.familyMemberRepository.findOne({
-      where: {
-        family_id: baby.family_id,
-        user_id: userId,
-        status: MemberStatus.ACTIVE,
-      },
-    });
-    return !!member;
+    return (await this.resolveBabyAccess(babyId, userId)) !== null;
   }
 
   /** Legacy compat — alias */
@@ -114,17 +128,9 @@ export class FamilyService {
     userId: string,
     minRole: FamilyRole,
   ): Promise<boolean> {
-    const baby = await this.babyRepository.findOne({ where: { id: babyId } });
-    if (!baby) return false;
-    const member = await this.familyMemberRepository.findOne({
-      where: {
-        family_id: baby.family_id,
-        user_id: userId,
-        status: MemberStatus.ACTIVE,
-      },
-    });
-    if (!member) return false;
-    return ROLE_HIERARCHY[member.role] >= ROLE_HIERARCHY[minRole];
+    const access = await this.resolveBabyAccess(babyId, userId);
+    if (!access) return false;
+    return ROLE_HIERARCHY[access.role] >= ROLE_HIERARCHY[minRole];
   }
 
   async findPendingMembership(userId: string): Promise<FamilyMember | null> {

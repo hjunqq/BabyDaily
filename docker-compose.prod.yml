@@ -19,6 +19,15 @@
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
       - TZ=Asia/Shanghai
       - ENABLE_DEV_LOGIN=false
+      # Run pending migrations on boot; keep auto-sync off in prod.
+      - DB_MIGRATIONS_RUN=${DB_MIGRATIONS_RUN:-true}
+      - DB_SYNCHRONIZE=${DB_SYNCHRONIZE:-false}
+      # Perf/timeout knobs — see scripts/PROD_DB_INCIDENT_GUIDE.md
+      - DB_STATEMENT_TIMEOUT_MS=${DB_STATEMENT_TIMEOUT_MS:-8000}
+      - DB_POOL_MAX=${DB_POOL_MAX:-20}
+      - DB_SLOW_QUERY_MS=${DB_SLOW_QUERY_MS:-500}
+      - REQUEST_TIMEOUT_MS=${REQUEST_TIMEOUT_MS:-12000}
+      - SLOW_REQUEST_MS=${SLOW_REQUEST_MS:-1500}
       - WECHAT_APPID=${WECHAT_APPID:-}
       - WECHAT_SECRET=${WECHAT_SECRET:-}
       - ADMIN_USERNAME=${ADMIN_USERNAME:-}

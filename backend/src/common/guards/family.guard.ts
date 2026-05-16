@@ -37,16 +37,19 @@ export class FamilyGuard implements CanActivate {
       });
     }
 
-    const belongs = await this.familyService.isActiveMemberOfBabyFamily(
+    const access = await this.familyService.resolveBabyAccess(
       babyId,
       user.userId,
     );
-    if (!belongs) {
+    if (!access) {
       throw new ForbiddenException({
         message: 'No permission for this baby data',
         code: ErrorCodes.AUTH_FORBIDDEN,
       });
     }
+    // Stash resolved access on the request so controllers/services can reuse
+    // family_id and role without re-querying.
+    request.babyAccess = { babyId, ...access };
     return true;
   }
 }
