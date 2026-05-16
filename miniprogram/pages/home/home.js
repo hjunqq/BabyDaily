@@ -2,6 +2,12 @@ const app = getApp();
 const { fetchRecords, fetchSummary } = require('./home.api');
 const { formatLocalTime, getLogicalDateKey, toApiISOString } = require('../../utils/datetime');
 const { logout } = require('../../utils/api');
+const {
+    recordIcon,
+    recordIconClass,
+    recordTypeLabel,
+    recordValue,
+} = require('../../utils/record-display');
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -93,10 +99,11 @@ Page({
     },
 
     updateDateStr: function() {
-        const d = new Date();
+        // Render in Beijing time so the date is consistent across devices/timezones.
+        const b = new Date(Date.now() + 8 * 60 * 60 * 1000);
         const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
         this.setData({
-            dateStr: d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日' + weekdays[d.getDay()],
+            dateStr: b.getUTCFullYear() + '年' + (b.getUTCMonth() + 1) + '月' + b.getUTCDate() + '日' + weekdays[b.getUTCDay()],
         });
     },
 
@@ -166,9 +173,8 @@ Page({
         }
 
         const details = feed.details || {};
-        const isBreast = details.subtype === 'BREAST';
-        const amount = isBreast ? (details.duration || 0) + ' 分钟' : (details.amount || 0) + ' ml';
-        const subtype = isBreast ? '亲喂' : '瓶喂';
+        const amount = recordValue(feed);
+        const subtype = recordTypeLabel(feed.type, details.subtype);
         const elapsedMs = Date.now() - new Date(feed.time).getTime();
         const timeStr = feed.formattedTime || formatLocalTime(feed.time);
 
@@ -186,11 +192,10 @@ Page({
         for (var i = 0; i < list.length; i++) {
             const r = list[i];
             if (r.type === 'FEED' && r.time && getLogicalDateKey(r.time, dayStartHour) === today) {
-                const d = r.details || {};
                 feeds.push({
                     id: r.id,
                     time: r.formattedTime || formatLocalTime(r.time),
-                    value: d.subtype === 'BREAST' ? (d.duration || 0) + '分钟' : (d.amount || 0) + 'ml',
+                    value: recordValue(r),
                 });
             }
         }
@@ -235,11 +240,11 @@ Page({
                 const d = r.details || {};
                 mapped.push({
                     id: r.id,
-                    icon: self.getIcon(r.type, d.subtype),
-                    iconClass: self.getIconClass(r.type),
-                    type: self.mapType(r.type, d.subtype),
+                    icon: recordIcon(r.type, d.subtype),
+                    iconClass: recordIconClass(r.type),
+                    type: recordTypeLabel(r.type, d.subtype),
                     time: r.formattedTime || formatLocalTime(r.time),
-                    value: self.mapValue(r),
+                    value: recordValue(r),
                 });
             }
             self.setData({ recentRecords: mapped, loading: false });
@@ -249,75 +254,6 @@ Page({
             wx.showModal({ title: '数据加载失败', content: detail, showCancel: false });
             self.setData({ error: '加载数据失败，请下拉刷新重试', loading: false });
         });
-    },
-
-    getIcon: function(type, subtype) {
-        if (type === 'FEED') return subtype === 'BREAST' ? '🤱' : (subtype === 'SOLID' ? '🥣' : '🍼');
-        if (type === 'DIAPER') return '🧷';
-        if (type === 'BATH') return '🛁';
-        if (type === 'SLEEP') return '💤';
-        if (type === 'VITA_AD') return '💊';
-        if (type === 'VITA_D3') return '☀️';
-        if (type === 'TOPICAL') return '🧴';
-        if (type === 'SOLIDS') return '🥣';
-        return '📝';
-    },
-
-    getIconClass: function(type) {
-        if (type === 'FEED') return 'feed';
-        if (type === 'DIAPER') return 'diaper';
-        if (type === 'BATH') return 'bath';
-        if (type === 'SLEEP') return 'sleep';
-        if (type === 'VITA_AD' || type === 'VITA_D3') return 'supplement';
-        if (type === 'TOPICAL') return 'supplement';
-        if (type === 'SOLIDS') return 'feed';
-        return 'feed';
-    },
-
-    mapType: function(type, subtype) {
-        if (type === 'FEED') {
-            if (subtype === 'BREAST') return '亲喂';
-            if (subtype === 'SOLID') return '辅食';
-            return '瓶喂';
-        }
-        if (type === 'DIAPER') return '换尿布';
-        if (type === 'BATH') return '洗澡';
-        if (type === 'SLEEP') return '睡眠';
-        if (type === 'VITA_AD') return '维生素 AD';
-        if (type === 'VITA_D3') return '维生素 D3';
-        if (type === 'TOPICAL') return '涂药膏';
-        if (type === 'SOLIDS') return '辅食';
-        return '记录';
-    },
-
-    mapValue: function(r) {
-        const d = r.details || {};
-        if (r.type === 'FEED') {
-            if (d.subtype === 'BREAST') return (d.duration || 0) + ' 分钟';
-            return d.amount ? d.amount + ' ml' : '';
-        }
-        if (r.type === 'DIAPER') {
-            if (d.type === 'BOTH') return '尿 + 便';
-            if (d.type === 'POO') return '便便';
-            return '尿尿';
-        }
-        if (r.type === 'SLEEP') {
-            const mins = d.duration || 0;
-            const h = Math.floor(mins / 60);
-            const m = mins % 60;
-            return h > 0 ? h + 'h ' + m + 'm' : mins + 'm';
-        }
-        if (r.type === 'BATH') return d.duration ? d.duration + '分钟' : '';
-        if (r.type === 'VITA_AD' || r.type === 'VITA_D3') return '已服用';
-        if (r.type === 'TOPICAL') {
-            const p = d.product || '药膏';
-            return d.area ? p + ' · ' + d.area : p;
-        }
-        if (r.type === 'SOLIDS') {
-            const f = d.food || '辅食';
-            return d.amount ? f + ' ' + d.amount + (d.unit || 'g') : f;
-        }
-        return '';
     },
 
     quickFeed: function() {

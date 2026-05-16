@@ -109,6 +109,29 @@
     background: linear-gradient(135deg, #ffb27d, #ff8b6a);
 }
 
+.wechat-submit {
+    margin-top: 0;
+    margin-bottom: 8rpx;
+    background: linear-gradient(135deg, #5fc28a, #2faa6b);
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+    margin: 26rpx 0 22rpx;
+    color: #b8a59f;
+    font-size: 22rpx;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    height: 1rpx;
+    background: #ecd8d4;
+}
+
 .error {
     margin-top: 24rpx;
     padding: 18rpx 22rpx;

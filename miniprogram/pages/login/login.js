@@ -2,6 +2,7 @@ const app = getApp();
 const {
     loginWithInviteCode,
     loginWithAdmin,
+    loginWithWechat,
     logout,
 } = require('../../utils/api');
 
@@ -88,6 +89,36 @@ Page({
                 else message = err.message;
             }
             this.setData({ error: message });
+        } finally {
+            this.setData({ loading: false });
+        }
+    },
+
+    async submitWechatLogin() {
+        this.setData({ loading: true, error: '' });
+        try {
+            logout();
+            const session = await loginWithWechat();
+            app.applySession(session);
+            await app.loadSettings();
+            if (session.onboardingRequired) {
+                wx.reLaunch({ url: '/pages/onboarding/onboarding' });
+                return;
+            }
+            if (session.babyId) {
+                wx.switchTab({ url: '/pages/home/home' });
+                return;
+            }
+            // Logged in but not yet in a family — keep them here and surface invite-code mode.
+            this.setData({
+                mode: 'invite',
+                error: '当前微信尚未加入家庭，请输入邀请码加入',
+            });
+        } catch (err) {
+            console.error('[Login] wechat login failed', err);
+            this.setData({
+                error: (err && err.message) || '微信登录失败，请重试',
+            });
         } finally {
             this.setData({ loading: false });
         }

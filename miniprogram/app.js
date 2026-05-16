@@ -23,7 +23,12 @@ App({
                 console.error('[App] Login failed:', err.message || err);
                 this.applySession(null);
                 this.applySettings(null);
-                throw err;
+                // Don't re-throw: callers (page onLoad) would show a blocking modal.
+                // Instead route the user to login where they can re-authenticate.
+                setTimeout(() => {
+                    wx.reLaunch({ url: '/pages/login/login' });
+                }, 0);
+                return null;
             });
     },
 

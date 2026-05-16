@@ -1,3 +1,7 @@
+// All display/parsing uses Beijing time (UTC+8) so the miniprogram shows
+// consistent times regardless of the device's system timezone.
+const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000;
+
 function pad2(value) {
     return String(value).padStart(2, '0');
 }
@@ -8,21 +12,29 @@ function parseApiDate(value) {
     return Number.isNaN(date.getTime()) ? null : date;
 }
 
+// Returns a Date whose UTC getters reflect Beijing local fields.
+function toBeijing(date) {
+    return new Date(date.getTime() + BEIJING_OFFSET_MS);
+}
+
 function formatLocalTime(value) {
     const date = parseApiDate(value);
     if (!date) return '';
-    return `${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+    const b = toBeijing(date);
+    return `${pad2(b.getUTCHours())}:${pad2(b.getUTCMinutes())}`;
 }
 
 function formatLocalDateKey(value) {
     const date = parseApiDate(value) || new Date();
-    return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+    const b = toBeijing(date);
+    return `${b.getUTCFullYear()}-${pad2(b.getUTCMonth() + 1)}-${pad2(b.getUTCDate())}`;
 }
 
 function formatMonthDay(value) {
     const date = parseApiDate(value);
     if (!date) return '';
-    return `${date.getMonth() + 1}月${date.getDate()}日`;
+    const b = toBeijing(date);
+    return `${b.getUTCMonth() + 1}月${b.getUTCDate()}日`;
 }
 
 function getLogicalDateKey(value, dayStartHour) {
@@ -35,13 +47,15 @@ function getLogicalDateKey(value, dayStartHour) {
 function formatLocalDateTime(value) {
     const date = parseApiDate(value);
     if (!date) return '';
-    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${formatLocalTime(date)}`;
+    const b = toBeijing(date);
+    return `${b.getUTCFullYear()}/${b.getUTCMonth() + 1}/${b.getUTCDate()} ${formatLocalTime(date)}`;
 }
 
 function formatEditableDateTime(value) {
     const date = parseApiDate(value);
     if (!date) return '';
-    return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())} ${formatLocalTime(date)}`;
+    const b = toBeijing(date);
+    return `${b.getUTCFullYear()}-${pad2(b.getUTCMonth() + 1)}-${pad2(b.getUTCDate())} ${formatLocalTime(date)}`;
 }
 
 function parseEditableDateTime(value) {
@@ -50,7 +64,8 @@ function parseEditableDateTime(value) {
     if (!match) return null;
 
     const [, year, month, day, hour, minute] = match;
-    const date = new Date(
+    // Interpret the input as Beijing local time, build a real UTC Date.
+    const utcMs = Date.UTC(
         Number(year),
         Number(month) - 1,
         Number(day),
@@ -58,7 +73,8 @@ function parseEditableDateTime(value) {
         Number(minute),
         0,
         0,
-    );
+    ) - BEIJING_OFFSET_MS;
+    const date = new Date(utcMs);
 
     return Number.isNaN(date.getTime()) ? null : date;
 }

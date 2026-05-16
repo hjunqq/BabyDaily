@@ -1,11 +1,22 @@
 <view class="page">
     <view class="hero">
         <view class="hero-badge">BabyDaily</view>
-        <view class="title">选择登录方式</view>
-        <view class="subtitle">邀请码用于申请加入家庭，测试账号用于管理员审核待批准成员。</view>
+        <view class="title">欢迎回来</view>
+        <view class="subtitle">已绑定过家庭的微信，一键登录即可恢复记录。</view>
     </view>
 
     <view class="card">
+        <button
+            class="submit wechat-submit"
+            loading="{{loading}}"
+            disabled="{{loading}}"
+            bindtap="submitWechatLogin"
+        >
+            {{loading ? '登录中...' : '微信一键登录'}}
+        </button>
+
+        <view class="divider"><text>或</text></view>
+
         <view class="mode-switch">
             <view
                 class="mode-chip {{mode === 'invite' ? 'active' : ''}}"

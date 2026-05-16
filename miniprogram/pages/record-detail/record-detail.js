@@ -1,6 +1,7 @@
 const app = getApp();
 const { authedRequest } = require('../../utils/api');
 const { formatLocalDateTime } = require('../../utils/datetime');
+const { recordTypeLabel, formatDuration } = require('../../utils/record-display');
 
 Page({
     data: {
@@ -34,10 +35,10 @@ Page({
 
     buildFields(r) {
         const fields = [];
-        fields.push({ label: '类型', value: this.mapType(r.type, (r.details || {}).subtype) });
-        fields.push({ label: '时间', value: this.formatTime(r.time) });
-
         const d = r.details || {};
+        fields.push({ label: '类型', value: recordTypeLabel(r.type, d.subtype) });
+        fields.push({ label: '时间', value: formatLocalDateTime(r.time) });
+
         if (r.type === 'FEED') {
             if (d.subtype === 'BREAST') {
                 fields.push({ label: '亲喂时长', value: `${d.duration || 0} 分钟` });
@@ -47,13 +48,10 @@ Page({
                 fields.push({ label: '奶量', value: `${d.amount || 0} ml` });
             }
         } else if (r.type === 'DIAPER') {
-            const typeMap = { PEE: '尿尿', POO: '便便', BOTH: '尿尿 + 便便' };
+            const typeMap = { PEE: '尿尿', POO: '便便', BOTH: '尿 + 便' };
             fields.push({ label: '类型', value: typeMap[d.type] || d.type });
         } else if (r.type === 'SLEEP') {
-            const mins = d.duration || 0;
-            const h = Math.floor(mins / 60);
-            const m = mins % 60;
-            fields.push({ label: '时长', value: h > 0 ? `${h}小时${m > 0 ? m + '分钟' : ''}` : `${mins}分钟` });
+            fields.push({ label: '时长', value: formatDuration(d.duration) });
         } else if (r.type === 'BATH') {
             fields.push({ label: '洗澡时长', value: d.duration ? `${d.duration} 分钟` : '未填写' });
         } else if (r.type === 'TOPICAL') {
@@ -68,20 +66,6 @@ Page({
             fields.push({ label: '备注', value: r.remark });
         }
         return fields;
-    },
-
-    formatTime(str) {
-        return formatLocalDateTime(str);
-    },
-
-    mapType(type, subtype) {
-        if (type === 'FEED') {
-            if (subtype === 'BREAST') return '亲喂';
-            if (subtype === 'SOLID') return '辅食';
-            return '瓶喂';
-        }
-        const map = { DIAPER: '换尿布', BATH: '洗澡', SLEEP: '睡眠', VITA_AD: '维生素 AD', VITA_D3: '维生素 D3', TOPICAL: '涂药膏', SOLIDS: '辅食' };
-        return map[type] || '记录';
     },
 
     goToEdit() {

@@ -1,6 +1,12 @@
 const app = getApp();
 const { authedRequest } = require('../../utils/api');
 const { formatLocalTime, formatMonthDay, isSameLocalDay } = require('../../utils/datetime');
+const {
+    recordIcon,
+    recordIconClass,
+    recordTypeLabel,
+    recordValue,
+} = require('../../utils/record-display');
 
 Page({
     data: {
@@ -92,8 +98,8 @@ Page({
             for (let i = 0; i < allRecords.length; i++) {
                 const r = allRecords[i];
                 const d = r.details || {};
-                const label = self.mapType(r.type, d.subtype);
-                const val = self.mapValue(r);
+                const label = recordTypeLabel(r.type, d.subtype);
+                const val = recordValue(r);
                 if ((label + val).toLowerCase().indexOf(q) !== -1) {
                     list.push(r);
                 }
@@ -103,8 +109,7 @@ Page({
         const groupMap = {};
         const groupOrder = [];
         const today = new Date();
-        const yesterday = new Date();
-        yesterday.setDate(today.getDate() - 1);
+        const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
 
         for (let j = 0; j < list.length; j++) {
             const r = list[j];
@@ -123,11 +128,11 @@ Page({
 
             groupMap[key].push({
                 id: r.id,
-                icon: self.getIcon(r.type, d.subtype),
-                iconClass: self.getIconClass(r.type),
-                typeLabel: self.mapType(r.type, d.subtype),
+                icon: recordIcon(r.type, d.subtype),
+                iconClass: recordIconClass(r.type),
+                typeLabel: recordTypeLabel(r.type, d.subtype),
                 timeStr: r.formattedTime || formatLocalTime(r.time),
-                value: self.mapValue(r),
+                value: recordValue(r),
             });
         }
 
@@ -143,58 +148,4 @@ Page({
         wx.navigateTo({ url: '/pages/record-detail/record-detail?id=' + id });
     },
 
-    getIcon: function(type, subtype) {
-        if (type === 'FEED') return subtype === 'BREAST' ? '🍼' : (subtype === 'SOLID' ? '🥣' : '🍼');
-        if (type === 'DIAPER') return '💩';
-        if (type === 'BATH') return '🛁';
-        if (type === 'SLEEP') return '😴';
-        if (type === 'VITA_AD') return '💊';
-        if (type === 'VITA_D3') return '☀️';
-        return '📝';
-    },
-
-    getIconClass: function(type) {
-        if (type === 'FEED') return 'feed';
-        if (type === 'DIAPER') return 'diaper';
-        if (type === 'BATH') return 'bath';
-        if (type === 'SLEEP') return 'sleep';
-        if (type === 'VITA_AD' || type === 'VITA_D3') return 'supplement';
-        return 'feed';
-    },
-
-    mapType: function(type, subtype) {
-        if (type === 'FEED') {
-            if (subtype === 'BREAST') return '亲喂';
-            if (subtype === 'SOLID') return '辅食';
-            return '瓶喂';
-        }
-        if (type === 'DIAPER') return '换尿布';
-        if (type === 'BATH') return '洗澡';
-        if (type === 'SLEEP') return '睡眠';
-        if (type === 'VITA_AD') return '维生素 AD';
-        if (type === 'VITA_D3') return '维生素 D3';
-        return '记录';
-    },
-
-    mapValue: function(r) {
-        const d = r.details || {};
-        if (r.type === 'FEED') {
-            if (d.subtype === 'BREAST') return (d.duration || 0) + '分钟';
-            return d.amount ? d.amount + 'ml' : '';
-        }
-        if (r.type === 'DIAPER') {
-            if (d.type === 'BOTH') return '尿+便';
-            if (d.type === 'POO') return '便便';
-            return '尿尿';
-        }
-        if (r.type === 'SLEEP') {
-            const mins = d.duration || 0;
-            const h = Math.floor(mins / 60);
-            const m = mins % 60;
-            return h > 0 ? h + 'h' + m + 'm' : mins + 'm';
-        }
-        if (r.type === 'BATH') return d.duration ? d.duration + '分钟' : '';
-        if (r.type === 'VITA_AD' || r.type === 'VITA_D3') return '已服用';
-        return '';
-    },
 });

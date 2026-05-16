@@ -202,8 +202,23 @@ const initSession = async () => {
         }
         throw new Error('Unsupported auth method');
     } catch (err) {
-        throw new Error('登录失败，请检查网络或重新输入账号信息');
+        // If the backend rejects the stored credentials (401/403) or the credentials
+        // are otherwise unusable, drop the auth context so we don't loop on next launch.
+        const sc = err && err.statusCode;
+        if (sc === 401 || sc === 403 || !sc) {
+            clearAuthContext();
+        }
+        const e = new Error('AUTH_REQUIRED');
+        e.cause = err;
+        throw e;
     }
+};
+
+const redirectToLogin = () => {
+    const pages = (typeof getCurrentPages === 'function') ? getCurrentPages() : [];
+    const current = pages.length > 0 ? pages[pages.length - 1].route : '';
+    if (current === 'pages/login/login') return;
+    wx.reLaunch({ url: '/pages/login/login' });
 };
 
 const authedRequest = async (url, options = {}) => {
@@ -214,8 +229,15 @@ const authedRequest = async (url, options = {}) => {
         if (err.statusCode === 401 || err.statusCode === 403) {
             const oldBabyId = getCurrentBabyId();
             clearSession();
-            const session = await initSession();
+            let session;
+            try {
+                session = await initSession();
+            } catch (reauthErr) {
+                redirectToLogin();
+                throw reauthErr;
+            }
             if (!session || !session.token) {
+                redirectToLogin();
                 throw new Error('AUTH_REQUIRED');
             }
             let retryUrl = url;
